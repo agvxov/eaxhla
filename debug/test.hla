@@ -1,0 +1,4 @@
+program example
+begin
+    xor $rax $rbx
+end program

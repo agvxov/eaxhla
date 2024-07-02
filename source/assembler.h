@@ -5,12 +5,12 @@
 
 typedef enum {
 	size_256b,              size_128b,              size_64b,
-	size_32b,               size_16b,               size_8b
+	size_32b,               size_16b,               size_8b,
 } size_index;
 
 typedef enum {
 	type_register_register, type_register_variable, type_register_constant,
-	type_variable_register, type_variable_constant
+	type_variable_register, type_variable_constant,
 } type_index;
 
 typedef enum {
@@ -21,7 +21,7 @@ typedef enum {
 	operation_is,           operation_above,        operation_below,
 	operation_if,           operation_increment,    operation_decrement,
 	operation_system,       operation_call,         operation_return,
-	operation_enter,        operation_leave,        operation_exit
+	operation_enter,        operation_leave,        operation_exit,
 } operation_index;
 
 typedef enum {
@@ -30,7 +30,7 @@ typedef enum {
 	operand_rsp,            operand_rbp,            operand_r8,
 	operand_r9,             operand_r10,            operand_r11,
 	operand_r12,            operand_r13,            operand_r14,
-	operand_r15
+	operand_r15,
 } operand_64b_index;
 
 typedef enum {
@@ -39,7 +39,7 @@ typedef enum {
 	operand_esp,            operand_ebp,            operand_r8d,
 	operand_r9d,            operand_r10d,           operand_r11d,
 	operand_r12d,           operand_r13d,           operand_r14d,
-	operand_r15d
+	operand_r15d,
 } operand_32b_index;
 
 typedef enum {
@@ -48,7 +48,7 @@ typedef enum {
 	operand_sp,             operand_bp,             operand_r8w,
 	operand_r9w,            operand_r10w,           operand_r11w,
 	operand_r12w,           operand_r13w,           operand_r14w,
-	operand_r15w
+	operand_r15w,
 } operand_16b_index;
 
 typedef enum {
@@ -57,17 +57,20 @@ typedef enum {
 	operand_spl,            operand_bpl,            operand_r8b,
 	operand_r9b,            operand_r10b,           operand_r11b,
 	operand_r12b,           operand_r13b,           operand_r14b,
-	operand_r15b
+	operand_r15b,
 } operand_8b_index;
 
 typedef enum {
 	command_operation,      command_size,           command_operand_d,
-	command_operand_s
-	command_length
+	command_operand_s,
+	command_length,
 } command_index;
 
 typedef signed   int  form;
 typedef unsigned int  next;
 typedef unsigned char byte;
+
+
+void assemble_xor (size_index size, type_index type, form destination, form source);
 
 #endif

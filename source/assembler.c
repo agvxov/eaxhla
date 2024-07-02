@@ -9,8 +9,8 @@ static void byte_push (byte data) {
 	byte_count += 1;
 }
 
-static form lower (form data) { return ((data => 0) && (data <=  7)); }
-static form upper (form data) { return ((data => 8) && (data <= 15)); }
+static form lower (form data) { return ((data >= 0) && (data <=  7)); }
+static form upper (form data) { return ((data >= 8) && (data <= 15)); }
 
 static void format_prefix (size_index size,
                            type_index type,
@@ -62,10 +62,10 @@ static void format_modifier (size_index size,
 	byte_push (format);
 }
 
-static void assemble_xor (size_index size,
-                          type_index type,
-                          form       destination,
-                          form       source) {
+void assemble_xor (size_index size,
+                   type_index type,
+                   form       destination,
+                   form       source) {
 	if (size == size_256b) exit (EXIT_FAILURE);
 	if (size == size_128b) exit (EXIT_FAILURE);
 

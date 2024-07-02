@@ -1,0 +1,7 @@
+*.o
+*.out
+*.tab.*
+*.yy.*
+eaxhla
+eaxcc
+.gdb_history
