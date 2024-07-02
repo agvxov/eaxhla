@@ -1,10 +1,17 @@
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
 
+#include <stdlib.h>
+
 typedef enum {
 	size_256b,              size_128b,              size_64b,
 	size_32b,               size_16b,               size_8b
 } size_index;
+
+typedef enum {
+	type_register_register, type_register_variable, type_register_constant,
+	type_variable_register, type_variable_constant
+} type_index;
 
 typedef enum {
 	operation_move,         operation_add,          operation_subtract,
@@ -16,10 +23,6 @@ typedef enum {
 	operation_system,       operation_call,         operation_return,
 	operation_enter,        operation_leave,        operation_exit
 } operation_index;
-
-typedef enum {
-	operand_register,       operand_memory,         operand_immediate
-} operand_index;
 
 typedef enum {
 	operand_rax,            operand_rcx,            operand_rdx,
@@ -56,5 +59,22 @@ typedef enum {
 	operand_r12b,           operand_r13b,           operand_r14b,
 	operand_r15b
 } operand_8b_index;
+
+typedef enum {
+	command_operation,      command_size,           command_operand_d,
+	command_operand_s
+	command_length
+} command_index;
+
+typedef unsigned int  data;
+typedef unsigned char byte;
+
+static data   byte_count = 0;
+static byte * byte_array = NULL;
+
+static void assemble_xor (size_index size,
+                          type_index type,
+                          size_t     destination,
+                          size_t     source);
 
 #endif
