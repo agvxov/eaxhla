@@ -1,10 +1,11 @@
 .PHONY: clean test
 
+WRAP := valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all
+
 ifeq (${DEBUG}, 1)
   LFLAGS   += --debug --trace
   CFLAGS   += -O0 -ggdb -fno-inline
   CPPFLAGS += -DDEBUG
-  WRAP     := valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all
 else
   CFLAGS += -O3 -flto=auto -fno-stack-protector
 endif
@@ -45,7 +46,7 @@ ${OUT}: ${GENSOURCE} ${GENOBJECT} ${OBJECT}
 	${LINK.c} -o $@ ${OBJECT} ${GENOBJECT} ${LDLIBS}
 
 test: ${OUT}
-	./${OUT} debug/test.hla
+	${WRAP} ./${OUT} debug/test.hla
 
 clean:
 	-rm ${OUT} ${OBJECT} ${GENOBJECT} ${GENSOURCE}

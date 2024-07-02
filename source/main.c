@@ -5,7 +5,7 @@
 
 signed main(int argc, char * argv[]) {
     if (argc < 2) {
-        printf("%s <file>", argv[0]);
+        printf("%s: <file>\n", argv[0]);
     }
 
     yyin = fopen(argv[1], "r");
