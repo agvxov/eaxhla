@@ -1,18 +1,20 @@
 .PHONY: clean test
 
 ifeq (${DEBUG}, 1)
-  LFLAGS += --debug --trace
-  CFLAGS += -Wall -Wextra -Wpedantic 
-  CFLAGS += -DDEBUG -O0 -ggdb -fno-inline	
-  WRAP   := valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all 
+  LFLAGS   += --debug --trace
+  CFLAGS   += -O0 -ggdb -fno-inline
+  CPPFLAGS += -DDEBUG
+  WRAP     := valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all
 else
-  CFLAGS += -O3 -fno-stack-protector
+  CFLAGS += -O3 -flto=auto -fno-stack-protector
 endif
+
+CFLAGS += -Wall -Wextra -Wpedantic
 
 OUT := eaxhla
 
-SOURCE.d  := source/
-OBJECT.d  := object/
+SOURCE.d  := source
+OBJECT.d  := object
 
 SOURCE    := main.c assembler.c
 OBJECT    := $(addprefix ${OBJECT.d}/,${SOURCE})
@@ -22,7 +24,7 @@ GENSOURCE := eaxhla.yy.c eaxhla.tab.c
 GENSOURCE := $(addprefix ${OBJECT.d}/,${GENSOURCE})
 GENOBJECT := $(subst .c,.o,${GENSOURCE})
 
-CFLAGS += -I${OBJECT.d}/ -I${SOURCE.d}/
+CPPFLAGS  += -I${OBJECT.d} -I${SOURCE.d}
 
 ${OBJECT.d}/%.yy.c: ${SOURCE.d}/%.l
 	flex --header-file=object/$(basename $(notdir $<)).yy.h -o $@ $<
@@ -46,7 +48,6 @@ test: ${OUT}
 	./${OUT} debug/test.hla
 
 clean:
-	-rm ${OUT}
-	-rm ${OBJECT}
-	-rm ${GENOBJECT}
-	-rm ${GENSOURCE}
+	-rm ${OUT} ${OBJECT} ${GENOBJECT} ${GENSOURCE}
+
+.PHONY: test clean
