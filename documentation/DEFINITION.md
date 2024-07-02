@@ -16,14 +16,55 @@ file -> preprocessor -> hla -> exe
 2. bison creates partial syntax trees (since we dont optimize, we can render in relatively small chunks because not all that much context is needed)
 3. xolatile magic
 
-question:
-do we burn the instruction look up table into the parser or do we depend on look ups?
-the former is more work and way worse source, but slightly faster, but also gets awkward if we plan on supporting multiple arches without reimplementing
+## Types
+```
+<prefix><size>
+```
+
+prefixes:
++ s - signed
++ u - unsigned
 
 ## Syntax
 ### Macros
 + fuck macros
 + use a preprocessor
+### logic
++ only evaulated in _logical blocks_
+#### logical blocks
++ if
+#### operators
++ =
++ >
++ <
++ <=
++ >=
++ !=
++ not
++ and
++ or
++ xor
+
+### labels
+```C
+my_label:
+
+```
+
+### Come back to later
++ `register`
+
+### eh
+```C
+program examle
+begin
+    if a is 1 then
+        // ...
+    else
+        // ...
+    end if
+end program
+```
 
 ## LATER
 + DWARF2
