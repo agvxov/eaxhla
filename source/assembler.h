@@ -70,14 +70,4 @@ typedef signed   int  form;
 typedef unsigned int  next;
 typedef unsigned char byte;
 
-static next   byte_count = 0;
-static byte * byte_array = NULL;
-
-static void byte_push (byte data);
-
-static void assemble_xor (size_index size,
-                          type_index type,
-                          form       destination,
-                          form       source);
-
 #endif
