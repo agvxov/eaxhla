@@ -1,15 +1,15 @@
 # HLA
 
 ## General
-+ x64
-+ AGPLv3
++ x86_64
++ GPLv3-only
 
 ## Technologies
-+ Chad C
-+ flex/bison
++ Chad C, C99
++ Flex/Bison
 
 ## Train of making
-file -> preprocessor -> hla -> exe
+file -> preprocessor -> as -> link -> exe
 
 ### implementation
 1. flex parsing
@@ -53,10 +53,13 @@ my_label:
 
 ### Come back to later
 + `register`
++ `volatile`
++ `extern`
++ `static`
 
-### eh
+### Assembly Example
 ```C
-program examle
+program example
 begin
     if a is 1 then
         // ...
