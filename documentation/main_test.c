@@ -7,23 +7,12 @@
 int main (void) {
 	token_array = malloc (144UL * sizeof (* token_array));
 
-	assemble (OPERATION_ADD_F, SIZE_64B,
-	          TYPE_REGISTER, OPERAND_REGISTER_1,
-	          TYPE_REGISTER, OPERAND_REGISTER_2);
+	assemble (ADC, D64, REG, R1, REG, R2);
+	assemble (ADC, D32, REG, R1, MEM, 12);
+	assemble (ADC, D16, MEM, 12, REG, R0);
+	assemble (ADC, D8, REG, R3, IMM, 0X77);
 
-	assemble (OPERATION_ADD_F, SIZE_32B,
-	          TYPE_REGISTER, OPERAND_REGISTER_1,
-	          TYPE_VARIABLE, 12);
-
-	assemble (OPERATION_ADD_F, SIZE_16B,
-	          TYPE_VARIABLE, 12,
-	          TYPE_REGISTER, OPERAND_REGISTER_A);
-
-	assemble (OPERATION_ADD_F, SIZE_8B,
-	          TYPE_REGISTER, OPERAND_REGISTER_3,
-	          TYPE_CONSTANT, 0X77);
-
-	for (int index = 0; index < token_count; ++index) {
+	for (unsigned int index = 0; index < token_count; ++index) {
 		printf ("%02X \n", token_array [index]);
 	}
 
