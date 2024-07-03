@@ -29,6 +29,9 @@ prefixes:
 ### Macros
 + fuck macros
 + use a preprocessor
+### asm
++ no ',' argument deliteters
++ optional "[]" argument parenthesizing (?)
 ### logic
 + only evaulated in _logical blocks_
 #### logical blocks
