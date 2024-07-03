@@ -5,6 +5,8 @@
 #include "../source/assembler.c"
 
 int main (void) {
+	unsigned int index;
+
 	token_array = malloc (144UL * sizeof (* token_array));
 
 	assemble (ADC, D64, REG, R1, REG, R2);
@@ -12,7 +14,7 @@ int main (void) {
 	assemble (ADC, D16, MEM, 12, REG, R0);
 	assemble (ADC, D8, REG, R3, IMM, 0X77);
 
-	for (unsigned int index = 0; index < token_count; ++index) {
+	for (index = 0; index < token_count; ++index) {
 		printf ("%02X \n", token_array [index]);
 	}
 
@@ -20,12 +22,3 @@ int main (void) {
 
 	return (0);
 }
-
-//~xor rcx rdx
-//~48 31 D1
-//~WORKS AS EXPECTED!
-
-//~90 48 11 D1
-//~90 13 0D 14 10 00 00
-//~90 66 44 11 15 09 10 00 00
-//~90 80 D3 77

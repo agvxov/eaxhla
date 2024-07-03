@@ -1,8 +1,6 @@
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
 
-#include <stdlib.h>
-
 typedef enum {
 	D64,              D32,              D16,              D8,
 } size_index;
@@ -14,7 +12,7 @@ typedef enum {
 typedef enum {
 	ADD,              OR,               ADC,              SBB,
 	AND,              SUB,              XOR,              CMP,
-	MUL,              DIV,              IMUL,             IDIV,
+	UMUL,             UDIV,             IMUL,             IDIV,
 	INC,              DEC,              NOT,              NEG,
 	ENTER,            LEAVE,            CALL,             RET,
 	SYSENTER,         SYSEXIT,          SYSCALL,          SYSRET,
@@ -31,11 +29,12 @@ typedef enum {
 	REP,              REPE,             REPNE,            REPZ,
 	LOOP,             LOOPE,            LOOPNE,           PAUSE,
 	XADD,             XCHG,             LEA,              POPCNT,
-	INT,              BSF,              BSR,              BOUND,
+	INTI,             BSF,              BSR,              BOUND,
 	FADD,             FSUB,             FMUL,             FDIV,
 	FNOP,             FXAM,             FABS,             FSCALE,
 	FSIN,             FCOS,             FSQRT,            FCHS,
 	FXCH,             FREM,             FLDPI,            FLDZ,
+	CPUID,
 } operation_index;
 
 typedef enum {
