@@ -54,5 +54,3 @@ test: ${OUT}
 
 clean:
 	-rm ${OUT} ${OBJECT} ${GENOBJECT} ${GENSOURCE}
-
-.PHONY: test clean
