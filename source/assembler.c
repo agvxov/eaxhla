@@ -20,12 +20,13 @@ void format_short_prefix (void) {
 
 static inline
 void format_long_prefix (size_index size,
+                         type_index to,
                          form       destination,
+                         type_index from,
                          form       source) {
-	token_print (0X40                         +
-	             0X01 * (upper (destination)) +
-	             0X02 * 0                     + // UNDEFINED
-	             0X04 * (upper (source))      +
+	token_print (0X40                                                      +
+	             0X01 * ((to   == TYPE_REGISTER) && (upper (destination))) +
+	             0X04 * ((from == TYPE_REGISTER) && (upper (source)))      +
 	             0X08 * (size == SIZE_64B));
 }
 
@@ -58,7 +59,7 @@ void format_register_redirection (size_index size,
 static inline
 void format_constant (size_index size) {
 	token_print (0X80 +
-	             0X01 * (size == SIZE_8B));
+	             0X01 * (size != SIZE_8B));
 }
 
 static inline
@@ -88,6 +89,22 @@ void format_regular_instruction (byte       format,
 }
 
 static inline
+void assemble_enter (form dynamic_storage,
+                     form nesting_level) {
+	token_print (0XC8);
+	token_print ((dynamic_storage /   1) % 256); // FIX LATER
+	token_print ((dynamic_storage / 256) % 256);
+	token_print ((nesting_level   /   1) % 256);
+}
+
+static inline void assemble_leave          (void) { token_print (0XC9); }
+static inline void assemble_system_call    (void) { token_print (0X0F); token_print (0X05); }
+static inline void assemble_system_return  (void) { token_print (0X0F); token_print (0X07); }
+static inline void assemble_system_enter   (void) { token_print (0X0F); token_print (0X34); }
+static inline void assemble_system_exit    (void) { token_print (0X0F); token_print (0X35); }
+static inline void assemble_cpu_identifier (void) { token_print (0X0F); token_print (0XA2); }
+
+static inline
 void assemble (operation_index operation,
                size_index      size,
                type_index      to,
@@ -103,7 +120,7 @@ void assemble (operation_index operation,
 	if ((size == SIZE_64B)
 	|| ((to   == TYPE_REGISTER) && (upper (destination)))
 	|| ((from == TYPE_REGISTER) && (upper (source)))) {
-		format_long_prefix (size, destination, source);
+		format_long_prefix (size, to, destination, from, source);
 	}
 
 	if (from == TYPE_CONSTANT) {

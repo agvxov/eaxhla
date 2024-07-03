@@ -21,6 +21,7 @@ typedef enum {
 	OPERATION_IF,           OPERATION_INCREMENT,    OPERATION_DECREMENT,
 	OPERATION_SYSTEM,       OPERATION_CALL,         OPERATION_RETURN,
 	OPERATION_ENTER,        OPERATION_LEAVE,        OPERATION_EXIT,
+	OPERATION_ADD_F,        OPERATION_SUBTRACT_F,
 } operation_index;
 
 typedef enum {
@@ -35,7 +36,5 @@ typedef enum {
 typedef signed   int  form;
 typedef unsigned int  next;
 typedef unsigned char byte;
-
-// size, operation, type, operand/form, type, operand/form
 
 #endif
