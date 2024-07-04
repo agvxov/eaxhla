@@ -212,21 +212,24 @@ entry $
 	nop
 
 	nop
-	adc rcx, rdx; 48 31 D1
+	adc rcx, rdx;
 	nop
-	adc ecx, [x4]; 33 0D 14 10 00 00
+	adc ecx, [x4];
 	nop
-	adc [x2], r10w; 66 44 31 15 09 10 00 00
+	adc [x2], r10w;
 	nop
-	adc bl, 077h; 80 F3 77
-	;~assemble (ADC, D64, REG, R1, REG, R2);
-	;~assemble (ADC, D32, REG, R1, MEM, 12);
-	;~assemble (ADC, D16, MEM, 12, REG, R10);
-	;~assemble (ADC, D8,  REG, R3, IMM, 0X77);
+	adc bl, 077h;
+	nop
+	inc ax
+	nop
+	lock
+
 ;~48 11 D1
-;~13 0D 14 10 00 00
-;~66 44 11 15 09 10 00 00
+;~13 0D 1B 10 00 00
+;~66 44 11 15 10 10 00 00
 ;~80 D3 77
+;~66 FF C0
+
 ;~48
 ;~11
 ;~D1
@@ -238,7 +241,122 @@ entry $
 ;~15
 ;~80
 ;~D3
+;~66
+;~FF
+;~C0
+;~F0
 
+; 48 11 D1
+; 13 0D 1D 10 00 00
+; 66 44 11 15 12 10 00 00
+; 80 D3 77
+; 66 FF C0
+
+	;~nop
+	;~nop
+	;~nop
+
+	;~nop
+	;~jmp qword[x4]
+	;~nop
+	;~jmp qword[x8]
+	;~nop
+	;~jmp rax
+	;~nop
+	;~jmp rcx
+	;~nop
+	;~jmp rdx
+	;~nop
+	;~jmp rbx
+	;~nop
+	;~jmp r8
+	;~nop
+	;~jmp r9
+
+	;~nop
+	;~nop
+	;~nop
+
+	;~nop
+	;~inc rax
+	;~nop
+	;~inc eax
+	;~nop
+	;~inc ax
+	;~nop
+	;~inc al
+	;~nop
+	;~inc qword[x8]
+	;~nop
+	;~inc dword[x4]
+	;~nop
+	;~inc word[x2]
+	;~nop
+	;~inc byte[x1]
+
+	;~nop
+	;~nop
+	;~nop
+
+	;~nop
+	;~idiv rax
+	;~nop
+	;~idiv eax
+	;~nop
+	;~idiv ax
+	;~nop
+	;~idiv al
+	;~nop
+	;~idiv qword[x8]
+	;~nop
+	;~idiv dword[x4]
+	;~nop
+	;~idiv word[x2]
+	;~nop
+	;~idiv byte[x1]
+
+	;~nop
+	;~nop
+	;~nop
+
+	;~nop
+	;~inc word[x2]
+	;~nop
+	;~dec word[x2]
+	;~nop
+	;~not word[x2]
+	;~nop
+	;~neg word[x2]
+	;~nop
+	;~mul word[x2]
+	;~nop
+	;~imul word[x2]
+	;~nop
+	;~div word[x2]
+	;~nop
+	;~idiv word[x2]
+
+	;~nop
+	;~inc ax
+	;~nop
+	;~dec cx
+	;~nop
+	;~not dx
+	;~nop
+	;~neg bx
+	;~nop
+	;~mul cx
+	;~nop
+	;~imul cx
+	;~nop
+	;~div cx
+	;~nop
+	;~idiv cx
+
+	nop
+
+	nop
+	nop
 	nop
 
 	nop

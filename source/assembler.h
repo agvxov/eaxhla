@@ -1,6 +1,10 @@
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
 
+typedef signed   int  form;
+typedef unsigned int  next;
+typedef unsigned char byte;
+
 typedef enum {
 	D64,              D32,              D16,              D8,
 } size_index;
@@ -12,8 +16,8 @@ typedef enum {
 typedef enum {
 	ADD,              OR,               ADC,              SBB,
 	AND,              SUB,              XOR,              CMP,
-	UMUL,             UDIV,             IMUL,             IDIV,
 	INC,              DEC,              NOT,              NEG,
+	UMUL,             IMUL,             UDIV,             IDIV,
 	NOP,              RETN,             RETF,             LEAVE,
 	LOCK,             HLT,
 	SYSENTER,         SYSEXIT,          SYSCALL,          SYSRET,
@@ -44,5 +48,10 @@ typedef enum {
 	R8,               R9,               R10,              R11,
 	R12,              R13,              R14,              R15,
 } operand_index;
+
+extern next   token_count;
+extern byte * token_array;
+
+extern void assemble (next count, next * array);
 
 #endif
