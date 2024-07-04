@@ -1,40 +1,48 @@
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
 
-#include <stdlib.h>
-
 typedef enum {
-	SIZE_256B,              SIZE_128B,              SIZE_64B,
-	SIZE_32B,               SIZE_16B,               SIZE_8B,
+	D64,              D32,              D16,              D8,
 } size_index;
 
 typedef enum {
-	TYPE_REGISTER,          TYPE_VARIABLE,          TYPE_CONSTANT,
+	NIL,              REG,              MEM,              IMM,
 } type_index;
 
 typedef enum {
-	OPERATION_MOVE,         OPERATION_ADD,          OPERATION_SUBTRACT,
-	OPERATION_MULTIPLY,     OPERATION_DIVIDE,       OPERATION_MODULUS,
-	OPERATION_COMPARE,      OPERATION_JUMP,         OPERATION_XOR,
-	OPERATION_AND,          OPERATION_OR,           OPERATION_NOT,
-	OPERATION_IS,           OPERATION_ABOVE,        OPERATION_BELOW,
-	OPERATION_IF,           OPERATION_INCREMENT,    OPERATION_DECREMENT,
-	OPERATION_SYSTEM,       OPERATION_CALL,         OPERATION_RETURN,
-	OPERATION_ENTER,        OPERATION_LEAVE,        OPERATION_EXIT,
-	OPERATION_ADD_F,        OPERATION_SUBTRACT_F,
+	ADD,              OR,               ADC,              SBB,
+	AND,              SUB,              XOR,              CMP,
+	UMUL,             UDIV,             IMUL,             IDIV,
+	INC,              DEC,              NOT,              NEG,
+	NOP,              RETN,             RETF,             LEAVE,
+	LOCK,             HLT,
+	SYSENTER,         SYSEXIT,          SYSCALL,          SYSRET,
+	PAUSE,            CPUID,
+	ENTER,            CALL,             IN,               OUT,
+	JMP,              JPE,              JS,               JPO,
+	JE,               JNE,              JZ,               JNZ,
+	JA,               JNA,              JB,               JNB,
+	MOV,              CMOVPE,           CMOVS,            CMOVPO,
+	CMOVE,            CMOVNE,           CMOVZ,            CMOVNZ,
+	CMOVA,            CMOVNA,           CMOVB,            CMOVNB,
+	PUSH,             POP,              BSWAP,            TEST,
+	RCL,              RCR,              ROL,              ROR,
+	SHL,              SHR,              SAL,              SAR,
+	REP,              REPE,             REPNE,            REPZ,
+	LOOP,             LOOPE,            LOOPNE,           MOVBE,
+	XADD,             XCHG,             LEA,              POPCNT,
+	INTI,             BSF,              BSR,              BOUND,
+	FADD,             FSUB,             FMUL,             FDIV,
+	FNOP,             FXAM,             FABS,             FSCALE,
+	FSIN,             FCOS,             FSQRT,            FCHS,
+	FXCH,             FREM,             FLDPI,            FLDZ,
 } operation_index;
 
 typedef enum {
-	OPERAND_REGISTER_0,     OPERAND_REGISTER_1,     OPERAND_REGISTER_2,
-	OPERAND_REGISTER_3,     OPERAND_REGISTER_4,     OPERAND_REGISTER_5,
-	OPERAND_REGISTER_6,     OPERAND_REGISTER_7,     OPERAND_REGISTER_8,
-	OPERAND_REGISTER_9,     OPERAND_REGISTER_A,     OPERAND_REGISTER_B,
-	OPERAND_REGISTER_C,     OPERAND_REGISTER_D,     OPERAND_REGISTER_E,
-	OPERAND_REGISTER_F,     OPERAND_REFERENCE,      OPERAND_DEREFERENCE,
+	R0,               R1,               R2,               R3,
+	R4,               R5,               R6,               R7,
+	R8,               R9,               R10,              R11,
+	R12,              R13,              R14,              R15,
 } operand_index;
-
-typedef signed   int  form;
-typedef unsigned int  next;
-typedef unsigned char byte;
 
 #endif

@@ -5,38 +5,22 @@
 #include "../source/assembler.c"
 
 int main (void) {
-	token_array = malloc (144UL * sizeof (* token_array));
+	unsigned int index;
 
-	assemble (OPERATION_ADD_F, SIZE_64B,
-	          TYPE_REGISTER, OPERAND_REGISTER_1,
-	          TYPE_REGISTER, OPERAND_REGISTER_2);
+	output_array = malloc (144UL * sizeof (* output_array));
 
-	assemble (OPERATION_ADD_F, SIZE_32B,
-	          TYPE_REGISTER, OPERAND_REGISTER_1,
-	          TYPE_VARIABLE, 12);
+	build_regular (ADC, D64, REG, R1, REG, R2);
+	build_regular (ADC, D32, REG, R1, MEM, 12);
+	build_regular (ADC, D16, MEM, 12, REG, R10);
+	build_regular (ADC, D8, REG, R3, IMM, 0X77);
+	build_special_1 (LOCK);
+	build_special_2 (PAUSE);
 
-	assemble (OPERATION_ADD_F, SIZE_16B,
-	          TYPE_VARIABLE, 12,
-	          TYPE_REGISTER, OPERAND_REGISTER_A);
-
-	assemble (OPERATION_ADD_F, SIZE_8B,
-	          TYPE_REGISTER, OPERAND_REGISTER_3,
-	          TYPE_CONSTANT, 0X77);
-
-	for (int index = 0; index < token_count; ++index) {
-		printf ("%02X \n", token_array [index]);
+	for (index = 0; index < output_count; ++index) {
+		printf ("%02X \n", output_array [index]);
 	}
 
-	free (token_array);
+	free (output_array);
 
 	return (0);
 }
-
-//~xor rcx rdx
-//~48 31 D1
-//~WORKS AS EXPECTED!
-
-//~90 48 11 D1
-//~90 13 0D 14 10 00 00
-//~90 66 44 11 15 09 10 00 00
-//~90 80 D3 77
