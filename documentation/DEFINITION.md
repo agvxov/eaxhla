@@ -8,8 +8,11 @@
 + Chad C, C99
 + Flex/Bison
 
-## Train of making
+## Train of translation
 file -> preprocessor -> as -> link -> exe
+
+NOTE: the compiler front-end should be able to handle the preprocessing someway,
+       but we are not making our own preprocessor. use Frexx or m4
 
 ### implementation
 1. flex parsing
@@ -25,17 +28,30 @@ prefixes:
 + s - signed
 + u - unsigned
 
+sizes:
++ 8
++ 16
++ 32
++ 64
+
 ## Syntax
 ### Macros
 + fuck macros
 + use a preprocessor
-### asm
+### Asm
 + no ',' argument deliteters
-+ optional "[]" argument parenthesizing (?)
-### logic
++ optional "[]" argument parenthesizing
+### Machine code
+```
+machine
+    // literal values
+end machine
+```
+All literal values (string or numeric) is copied as machine code
+### Logic
 + only evaulated in _logical blocks_
 #### logical blocks
-+ if
++ if-then-else-end-if
 #### operators
 + =
 + >
@@ -47,11 +63,22 @@ prefixes:
 + and
 + or
 + xor
+### Functions
+```
+<qualifyiers>
+<type> <name>
+    <declarations>
+begin
+    <code>
+end <type>
+```
 
+qualifier:
++ fast -> use the fastcall calling convention
++ ? stack -> place all arguments on the stack
 ### labels
 ```C
 my_label:
-
 ```
 
 ### Come back to later
@@ -59,18 +86,6 @@ my_label:
 + `volatile`
 + `extern`
 + `static`
-
-### Assembly Example
-```C
-program example
-begin
-    if a is 1 then
-        // ...
-    else
-        // ...
-    end if
-end program
-```
 
 ## LATER
 + DWARF2

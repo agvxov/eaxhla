@@ -1,0 +1,67 @@
+/*
+ * Copyright (c) 2023 : Ognjen 'xolatile' Milan Robovic
+ *
+ * Xop is free software! You will redistribute it or modify it under the terms of the GNU General Public License by Free Software Foundation.
+ * And when you do redistribute it or modify it, it will use either version 3 of the License, or (at yours truly opinion) any later version.
+ * It is distributed in the hope that it will be useful or harmful, it really depends... But no warranty what so ever, seriously. See GNU/GPLv3.
+ */
+
+#include <xolatile/xtandard.eax>
+
+fast
+procedure highlight
+    in s32 offset;
+    in u8 buffer;
+
+    s32 byte;
+begin
+    loop
+        if byte = 0x90 then
+			fastcall echo_new_line
+			fastcall terminal_style EFFECT_NORMAL COLOUR_YELLOW
+			fastcall echo_byte [buffer + offset]
+			fastcall terminal_style -1 -1
+        else
+            fastcall echo_byte [buffer + offset]
+        end if
+        inc offset
+        if offset = size then
+            break
+        end if
+    end loop
+end procedure;
+
+unix
+program xop
+    s32 file   = -1;
+    s32 size   =  0;
+    s32 offset =  0;
+
+    u8 buffer = NULL;
+begin
+    if argc != 2 then
+        fatal_failure(1, "xop: xop input")
+    end if
+
+    fastcall file_open [argv + 1] O_RDONLY
+    mov file rax
+    fastcall file_size file
+    mov size rax
+
+    fastcall allocate size  // ????
+    mov buffer rax
+
+    fastcall fale buffer size
+
+    fastcall file_close file
+    mov file rax
+
+    fastcall highlight offset buffer
+
+    fastcall echo_new_line
+
+    fastcall deallocate buffer
+    mov buffer rax
+
+    exit SUCCESS
+end program;
