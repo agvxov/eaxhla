@@ -7,18 +7,18 @@
 int main (void) {
 	unsigned int index;
 
-	token_array = malloc (144UL * sizeof (* token_array));
+	output_array = malloc (144UL * sizeof (* output_array));
 
 	assemble (ADC, D64, REG, R1, REG, R2);
 	assemble (ADC, D32, REG, R1, MEM, 12);
-	assemble (ADC, D16, MEM, 12, REG, R0);
+	assemble (ADC, D16, MEM, 12, REG, R10);
 	assemble (ADC, D8, REG, R3, IMM, 0X77);
 
-	for (index = 0; index < token_count; ++index) {
-		printf ("%02X \n", token_array [index]);
+	for (index = 0; index < output_count; ++index) {
+		printf ("%02X \n", output_array [index]);
 	}
 
-	free (token_array);
+	free (output_array);
 
 	return (0);
 }

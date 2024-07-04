@@ -154,19 +154,6 @@ entry $
 	nop
 
 	nop
-	adc rcx, rdx; 48 31 D1
-	nop
-	adc ecx, [x4]; 33 0D 14 10 00 00
-	nop
-	adc [x2], r10w; 66 44 31 15 09 10 00 00
-	nop
-	adc bl, 077h; 80 F3 77
-
-	nop
-	nop
-	nop
-
-	nop
 	enter 2, 2
 	nop
 	leave
@@ -180,6 +167,77 @@ entry $
 	sysexit
 	nop
 	cpuid
+	nop
+	movbe rax, [x8]
+	nop
+	movbe rcx, [x8]
+	nop
+	movsq
+	nop
+	neg rax
+	nop
+	neg dword[x4]
+
+	nop
+	nop
+	nop
+
+	nop
+	inc byte[x1]
+	nop
+	inc word[x2]
+	nop
+	inc dword[x4]
+	nop
+	inc qword[x8]
+	nop
+	inc cl
+	nop
+	inc cx
+	nop
+	inc ecx
+	nop
+	inc rcx
+	nop
+	inc r9b
+	nop
+	inc r9w
+	nop
+	inc r9d
+	nop
+	inc r9
+
+	nop
+	nop
+	nop
+
+	nop
+	adc rcx, rdx; 48 31 D1
+	nop
+	adc ecx, [x4]; 33 0D 14 10 00 00
+	nop
+	adc [x2], r10w; 66 44 31 15 09 10 00 00
+	nop
+	adc bl, 077h; 80 F3 77
+	;~assemble (ADC, D64, REG, R1, REG, R2);
+	;~assemble (ADC, D32, REG, R1, MEM, 12);
+	;~assemble (ADC, D16, MEM, 12, REG, R10);
+	;~assemble (ADC, D8,  REG, R3, IMM, 0X77);
+;~48 11 D1
+;~13 0D 14 10 00 00
+;~66 44 11 15 09 10 00 00
+;~80 D3 77
+;~48
+;~11
+;~D1
+;~13
+;~0D
+;~66
+;~44
+;~11
+;~15
+;~80
+;~D3
 
 	nop
 

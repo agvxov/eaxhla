@@ -34,7 +34,7 @@ typedef enum {
 	FNOP,             FXAM,             FABS,             FSCALE,
 	FSIN,             FCOS,             FSQRT,            FCHS,
 	FXCH,             FREM,             FLDPI,            FLDZ,
-	CPUID,
+	CPUID,            MOVBE,
 } operation_index;
 
 typedef enum {
