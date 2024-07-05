@@ -43,7 +43,10 @@ procedure{wsnl}+           { return PROCEDURE; }
 loop{wsnl}+                { return TLOOP; }
 if{wsnl}+                  { return IF; }
 then{wsnl}+                { return THEN; }
+machine{wsnl}+             { return MACHINE; }
+
 break{wsnl}+               { return BREAK; }
+exit{wsnl}+                { return EXIT;  }
 
 end { BEGIN IN_END; }
 
@@ -52,6 +55,7 @@ program        { BEGIN INITIAL; return END_PROGRAM; }
 procedure      { BEGIN INITIAL; return END_PROCEDURE; }
 loop           { BEGIN INITIAL; return END_LOOP; }
 if             { BEGIN INITIAL; return END_IF; }
+machine        { BEGIN INITIAL; return END_MACHINE; }
 {wsnl}         { ; }
 .              { yyerror(); }
 }
@@ -59,16 +63,36 @@ if             { BEGIN INITIAL; return END_IF; }
 fast{wsnl}+    { return FAST; }
 unix{wsnl}+    { return UNIX; }
 
-\$rax{wsnl}+   { return RAX; }
-\$rbx{wsnl}+   { return RBX; }
-\$rcx{wsnl}+   { return RCX; }
-\$rdx{wsnl}+   { return RDX; }
-\$rbp{wsnl}+   { return RBP; }
-\$rsp{wsnl}+   { return RSP; }
-\$rip{wsnl}+   { return RIP; }
+\$rax{wsnl}+   { return RAX;    }
+\$rbx{wsnl}+   { return RBX;    }
+\$rcx{wsnl}+   { return RCX;    }
+\$rdx{wsnl}+   { return RDX;    }
+\$rbp{wsnl}+   { return RBP;    }
+\$rsp{wsnl}+   { return RSP;    }
+\$rip{wsnl}+   { return RIP;    }
+\$rsi{wsnl}+   { return RSI;    }
+\$rdi{wsnl}+   { return RDI;    }
+\$r8{wsnl}+    { return RG8;    }
+\$r9{wsnl}+    { return RG9;    }
+\$r10{wsnl}+   { return RG10;   }
+\$r11{wsnl}+   { return RG11;   }
+\$r12{wsnl}+   { return RG12;   }
+\$r13{wsnl}+   { return RG13;   }
+\$r14{wsnl}+   { return RG14;   }
+\$xmm0{wsnl}+  { return RGXMM0; }
+\$xmm1{wsnl}+  { return RGXMM1; }
+\$xmm2{wsnl}+  { return RGXMM2; }
+\$xmm3{wsnl}+  { return RGXMM3; }
+\$xmm4{wsnl}+  { return RGXMM4; }
+\$xmm5{wsnl}+  { return RGXMM5; }
+\$xmm6{wsnl}+  { return RGXMM6; }
+\$xmm7{wsnl}+  { return RGXMM7; }
 
 in{wsnl}+  { return TIN; }
 \=         { return '='; }
+
+\!\=       { return NEQ; }
+\!         { return TNOT; }
 
 s8{wsnl}+  { return  S8; }
 s16{wsnl}+ { return S16; }

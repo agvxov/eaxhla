@@ -16,8 +16,7 @@ procedure highlight
     s32 byte
 begin
     loop
-        if
-        /* byte = 0x90 */
+        if byte = 0x90
         then
 			fastcall echo_new_line
 			fastcall terminal_style EFFECT_NORMAL COLOUR_YELLOW
@@ -27,8 +26,7 @@ begin
             fastcall echo_byte [buffer + offset]
         end if
         inc offset
-        if
-        /* offset = size */
+        if offset = size
         then
             break
         end if
@@ -43,8 +41,7 @@ program xop
 
     u8 buffer = 0
 begin
-    if
-    /* argc != 2 */
+    if ! argc = 2
     then
         fastcall fatal_failure 1 "xop: xop input"
     end if
@@ -69,5 +66,9 @@ begin
     fastcall deallocate buffer
     mov buffer rax
 
-    exit SUCCESS
+    machine
+        0x90
+    end machine
+
+    exit 0
 end program
