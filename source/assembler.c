@@ -59,41 +59,45 @@ static void build_long_prefix (form use_big_registers,
 }
 
 static void build_register_direction (form when,
-                                      form destination,
-                                      form source) { /* LENGTH */
-	place (when, (byte) (0XC0 + 0X01 * (destination % 8) + 0X08 * (source % 8)));
+                                      next destination,
+                                      next source) {
+	place (when, (byte) (0XC0
+	     + 0X01 * (destination % 8)
+	     + 0X08 * (source      % 8)));
 }
 
 static void build_register_redirection (form when,
-                                        form direction) {
-	place (when, (byte) (0X05 + 0X08 * (direction % 8)));
+                                        next direction) {
+	place (when, (byte) (0X05
+	     + 0X08 * (direction % 8)));
 }
 
 static void build_constant (form       when,
                             size_index size) {
-	place (when, (byte) (0X80 + 0X01 * (size != D8)));
+	place (when, (byte) (0X80
+	     + 0X01 * (size != D8)));
 }
 
 static void build_regular (operation_index operation,
                            size_index      size,
                            type_index      to,
-                           form            destination,
+                           next            destination,
                            type_index      from,
-                           form            source) {
+                           next            source) {
 	build_short_prefix (size == D16);
 
 	build_long_prefix (size == D64,
 	                  (to   == REG) && (upper (destination)),
-	                  (from == REG) && (upper (source))); //////////////////
+	                  (from == REG) && (upper (source)));
 
 	build_constant (from == IMM, size);
 
 	place (1, (byte) (0X08 * (operation - REGULAR_BEGIN)
-	      + destination % 8 * ((to == REG) && (from == IMM))
-	      + 0X01 *  (size != D8)
-	      + 0X02 * ((from == MEM) && (to == REG))///////////////////////////
-	      + 0X04 * ((from == IMM) && (to == MEM))///////////////////////////
-	      + 0XC0 * ((from == IMM) && (to == REG))));////////////////////////
+	     + destination % 8 * ((to == REG) && (from == IMM))
+	     + 0X01 *  (size != D8)
+	     + 0X02 * ((from == MEM) && (to == REG))
+	     + 0X04 * ((from == IMM) && (to == MEM))
+	     + 0XC0 * ((from == IMM) && (to == REG))));
 
 	build_register_direction ((to == REG) && (from == REG),
 	                          destination, source);
@@ -105,22 +109,22 @@ static void build_regular (operation_index operation,
 static void build_irregular (operation_index operation,
                              size_index      size,
                              type_index      to,
-                             form            destination) {
+                             next            destination) {
 	build_short_prefix (size == D16);
 
 	build_long_prefix (size == D64,
 	                  (to == REG) && (upper (destination)), 0);
 
 	place (1, (byte) (0XF6
-	      + 0X08 * ((operation == INC) || (operation == DEC))
-	      + 0X01 * (size != D8)));
+	     + 0X08 * ((operation == INC) || (operation == DEC))
+	     + 0X01 * (size != D8)));
 
 	place (to == REG, (byte) (0XC0
-	      + 0X08 * (operation - IRREGULAR_BEGIN))
-	      + 0X01 * (destination % 8));
+	     + 0X08 * (operation - IRREGULAR_BEGIN))
+	     + 0X01 * (destination % 8));
 
 	place (to == MEM, (byte) (0X05
-	      + 0X08 * (operation - IRREGULAR_BEGIN)));
+	     + 0X08 * (operation - IRREGULAR_BEGIN)));
 }
 
 static void build_special_1 (operation_index operation) {
@@ -151,13 +155,13 @@ void assemble (next count, next * array) {
 		if ((array [index] >= REGULAR_BEGIN)
 		&&  (array [index] <= REGULAR_END)) {
 			build_regular (array [index + 0], array [index + 1],
-			               array [index + 2], (form) array [index + 3],
-			               array [index + 4], (form) array [index + 5]);
+			               array [index + 2], array [index + 3],
+			               array [index + 4], array [index + 5]);
 			index += 5;
 		} else if ((array [index] >= IRREGULAR_BEGIN)
 		       &&  (array [index] <= IRREGULAR_END)) {
 			build_irregular (array [index + 0], array [index + 1],
-			                 array [index + 2], (form) array [index + 3]);
+			                 array [index + 2], array [index + 3]);
 			index += 3;
 		} else if ((array [index] >= SPECIAL_1_BEGIN)
 		       &&  (array [index] <= SPECIAL_1_END)) {
