@@ -24,10 +24,7 @@ uhex       [0123456789ABCDEF]
 %x IN_COMMENT IN_MULTILINE_COMMENT
 %x IN_STRING
 %x IN_END
-
-    // XXX: ?!
-%x IN_DECLARE
-%x IN_UGH
+%x IN_ARTIMETRIC_BLOCK
 
 %option nodefault
 %option yylineno
@@ -49,16 +46,6 @@ break{wsnl}+               { return BREAK; }
 exit{wsnl}+                { return EXIT;  }
 
 end { BEGIN IN_END; }
-
-<IN_END>{
-program        { BEGIN INITIAL; return END_PROGRAM; }
-procedure      { BEGIN INITIAL; return END_PROCEDURE; }
-loop           { BEGIN INITIAL; return END_LOOP; }
-if             { BEGIN INITIAL; return END_IF; }
-machine        { BEGIN INITIAL; return END_MACHINE; }
-{wsnl}         { ; }
-.              { yyerror(); }
-}
 
 fast{wsnl}+    { return FAST; }
 unix{wsnl}+    { return UNIX; }
@@ -103,27 +90,29 @@ u16{wsnl}+ { return U16; }
 u32{wsnl}+ { return U32; }
 u64{wsnl}+ { return U64; }
 
--?[[:digit:]]+  {
-                    yylval.intval = strtol(yytext, NULL, 10);
-                    return LITERAL;
-}
-
-0b[01]+             {
-                        yylval.intval = strtol(yytext, NULL, 2);
-                        return LITERAL;
-                    }
-
-0x{hex}+  {
-              yylval.intval = strtol(yytext + 2, NULL, 16);
-              return LITERAL;
-          }
-
-0x{uhex}+ {
-              yylval.intval = strtol(yytext + 2, NULL, 16);
-              return LITERAL;
-          }
-
 \"  { BEGIN IN_STRING; }
+
+xor{wsnl}+     { return TXOR; }
+inc{wsnl}+     { return TINC; }
+
+fastcall{wsnl}+ { return FASTCALL; }
+
+\/\/    { BEGIN IN_COMMENT; }
+\/\*    { BEGIN IN_MULTILINE_COMMENT; }
+
+\[      { return '['; }
+\]      { return ']'; }
+\+|\-|\*|\/|\%|\^ { return yytext[0]; }
+
+<IN_END>{
+program        { BEGIN INITIAL; return END_PROGRAM; }
+procedure      { BEGIN INITIAL; return END_PROCEDURE; }
+loop           { BEGIN INITIAL; return END_LOOP; }
+if             { BEGIN INITIAL; return END_IF; }
+machine        { BEGIN INITIAL; return END_MACHINE; }
+{wsnl}         { ; }
+.              { yyerror(); }
+}
 
 <IN_STRING>{
     /* XXX: escapes */
@@ -144,14 +133,6 @@ u64{wsnl}+ { return U64; }
     }
 }
 
-xor{wsnl}+     { return TXOR; }
-inc{wsnl}+     { return TINC; }
-
-fastcall{wsnl}+ { return FASTCALL; }
-
-\/\/    { BEGIN IN_COMMENT; }
-\/\*    { BEGIN IN_MULTILINE_COMMENT; }
-
 <IN_COMMENT>{
 \n      { BEGIN INITIAL; }
 .*      { ; }
@@ -162,12 +143,26 @@ fastcall{wsnl}+ { return FASTCALL; }
 .|\n    { ; }
 }
 
-\[      { BEGIN IN_UGH; }
+<INITIAL,IN_ARTIMETRIC_BLOCK>{
+-?[[:digit:]]+  {
+                    yylval.intval = strtol(yytext, NULL, 10);
+                    return LITERAL;
+}
 
-<IN_UGH>{
-\]      { BEGIN INITIAL; yylval.strval = strdup(yytext); return IDENTIFIER; }
-    /* XXX! */
-.|\n    { ; }
+0b[01]+   {
+              yylval.intval = strtol(yytext, NULL, 2);
+              return LITERAL;
+          }
+
+0x{hex}+  {
+              yylval.intval = strtol(yytext + 2, NULL, 16);
+              return LITERAL;
+          }
+
+0x{uhex}+ {
+              yylval.intval = strtol(yytext + 2, NULL, 16);
+              return LITERAL;
+          }
 }
 
 {identifier} { yylval.strval = strdup(yytext); return IDENTIFIER; }
@@ -175,14 +170,6 @@ fastcall{wsnl}+ { return FASTCALL; }
 . { yyerror(); }
 
 %%
-
-void set_state(int state) {
-    switch (state) {
-        case STATE_DECLARE: {
-            BEGIN IN_DECLARE;
-        } break;
-    }
-}
 
 void yyfree_leftovers(void) {
     if (yyin) {

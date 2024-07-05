@@ -18,6 +18,7 @@ endif
 
 CFLAGS   += -Wall -Wextra -Wpedantic
 CPPFLAGS += -Ilibrary/tommyds
+LDFLAGS  += -lm
 
 OUT := eaxhla
 

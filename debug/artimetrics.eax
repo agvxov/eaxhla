@@ -1,0 +1,6 @@
+procedure test
+    u8 a = [8 + 8]
+    u8 b = [2 ^ 8]
+    u8 c = [2 ^ 8 + [2 * 3]]
+begin
+end procedure

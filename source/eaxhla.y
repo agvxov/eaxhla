@@ -20,6 +20,7 @@
 
 %{
     #include <stdio.h>
+    #include <math.h>
 
     #include "eaxhla.yy.h"
     #include "assembler.h"
@@ -30,8 +31,6 @@
         printf("\033[31mError: syntax error at line %d near '%s'.\033[0m\n", yylineno, yytext);
         yyfree_leftovers();
     }
-
-    extern void set_state(int state);
 
     long new_static(int size) {
         (void)size;
@@ -63,6 +62,8 @@
 
 %token<strval> IDENTIFIER
 
+%type<intval>  immediate
+%type<intval>  artimetric_block artimetric_expression artimetric_operand
 %token<intval> LITERAL
 %token<strval> STRING_LITERAL
 
@@ -123,7 +124,7 @@ declaration_section: %empty
     ;
 
 declaration: origin type IDENTIFIER { $2.name = $3; /* add_var($1); */ free($3); }
-    | origin type IDENTIFIER '=' LITERAL { $2.name = $3; /* add_var($1); */ free($3); }
+    | origin type IDENTIFIER '=' immediate { $2.name = $3; /* add_var($1); */ free($3); }
     | origin type IDENTIFIER '=' STRING_LITERAL { $2.name = $3; /* add_var($1); */ free($3); free($5); }
     ;
 
@@ -231,6 +232,24 @@ register: RAX    { $$ = R0;    }
     ;
 
 immediate: LITERAL
+    | artimetric_block
+    ;
+
+artimetric_block: '[' artimetric_expression ']' { $$ = $2; }
+    ;
+
+artimetric_expression: %empty { yyerror(); }
+    | artimetric_operand
+    | artimetric_expression '+' artimetric_operand { $$ = $1 + $3; }
+    | artimetric_expression '-' artimetric_operand { $$ = $1 - $3; }
+    | artimetric_expression '*' artimetric_operand { $$ = $1 * $3; }
+    | artimetric_expression '/' artimetric_operand { $$ = $1 / $3; }
+    | artimetric_expression '%' artimetric_operand { $$ = $1 % $3; }
+    | artimetric_expression '^' artimetric_operand { $$ = pow($1, $3); }
+    ;
+
+artimetric_operand: immediate
+    | IDENTIFIER { $$ = 0; /*XXX*/ }
     ;
 
 exit: EXIT immediate
