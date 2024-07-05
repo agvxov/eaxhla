@@ -15,19 +15,30 @@ typedef enum {
 typedef enum {
 	ADD,              OR,               ADC,              SBB,
 	AND,              SUB,              XOR,              CMP,
+	/**/
 	INC,              DEC,              NOT,              NEG,
 	UMUL,             IMUL,             UDIV,             IDIV,
+	/**/
 	NOP,              RETN,             RETF,             LEAVE,
 	LOCK,             HLT,
+	/**/
 	SYSENTER,         SYSEXIT,          SYSCALL,          SYSRET,
 	PAUSE,            CPUID,
+	/**/
 	ENTER,            CALL,             IN,               OUT,
-	JMP,              JPE,              JS,               JPO,
-	JE,               JNE,              JZ,               JNZ,
-	JA,               JNA,              JB,               JNB,
-	MOV,              CMOVPE,           CMOVS,            CMOVPO,
-	CMOVE,            CMOVNE,           CMOVZ,            CMOVNZ,
-	CMOVA,            CMOVNA,           CMOVB,            CMOVNB,
+	/**/
+	JMP,
+	JO,               JNO,              JB,               JAE,
+	JE,               JNE,              JBE,              JA,
+	JS,               JNS,              JPE,              JPO,
+	JL,               JGE,              JLE,              JG,
+	/**/
+	MOV,
+	CMOVO,            CMOVNO,           CMOVB,            CMOVAE,
+	CMOVE,            CMOVNE,           CMOVBE,           CMOVA,
+	CMOVS,            CMOVNS,           CMOVPE,           CMOVPO,
+	CMOVL,            CMOVGE,           CMOVLE,           CMOVG,
+	/**/
 	PUSH,             POP,              BSWAP,            TEST,
 	RCL,              RCR,              ROL,              ROR,
 	SHL,              SHR,              SAL,              SAR,

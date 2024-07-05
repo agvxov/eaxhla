@@ -12,7 +12,7 @@ entry $
 ; 66 41 81 C1                FF 7F | add r9w 07fffh
 ; 66    81 05    00 11 00 00 FF 7F | add [x] 07fffh
 
-	nop
+fff:	nop
 	add r9w, [x2]
 	nop
 	add [x2], r9w
@@ -354,9 +354,80 @@ entry $
 	;~idiv cx
 
 	nop
+	nop
+	nop
+
+nnn:	nop
+	jmp nnn
+	nop
+	jmp fff
+	nop
+	jmp rax
+	nop
+	jmp rcx
+	nop
+	jmp r8
+	nop
+	jmp r9
+	nop
+	jmp word[x2]
+	nop
+	jmp qword[x8]
 
 	nop
 	nop
+	nop
+
+	nop
+	jo nnn
+	nop
+	jno fff
+	nop
+	jb fff
+	nop
+	jae fff
+	nop
+	je fff
+	nop
+	jne fff
+	nop
+	jbe fff
+	nop
+	ja fff
+	nop
+	js fff
+	nop
+	jns fff
+	nop
+	jpe fff
+	nop
+	jpo fff
+	nop
+	jl fff
+	nop
+	jge fff
+	nop
+	jle fff
+	nop
+	jg fff
+
+	nop
+	nop
+	nop
+
+	nop
+	cmovo cx, r9w
+	nop
+	cmovg cx, r9w
+	nop
+	cmovo ecx, r9d
+	nop
+	cmovg ecx, r9d
+	nop
+	cmovo rcx, r9
+	nop
+	cmovg rcx, r9
+
 	nop
 
 	nop
