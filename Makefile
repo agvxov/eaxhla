@@ -16,22 +16,29 @@ else
   WRAP := valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all
 endif
 
-CFLAGS += -Wall -Wextra -Wpedantic
+CFLAGS   += -Wall -Wextra -Wpedantic
+CPPFLAGS += -Ilibrary/tommyds
 
 OUT := eaxhla
 
 SOURCE.d  := source
 OBJECT.d  := object
 
-SOURCE    := main.c assembler.c
+SOURCE    := main.c assembler.c table.c
 OBJECT    := $(addprefix ${OBJECT.d}/,${SOURCE})
 OBJECT    := ${OBJECT:.c=.o}
+
+# see library/, run library/bootstrap.sh
+LIBS      := tommy.o
+LIBS      := $(addprefix ${OBJECT.d}/,${LIBS.source})
 
 GENSOURCE := eaxhla.yy.c eaxhla.tab.c
 GENSOURCE := $(addprefix ${OBJECT.d}/,${GENSOURCE})
 GENOBJECT := $(subst .c,.o,${GENSOURCE})
 
 CPPFLAGS  += -I${OBJECT.d} -I${SOURCE.d}
+
+all: ${OUT}
 
 ${OBJECT.d}/%.yy.c: ${SOURCE.d}/%.l
 	flex ${FLEXFLAGS} --header-file=object/$(basename $(notdir $<)).yy.h -o $@ $<
@@ -48,8 +55,11 @@ ${OBJECT.d}/%.tab.o: ${OBJECT.d}/%.tab.c
 ${OBJECT.d}/%.o: ${SOURCE.d}/%.c
 	${COMPILE.c} -o $@ $<
 
-${OUT}: ${GENSOURCE} ${GENOBJECT} ${OBJECT}
+${OUT}: ${GENSOURCE} ${GENOBJECT} ${OBJECT} ${LIB}
 	${LINK.c} -o $@ ${OBJECT} ${GENOBJECT} ${LDLIBS}
+
+bootstrap:
+	./library/bootstrap.sh
 
 test: ${OUT}
 	fcpp -C -LL debug/xop.eax > debug/xop.eax.pp
@@ -57,3 +67,5 @@ test: ${OUT}
 
 clean:
 	-rm ${OUT} ${OBJECT} ${GENOBJECT} ${GENSOURCE}
+
+.PHONY: test clean bootstrap

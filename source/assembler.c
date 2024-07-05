@@ -19,28 +19,25 @@ splint assembler.h:
 	-- no warnings at all.
 */
 
-#define REGULAR_START   (ADD)
-#define REGULAR_COUNT   (UMUL - REGULAR_START)
-#define IRREGULAR_START (UMUL)
-#define IRREGULAR_COUNT (NOP - IRREGULAR_START)
-#define SPECIAL_1_START (NOP)
-#define SPECIAL_1_COUNT (SYSENTER - SPECIAL_1_START)
-#define SPECIAL_2_START (SYSENTER)
-#define SPECIAL_2_COUNT (ENTER - SPECIAL_2_START)
+#define REGULAR_BEGIN   (ADD)
+#define REGULAR_END     (CMP)
+#define IRREGULAR_BEGIN (INC)
+#define IRREGULAR_END   (IDIV)
+#define SPECIAL_1_BEGIN (NOP)
+#define SPECIAL_1_END   (HLT)
+#define SPECIAL_2_BEGIN (SYSENTER)
+#define SPECIAL_2_END   (CPUID)
 
-typedef signed   int  form;
-typedef unsigned int  next;
-typedef unsigned char byte;
+#define REGULAR_COUNT   (REGULAR_END   - REGULAR_BEGIN   + 1)
+#define IRREGULAR_COUNT (IRREGULAR_END - IRREGULAR_BEGIN + 1)
+#define SPECIAL_1_COUNT (SPECIAL_1_END - SPECIAL_1_BEGIN + 1)
+#define SPECIAL_2_COUNT (SPECIAL_2_END - SPECIAL_2_BEGIN + 1)
 
-static next   input_count; /* SHOULD I EXPOSE THESE? */
-static form * input_array;
-static next   output_count;
-static byte * output_array;
+static void place (form when,
+                   byte data) {
+	token_array [token_count] = data;
 
-static void place (form when, byte data) {
-	output_array [output_count] = data;
-
-	output_count += (next) when;
+	token_count += (next) when;
 }
 
 static form valid (form data) { return ((data >= 0) && (data <= 15)); }
@@ -51,16 +48,14 @@ static void build_short_prefix (form when) {
 	place (when, 0X66);
 }
 
-static void build_long_prefix (form       when,
-                               size_index size,
-                               type_index to,
-                               form       destination,
-                               type_index from,
-                               form       source) {
-	place (when, (byte) (0X40
-	      + 0X01 * ((to   == REG) && (upper (destination)))
-	      + 0X04 * ((from == REG) && (upper (source)))
-	      + 0X08 *  (size == D64)));
+static void build_long_prefix (form use_big_registers,
+                               form use_new_destination,
+                               form use_new_source) {
+	place (use_big_registers || use_new_destination || use_new_source,
+	       (byte) (0X40
+	             + 0X01 * use_new_destination
+	             + 0X04 * use_new_source
+	             + 0X08 * use_big_registers));
 }
 
 static void build_register_direction (form when,
@@ -79,20 +74,6 @@ static void build_constant (form       when,
 	place (when, (byte) (0X80 + 0X01 * (size != D8)));
 }
 
-static void build_regular_instruction (form       when,
-                                       byte       code,
-                                       size_index size,
-                                       type_index to,
-                                       form       destination,
-                                       type_index from) {
-	place (when, (byte) (code
-	      + destination % 8 * ((to == REG) && (from == IMM))
-	      + 0X01 *  (size != D8)
-	      + 0X02 * ((from == MEM) && (to == REG))
-	      + 0X04 * ((from == IMM) && (to == MEM))
-	      + 0XC0 * ((from == IMM) && (to == REG))));
-}
-
 static void build_regular (operation_index operation,
                            size_index      size,
                            type_index      to,
@@ -101,15 +82,18 @@ static void build_regular (operation_index operation,
                            form            source) {
 	build_short_prefix (size == D16);
 
-	build_long_prefix ((size == D64)
-	               || ((to   == REG) && (upper (destination)))
-	               || ((from == REG) && (upper (source))),
-	                   size, to, destination, from, source);
+	build_long_prefix (size == D64,
+	                  (to   == REG) && (upper (destination)),
+	                  (from == REG) && (upper (source))); //////////////////
 
 	build_constant (from == IMM, size);
 
-	build_regular_instruction (1, (byte) (0X08 * operation),
-	                           size, to, destination, from);
+	place (1, (byte) (0X08 * (operation - REGULAR_BEGIN)
+	      + destination % 8 * ((to == REG) && (from == IMM))
+	      + 0X01 *  (size != D8)
+	      + 0X02 * ((from == MEM) && (to == REG))///////////////////////////
+	      + 0X04 * ((from == IMM) && (to == MEM))///////////////////////////
+	      + 0XC0 * ((from == IMM) && (to == REG))));////////////////////////
 
 	build_register_direction ((to == REG) && (from == REG),
 	                          destination, source);
@@ -118,12 +102,33 @@ static void build_regular (operation_index operation,
 	build_register_redirection ((to == MEM) && (from == REG), source);
 }
 
+static void build_irregular (operation_index operation,
+                             size_index      size,
+                             type_index      to,
+                             form            destination) {
+	build_short_prefix (size == D16);
+
+	build_long_prefix (size == D64,
+	                  (to == REG) && (upper (destination)), 0);
+
+	place (1, (byte) (0XF6
+	      + 0X08 * ((operation == INC) || (operation == DEC))
+	      + 0X01 * (size != D8)));
+
+	place (to == REG, (byte) (0XC0
+	      + 0X08 * (operation - IRREGULAR_BEGIN))
+	      + 0X01 * (destination % 8));
+
+	place (to == MEM, (byte) (0X05
+	      + 0X08 * (operation - IRREGULAR_BEGIN)));
+}
+
 static void build_special_1 (operation_index operation) {
 	const byte data [1 * SPECIAL_1_COUNT] = {
 		0X90, 0XC3, 0XCB, 0XC9, 0XF0, 0XF4
 	};
 
-	place (1, data [operation - SPECIAL_1_START]);
+	place (1, data [operation - SPECIAL_1_BEGIN]);
 }
 
 static void build_special_2 (operation_index operation) {
@@ -132,6 +137,36 @@ static void build_special_2 (operation_index operation) {
 		0X34, 0X35, 0X05, 0X07, 0X90, 0XA2
 	};
 
-	place (1, data [operation - SPECIAL_2_START]);
-	place (1, data [operation - SPECIAL_2_START + SPECIAL_2_COUNT]);
+	place (1, data [operation - SPECIAL_2_BEGIN]);
+	place (1, data [operation - SPECIAL_2_BEGIN + SPECIAL_2_COUNT]);
+}
+
+next   token_count;
+byte * token_array;
+
+void assemble (next count, next * array) {
+	next index;
+
+	for (index = 0; index < count; ++index) {
+		if ((array [index] >= REGULAR_BEGIN)
+		&&  (array [index] <= REGULAR_END)) {
+			build_regular (array [index + 0], array [index + 1],
+			               array [index + 2], (form) array [index + 3],
+			               array [index + 4], (form) array [index + 5]);
+			index += 5;
+		} else if ((array [index] >= IRREGULAR_BEGIN)
+		       &&  (array [index] <= IRREGULAR_END)) {
+			build_irregular (array [index + 0], array [index + 1],
+			                 array [index + 2], (form) array [index + 3]);
+			index += 3;
+		} else if ((array [index] >= SPECIAL_1_BEGIN)
+		       &&  (array [index] <= SPECIAL_1_END)) {
+			build_special_1 (array [index + 0]);
+			index += 0;
+		} else if ((array [index] >= SPECIAL_2_BEGIN)
+		       &&  (array [index] <= SPECIAL_2_END)) {
+			build_special_2 (array [index + 0]);
+			index += 0;
+		}
+	}
 }
