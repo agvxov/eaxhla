@@ -4,7 +4,10 @@
     #include "eaxhla.yy.h"
     #include "assembler.h"
 
-    void yyerror() { ; }
+    void yyerror() {
+        printf("\033[31mError: syntax error at line %d.\033[0m\n", yylineno);
+    }
+
 %}
 
 %union{

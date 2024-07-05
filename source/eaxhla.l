@@ -6,6 +6,7 @@
 identifier [A-z_][A-z0-9_]*
 wsnl       [ \t\r\v\f\n]
 
+%option yylineno
 %%
 
 program{wsnl}+{identifier}{wsnl}+begin{wsnl}+  { return PROGRAM_HEAD; }
