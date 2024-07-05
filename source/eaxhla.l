@@ -169,6 +169,9 @@ machine        { BEGIN INITIAL; return END_MACHINE; }
               yylval.intval = strtol(yytext + 2, NULL, 16);
               return LITERAL;
           }
+}
+
+<IN_ARTIMETRIC_BLOCK>{
 <<EOF>> { yytext = strdup("<EOF>"); yyerror("unterminated artimetric block"); yyterminate(); }
 }
 
