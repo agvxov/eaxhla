@@ -39,6 +39,8 @@ GENOBJECT := $(subst .c,.o,${GENSOURCE})
 
 CPPFLAGS  += -I${OBJECT.d} -I${SOURCE.d}
 
+LDLIBS := -lm
+
 all: ${OUT}
 
 ${OBJECT.d}/%.yy.c: ${SOURCE.d}/%.l
