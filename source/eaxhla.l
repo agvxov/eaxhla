@@ -6,6 +6,7 @@
 identifier [A-z_][A-z0-9_]*
 wsnl       [ \t\r\v\f\n]
 
+%option nodefault
 %option yylineno
 %option nounput noinput
 %%
