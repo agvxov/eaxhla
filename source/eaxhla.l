@@ -11,7 +11,7 @@
         string_literal_buffer = malloc(128);
 
     void yyfree_leftovers(void);
-    void yyerror(void);
+    void yyerror(const char * errmsg);
 %}
 %option noyywrap
 
@@ -23,7 +23,7 @@ uhex       [0123456789ABCDEF]
 
 %x IN_COMMENT IN_MULTILINE_COMMENT
 %x IN_STRING
-%x IN_END
+%x IN_END IN_UNKNOWN_END
 %x IN_ARTIMETRIC_BLOCK
 
 %option nodefault
@@ -111,11 +111,15 @@ loop           { BEGIN INITIAL; return END_LOOP; }
 if             { BEGIN INITIAL; return END_IF; }
 machine        { BEGIN INITIAL; return END_MACHINE; }
 {wsnl}         { ; }
-.              { yyerror(); }
+.              { yyless(0); BEGIN IN_UNKNOWN_END; }
+}
+
+<IN_UNKNOWN_END>{
+.*  { yyerror("unknown end sequence"); BEGIN INITIAL; return 0; }
 }
 
 <IN_STRING>{
-    /* XXX: escapes */
+    /* XXX: escapes; multiline strings will die */
 \"  {
         BEGIN INITIAL;
         yylval.strval = strdup(string_literal_buffer);
@@ -136,11 +140,13 @@ machine        { BEGIN INITIAL; return END_MACHINE; }
 <IN_COMMENT>{
 \n      { BEGIN INITIAL; }
 .*      { ; }
+<<EOF>> { yytext = strdup("<EOF>"); yyerror("unterminated comment"); yyterminate(); }
 }
 
 <IN_MULTILINE_COMMENT>{
 \*\/    { BEGIN INITIAL; }
 .|\n    { ; }
+<<EOF>> { yytext = strdup("<EOF>"); yyerror("unterminated comment"); yyterminate(); }
 }
 
 <INITIAL,IN_ARTIMETRIC_BLOCK>{
@@ -163,12 +169,13 @@ machine        { BEGIN INITIAL; return END_MACHINE; }
               yylval.intval = strtol(yytext + 2, NULL, 16);
               return LITERAL;
           }
+<<EOF>> { yytext = strdup("<EOF>"); yyerror("unterminated artimetric block"); yyterminate(); }
 }
 
 {identifier}  { yylval.strval = strdup(yytext); return IDENTIFIER; }
 {identifier}: { yylval.strval = strdup(yytext); return LABEL; }
 
-. { yyerror(); }
+. { yyerror("scanner jammed"); }
 
 %%
 

@@ -66,7 +66,10 @@ bootstrap:
 
 test: ${OUT}
 	#fcpp -C -LL debug/xop.eax > debug/xop.eax.pp
-	${WRAP} ./${OUT} debug/xop.eax
+	#${WRAP} ./${OUT} debug/xop.eax
+	${WRAP} ./${OUT} debug/artimetrics.eax
+	@echo " --- ERROR TESTING BEGINS BELOW ---"
+	debug/error_test.sh
 
 clean:
 	-rm ${OUT} ${OBJECT} ${GENOBJECT} ${GENSOURCE}

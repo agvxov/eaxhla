@@ -26,10 +26,15 @@
     #include "assembler.h"
 
     extern void yyfree_leftovers(void);
+    extern char * yyfilename;
 
-    void yyerror() {
-        printf("\033[31mError: syntax error at line %d near '%s'.\033[0m\n", yylineno, yytext);
-        yyfree_leftovers();
+    void yyerror(const char * errmsg) {
+        printf("\033[1m%s:%d:\033[0m \033[31mError\033[0m: %s near \033[1m'%s'\033[0m.\n",
+                    yyfilename,
+                    yylineno,
+                    errmsg,
+                    yytext
+                );
     }
 
     long new_static(int size) {
@@ -37,6 +42,8 @@
         return 0;
     }
 %}
+
+    // %define parse.error detailed
 
 %union{
     long intval;
@@ -121,6 +128,7 @@ function_specifier: %empty
 
 declaration_section: %empty
     | declaration declaration_section
+    | error declaration_section { yyerrok; }
     ;
 
 declaration: origin type IDENTIFIER { $2.name = $3; /* add_var($1); */ free($3); }
@@ -143,6 +151,7 @@ type: S8    { $$ = (static_variable){ .is_signed = 1, .size =  8, .address = new
     ;
 
 code: %empty
+    | error   code { yyerrok; }
     | loop    code
     | if      code
     | call    code
@@ -239,7 +248,7 @@ immediate: LITERAL
 artimetric_block: '[' artimetric_expression ']' { $$ = $2; }
     ;
 
-artimetric_expression: %empty { yyerror(); }
+artimetric_expression: %empty { YYERROR; }
     | artimetric_operand
     | artimetric_expression '+' artimetric_operand { $$ = $1 + $3; }
     | artimetric_expression '-' artimetric_operand { $$ = $1 - $3; }
@@ -257,3 +266,5 @@ exit: EXIT immediate
     | EXIT IDENTIFIER
     ;
 %%
+
+

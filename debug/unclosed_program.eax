@@ -1,0 +1,4 @@
+unix
+program main
+    exit 1
+end rpogram
