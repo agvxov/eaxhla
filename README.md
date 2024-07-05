@@ -1,7 +1,8 @@
 ## EAXCC
 #### Emil, Anon, Xolatile C Compiler
 
-is a reduced implementation of the C Programming Language. It utilizes a intermediary assembly called EAXHLA.
+A reduced implementation of the C Programming Language.
+It utilizes a intermediary assembly called EAXHLA.
 
 #### Building
 
@@ -12,7 +13,7 @@ make bootstrap
 make
 ```
 
-You can add the DEBUG=1 flag for debugging, see the Makefile for more options.
+You can add the `DEBUG=1` flag for debugging, see the Makefile for more options.
 
 #### Licensing
 
