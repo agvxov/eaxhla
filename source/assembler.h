@@ -1,5 +1,4 @@
 #ifndef ASSEMBLER_H
-#define ASSEMBLER_H
 
 typedef signed   int  form;
 typedef unsigned int  next;
@@ -54,4 +53,5 @@ extern byte * token_array;
 
 extern void assemble (next count, next * array);
 
+#define ASSEMBLER_H
 #endif
