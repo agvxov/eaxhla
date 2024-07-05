@@ -5,11 +5,12 @@
 + GPLv3-only
 
 ## Technologies
-+ Chad C, C99
++ C99
++ TommyHash
 + Flex/Bison
 
 ## Train of translation
-file -> preprocessor -> as -> link -> exe
+file -> preprocessor -> hla -> link -> exe
 
 NOTE: the compiler front-end should be able to handle the preprocessing someway,
        but we are not making our own preprocessor. use Frexx or m4
@@ -33,6 +34,22 @@ sizes:
 + 16
 + 32
 + 64
+
+floating point types?
+
+prefix:
++ f
+
+size:
++ 32 (float)
++ 64 (double)
++ 128? (long double)
+
+All of these types would be generically available unless disabled by some compiler option. All of the traditional
+types would be enabled by default or require said flag to become usable, this hypothetical flag (`-ftraditional-types`)
+would then need implementation and support. In the future traditional types could be enabled by default along with
+a flag like (`-fno-terry-types`) to disable EAXCC standard typing. If these types are ever disabled by default
+then we'll utilize the flag (`-fterry-types`) to enable them.
 
 ## Syntax
 ### Macros
@@ -89,4 +106,6 @@ my_label:
 
 ## LATER
 + DWARF2
-+ linker??
+  - ask xolatile very nicely
++ linker?
+  - support ld (thereby mold/gold) for speed reasons
