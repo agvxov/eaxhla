@@ -38,11 +38,12 @@ sizes:
 floating point types?
 
 prefix:
-+ f
++ f (guarantee IEEE)
 
 size:
 + 32 (float)
 + 64 (double)
++ 80? (long double)
 + 128? (long double)
 
 All of these types would be generically available unless disabled by some compiler option. All of the traditional
