@@ -48,7 +48,7 @@ static next * imbue_size;
 // Main function.
 static void place (form when,
                    byte data) {
-	/**/
+	/* */
 	token_array [token_count] = data;
 
 	token_count += (next) when;
@@ -65,7 +65,7 @@ static form near (next label) { return (0); /* DO NOT CHANGE YET! */ }
 // --
 static void displacement (form size,
                           next data) {
-	/**/
+	/* */
 	(void) size;
 
 	place (1, (data >> 24) & 0XFF);
@@ -77,7 +77,7 @@ static void displacement (form size,
 // --
 static void immediate (form size,
                        next data) {
-	/**/
+	/* */
 	(void) size;
 
 	place (1, (data >> 24) & 0XFF);
@@ -94,7 +94,7 @@ static void build_short_prefix (form when) {
 static void build_long_prefix (form use_big_registers,
                                form use_new_destination,
                                form use_new_source) {
-	/**/
+	/* */
 	place (use_big_registers || use_new_destination || use_new_source,
 	       (byte) (0X40
 	             + 0X01 * use_new_destination
@@ -106,7 +106,7 @@ static void build_long_prefix (form use_big_registers,
 static void build_register_direction (form when,
                                       next destination,
                                       next source) {
-	/**/
+	/* */
 	place (when, (byte) (0XC0
 	     + 0X01 * (destination & 0X07)
 	     + 0X08 * (source      & 0X07)));
@@ -115,7 +115,7 @@ static void build_register_direction (form when,
 // 05-3D
 static void build_register_redirection (form when,
                                         next direction) {
-	/**/
+	/* */
 	place (when, (byte) (0X05
 	     + 0X08 * (direction & 0X07)));
 }
@@ -123,7 +123,7 @@ static void build_register_redirection (form when,
 // 80/81
 static void build_constant (form       when,
                             size_index size) {
-	/**/
+	/* */
 	place (when, (byte) (0X80
 	     + 0X01 * (size != D8)));
 }
@@ -135,7 +135,7 @@ static void build_regular (operation_index operation,
                            next            destination,
                            type_index      from,
                            next            source) {
-	/**/
+	/* */
 	build_short_prefix (size == D16);
 
 	build_long_prefix (size == D64,
@@ -163,7 +163,7 @@ static void build_irregular (operation_index operation,
                              size_index      size,
                              type_index      to,
                              next            destination) {
-	/**/
+	/* */
 	build_short_prefix (size == D16);
 
 	build_long_prefix (size == D64,
@@ -204,13 +204,13 @@ static void build_special_2 (operation_index operation) {
 // JUMP_IF_BEGIN-JUMP_IF_END D8/32 IMM8/32
 static void build_jump_if (operation_index operation,
                            size_index      size,
-                           next            destination) {
-	/**/
+                           next            location) {
+	/* */
 	(void) size; /* HIGHLY DEPENDS FOR FAR AND NEAR JUMPS! */
 
-	place (far  (destination), 0X0F); /* EVERYTHING IS FAR JUMP! */
-	place (far  (destination), (byte) (0X80 + operation - JUMP_IF_BEGIN));
-	place (near (destination), (byte) (0X70 + operation - JUMP_IF_BEGIN));
+	place (far  (location), 0X0F); /* EVERYTHING IS FAR JUMP! */
+	place (far  (location), (byte) (0X80 + operation - JUMP_IF_BEGIN));
+	place (near (location), (byte) (0X70 + operation - JUMP_IF_BEGIN));
 
 	//~displacement (4, 0X12345678);
 }
@@ -220,7 +220,7 @@ static void build_move_if (operation_index operation,
                            size_index      size,
                            type_index      to,
                            next            destination) {
-	/**/
+	/* */
 	build_short_prefix (size == D16);
 
 	build_long_prefix (size == D64,
@@ -242,7 +242,7 @@ byte * token_array;
 
 void assemble (next   count,
                next * array) {
-	/**/
+	/* */
 	next index;
 
 	for (index = 0; index < count; ++index) {
@@ -265,6 +265,17 @@ void assemble (next   count,
 		       &&  (array [index] <= SPECIAL_2_END)) {
 			build_special_2 (array [index + 0]);
 			index += 0;
+		} else if ((array [index] >= JUMP_IF_BEGIN)
+		       &&  (array [index] <= JUMP_IF_END)) {
+			build_jump_if (array [index + 0], array [index + 1],
+			               array [index + 2]);
+			index += 2;
+		} else if ((array [index] >= SPECIAL_2_BEGIN)
+		       &&  (array [index] <= SPECIAL_2_END)) {
+			build_special_2 (array [index + 0], array [index + 1],
+			                 array [index + 2], array [index + 3],
+			                 array [index + 4], array [index + 5]);
+			index += 5;
 		}
 	}
 }
