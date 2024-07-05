@@ -4,19 +4,25 @@
 #include "../source/assembler.h"
 #include "../source/assembler.c"
 
-static unsigned int array [29] = {
+#define COUNT (29+24)
+
+static unsigned int array [COUNT] = {
 	ADC, D64, REG, R1, REG, R2,
 	ADC, D32, REG, R1, MEM, 12,
 	ADC, D16, MEM, 12, REG, R10,
 	ADC, D8, REG, R3, IMM, 0X77,
-	INC, D16, REG, R0, LOCK
+	INC, D16, REG, R0, LOCK,
+	CMOVG, D64, REG, R1, REG, R1,
+	CMOVG, D64, REG, R1, REG, R9,
+	CMOVG, D64, REG, R9, REG, R1,
+	CMOVG, D64, REG, R9, REG, R9
 };
 
 int main (void) {
 	unsigned int index;
 	token_array = malloc (144UL * sizeof (* token_array));
 
-	assemble (29, array);
+	assemble (COUNT, array);
 
 	printf ("> %u\n", token_count);
 

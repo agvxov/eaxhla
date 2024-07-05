@@ -97,8 +97,8 @@ static void build_long_prefix (form use_big_registers,
 	/* */
 	place (use_big_registers || use_new_destination || use_new_source,
 	       (byte) (0X40
-	             + 0X01 * use_new_destination
-	             + 0X04 * use_new_source
+	             + 0X01 * use_new_source
+	             + 0X04 * use_new_destination
 	             + 0X08 * use_big_registers));
 }
 
@@ -139,8 +139,8 @@ static void build_regular (operation_index operation,
 	build_short_prefix (size == D16);
 
 	build_long_prefix (size == D64,
-	                  (to   == REG) && (upper (destination)),
-	                  (from == REG) && (upper (source)));
+	                  (to   == REG) && (upper ((form) destination)),
+	                  (from == REG) && (upper ((form) source)));
 
 	build_constant (from == IMM, size);
 
@@ -167,7 +167,7 @@ static void build_irregular (operation_index operation,
 	build_short_prefix (size == D16);
 
 	build_long_prefix (size == D64,
-	                  (to   == REG) && (upper (destination)), 0);
+	                  (to   == REG) && (upper ((form) destination)), 0);
 
 	place (1, (byte) (0XF6
 	     + 0X08 * ((operation == INC) || (operation == DEC))
@@ -219,12 +219,15 @@ static void build_jump_if (operation_index operation,
 static void build_move_if (operation_index operation,
                            size_index      size,
                            type_index      to,
-                           next            destination) {
+                           next            destination,
+                           type_index      from,
+                           next            source) {
 	/* */
 	build_short_prefix (size == D16);
 
 	build_long_prefix (size == D64,
-	                  (to   == REG) && (upper (destination)), 0);
+	                  (to   == REG) && (upper ((form) destination)),
+	                  (from == REG) && (upper ((form) source)));
 
 	place (1, 0X0F);
 	place (1, (byte) (0X40 + operation - MOVE_IF_BEGIN));
@@ -270,11 +273,11 @@ void assemble (next   count,
 			build_jump_if (array [index + 0], array [index + 1],
 			               array [index + 2]);
 			index += 2;
-		} else if ((array [index] >= SPECIAL_2_BEGIN)
-		       &&  (array [index] <= SPECIAL_2_END)) {
-			build_special_2 (array [index + 0], array [index + 1],
-			                 array [index + 2], array [index + 3],
-			                 array [index + 4], array [index + 5]);
+		} else if ((array [index] >= MOVE_IF_BEGIN)
+		       &&  (array [index] <= MOVE_IF_END)) {
+			build_move_if (array [index + 0], array [index + 1],
+			               array [index + 2], array [index + 3],
+			               array [index + 4], array [index + 5]);
 			index += 5;
 		}
 	}

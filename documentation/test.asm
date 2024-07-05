@@ -426,7 +426,28 @@ nnn:	nop
 	nop
 	cmovo rcx, r9
 	nop
-	cmovg rcx, r9
+	cmovg rcx, r9 ; 49 0F 4F C9
+	nop
+	xor rcx, rcx
+	nop
+	xor r9, rcx;+1
+	nop
+	xor rcx, r9;+4
+	nop
+	xor r9, r9;+1+4
+
+	nop
+	nop
+	nop
+
+	nop
+	cmovg rcx, rcx; 48 0F 4F C9
+	nop
+	cmovg rcx, r9; 49 0F 4F C9
+	nop
+	cmovg r9, rcx; 4C 0F 4F C9
+	nop
+	cmovg r9, r9; 4D 0F 4F C9
 
 	nop
 
