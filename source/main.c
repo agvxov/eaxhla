@@ -8,6 +8,9 @@ signed main(int argc, char * argv[]) {
         printf("%s: <file>\n", argv[0]);
     }
 
+    #if DEBUG == 1
+        yydebug = 1;
+    #endif
     yyin = fopen(argv[1], "r");
     yyparse();
 
