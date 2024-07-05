@@ -1,6 +1,7 @@
 %{
     #include <stdlib.h>
     #include "eaxhla.tab.h"
+    #include "table.h"
 
     char * string_literal_buffer;
     int string_litral_buffer_size     = 0;
@@ -10,7 +11,7 @@
         string_literal_buffer = malloc(128);
 
     void yyfree_leftovers(void);
-    void yyerror(void);
+    void yyerror(const char * errmsg);
 %}
 %option noyywrap
 
@@ -22,10 +23,8 @@ uhex       [0123456789ABCDEF]
 
 %x IN_COMMENT IN_MULTILINE_COMMENT
 %x IN_STRING
-
-    // XXX: ?!
-%x IN_DECLARE
-%x IN_UGH
+%x IN_END IN_UNKNOWN_END
+%x IN_ARTIMETRIC_BLOCK
 
 %option nodefault
 %option yylineno
@@ -36,32 +35,51 @@ uhex       [0123456789ABCDEF]
 
 begin{wsnl}+ { return MYBEGIN; }
 
-    /* XXX 'end' should be its own state, with proper error handling */
 program{wsnl}+             { return PROGRAM; }
-end{wsnl}+program{wsnl}+   { return END_PROGRAM; }
 procedure{wsnl}+           { return PROCEDURE; }
-end{wsnl}+procedure{wsnl}+ { return END_PROCEDURE; }
 loop{wsnl}+                { return TLOOP; }
-end{wsnl}+loop{wsnl}+      { return END_LOOP; }
 if{wsnl}+                  { return IF; }
 then{wsnl}+                { return THEN; }
-end{wsnl}+if{wsnl}+        { return END_IF; }
-break{wsnl}+               { return BREAK; }
+machine{wsnl}+             { return MACHINE; }
 
+break{wsnl}+               { return BREAK; }
+exit{wsnl}+                { return EXIT;  }
+
+end { BEGIN IN_END; }
 
 fast{wsnl}+    { return FAST; }
 unix{wsnl}+    { return UNIX; }
 
-\$rax{wsnl}+   { return RAX; }
-\$rbx{wsnl}+   { return RBX; }
-\$rcx{wsnl}+   { return RCX; }
-\$rdx{wsnl}+   { return RDX; }
-\$rbp{wsnl}+   { return RBP; }
-\$rsp{wsnl}+   { return RSP; }
-\$rip{wsnl}+   { return RIP; }
+\$rax{wsnl}+   { return RAX;    }
+\$rbx{wsnl}+   { return RBX;    }
+\$rcx{wsnl}+   { return RCX;    }
+\$rdx{wsnl}+   { return RDX;    }
+\$rbp{wsnl}+   { return RBP;    }
+\$rsp{wsnl}+   { return RSP;    }
+\$rip{wsnl}+   { return RIP;    }
+\$rsi{wsnl}+   { return RSI;    }
+\$rdi{wsnl}+   { return RDI;    }
+\$r8{wsnl}+    { return RG8;    }
+\$r9{wsnl}+    { return RG9;    }
+\$r10{wsnl}+   { return RG10;   }
+\$r11{wsnl}+   { return RG11;   }
+\$r12{wsnl}+   { return RG12;   }
+\$r13{wsnl}+   { return RG13;   }
+\$r14{wsnl}+   { return RG14;   }
+\$xmm0{wsnl}+  { return RGXMM0; }
+\$xmm1{wsnl}+  { return RGXMM1; }
+\$xmm2{wsnl}+  { return RGXMM2; }
+\$xmm3{wsnl}+  { return RGXMM3; }
+\$xmm4{wsnl}+  { return RGXMM4; }
+\$xmm5{wsnl}+  { return RGXMM5; }
+\$xmm6{wsnl}+  { return RGXMM6; }
+\$xmm7{wsnl}+  { return RGXMM7; }
 
 in{wsnl}+  { return TIN; }
 \=         { return '='; }
+
+\!\=       { return NEQ; }
+\!         { return TNOT; }
 
 s8{wsnl}+  { return  S8; }
 s16{wsnl}+ { return S16; }
@@ -72,30 +90,36 @@ u16{wsnl}+ { return U16; }
 u32{wsnl}+ { return U32; }
 u64{wsnl}+ { return U64; }
 
--?[[:digit:]]+  {
-                    yylval.intval = strtol(yytext, NULL, 10);
-                    return LITERAL;
-}
-
-0b[01]+             {
-                        yylval.intval = strtol(yytext, NULL, 2);
-                        return LITERAL;
-                    }
-
-0x{hex}+  {
-              yylval.intval = strtol(yytext + 2, NULL, 16);
-              return LITERAL;
-          }
-
-0x{uhex}+ {
-              yylval.intval = strtol(yytext + 2, NULL, 16);
-              return LITERAL;
-          }
-
 \"  { BEGIN IN_STRING; }
 
+xor{wsnl}+     { return TXOR; }
+inc{wsnl}+     { return TINC; }
+
+fastcall{wsnl}+ { return FASTCALL; }
+
+\/\/    { BEGIN IN_COMMENT; }
+\/\*    { BEGIN IN_MULTILINE_COMMENT; }
+
+\[      { return '['; }
+\]      { return ']'; }
+\+|\-|\*|\/|\%|\^|\: { return yytext[0]; }
+
+<IN_END>{
+program        { BEGIN INITIAL; return END_PROGRAM; }
+procedure      { BEGIN INITIAL; return END_PROCEDURE; }
+loop           { BEGIN INITIAL; return END_LOOP; }
+if             { BEGIN INITIAL; return END_IF; }
+machine        { BEGIN INITIAL; return END_MACHINE; }
+{wsnl}         { ; }
+.              { yyless(0); BEGIN IN_UNKNOWN_END; }
+}
+
+<IN_UNKNOWN_END>{
+.*  { yyerror("unknown end sequence"); BEGIN INITIAL; return 0; }
+}
+
 <IN_STRING>{
-    /* XXX: escapes */
+    /* XXX: escapes; multiline strings will die */
 \"  {
         BEGIN INITIAL;
         yylval.strval = strdup(string_literal_buffer);
@@ -113,45 +137,47 @@ u64{wsnl}+ { return U64; }
     }
 }
 
-xor{wsnl}+     { return TXOR; }
-inc{wsnl}+     { return TINC; }
-
-fastcall{wsnl}+ { return FASTCALL; }
-
-\/\/    { BEGIN IN_COMMENT; }
-\/\*    { BEGIN IN_MULTILINE_COMMENT; }
-
 <IN_COMMENT>{
 \n      { BEGIN INITIAL; }
 .*      { ; }
+<<EOF>> { yytext = strdup("<EOF>"); yyerror("unterminated comment"); yyterminate(); }
 }
 
 <IN_MULTILINE_COMMENT>{
 \*\/    { BEGIN INITIAL; }
 .|\n    { ; }
+<<EOF>> { yytext = strdup("<EOF>"); yyerror("unterminated comment"); yyterminate(); }
 }
 
-\[      { BEGIN IN_UGH; }
-
-<IN_UGH>{
-\]      { BEGIN INITIAL; yylval.strval = strdup(yytext); return IDENTIFIER; }
-    /* XXX! */
-.|\n    { ; }
+<INITIAL,IN_ARTIMETRIC_BLOCK>{
+-?[[:digit:]]+  {
+                    yylval.intval = strtol(yytext, NULL, 10);
+                    return LITERAL;
 }
 
-{identifier}{wsnl}+ { yylval.strval = strdup(yytext); return IDENTIFIER; }
+0b[01]+   {
+              yylval.intval = strtol(yytext, NULL, 2);
+              return LITERAL;
+          }
 
-. { yyerror(); }
+0x{hex}+  {
+              yylval.intval = strtol(yytext + 2, NULL, 16);
+              return LITERAL;
+          }
+
+0x{uhex}+ {
+              yylval.intval = strtol(yytext + 2, NULL, 16);
+              return LITERAL;
+          }
+<<EOF>> { yytext = strdup("<EOF>"); yyerror("unterminated artimetric block"); yyterminate(); }
+}
+
+{identifier}  { yylval.strval = strdup(yytext); return IDENTIFIER; }
+{identifier}: { yylval.strval = strdup(yytext); return LABEL; }
+
+. { yyerror("scanner jammed"); }
 
 %%
-
-void set_state(int state) {
-    switch (state) {
-        case STATE_DECLARE: {
-            BEGIN IN_DECLARE;
-        } break;
-    }
-}
 
 void yyfree_leftovers(void) {
     if (yyin) {

@@ -1,14 +1,14 @@
 #ifndef TABLE_H_
 
-#include <tommyds/tommytrie.h>
+#include <tommyds/tommyhashtbl.h>
 
 typedef struct {
-  /* size_t   size; */
-  /* int    * hash; */
-  /* void   * data; */
-
+  short      size;
+  long       address;
+  unsigned   hash;
+  void     * data;
   tommy_node node;
-} value_table_t;
+} variable_t;
 
 #define TABLE_H_
 #endif

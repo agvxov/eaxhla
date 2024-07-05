@@ -5,6 +5,7 @@
 }
 
 %code requires {
+    #include "table.h"
     // XXX this could be easily squashed later
     typedef struct {
         int is_signed;
@@ -19,24 +20,30 @@
 
 %{
     #include <stdio.h>
+    #include <math.h>
 
     #include "eaxhla.yy.h"
     #include "assembler.h"
 
     extern void yyfree_leftovers(void);
+    extern char * yyfilename;
 
-    void yyerror() {
-        printf("\033[31mError: syntax error at line %d near '%s'.\033[0m\n", yylineno, yytext);
-        yyfree_leftovers();
+    void yyerror(const char * errmsg) {
+        printf("\033[1m%s:%d:\033[0m \033[31mError\033[0m: %s near \033[1m'%s'\033[0m.\n",
+                    yyfilename,
+                    yylineno,
+                    errmsg,
+                    yytext
+                );
     }
-
-    extern void set_state(int state);
 
     long new_static(int size) {
         (void)size;
         return 0;
     }
 %}
+
+    // %define parse.error detailed
 
 %union{
     long intval;
@@ -55,17 +62,25 @@
 %token PROGRAM END_PROGRAM
 %token PROCEDURE END_PROCEDURE
 %token TLOOP END_LOOP
-%token IF THEN END_IF
-%token BREAK
+%token IF THEN ELSE END_IF
+%token MACHINE END_MACHINE
 
-%token<strval> IDENTIFIER
+%token EXIT BREAK
 
+%token<strval> IDENTIFIER LABEL
+
+%type<intval>  immediate
+%type<intval>  artimetric_block artimetric_expression artimetric_operand
 %token<intval> LITERAL
 %token<strval> STRING_LITERAL
 
 %token FAST
 
 %token UNIX
+
+// Logic
+%token NEQ TNOT
+//%token TOR TXOR // these are (in)conveniently instructions too
 
 // Type info
 %token TIN
@@ -76,8 +91,11 @@
 // Registers
 %type<intval> register
 
-%token RAX RBX RCX RDX
 %token RBP RSP RIP
+%token RAX RBX RCX RDX
+%token RSI RDI
+%token RG8 RG9 RG10 RG11 RG12 RG13 RG14 RG15
+%token RGXMM0 RGXMM1 RGXMM2 RGXMM3 RGXMM4 RGXMM5 RGXMM6 RGXMM7
 
 // Instructions
 %token TADD TOR TADC TBB TXOR TAND TSUB TCMP TSYSCALL TINC
@@ -110,10 +128,11 @@ function_specifier: %empty
 
 declaration_section: %empty
     | declaration declaration_section
+    | error declaration_section { yyerrok; }
     ;
 
 declaration: origin type IDENTIFIER { $2.name = $3; /* add_var($1); */ free($3); }
-    | origin type IDENTIFIER '=' LITERAL { $2.name = $3; /* add_var($1); */ free($3); }
+    | origin type IDENTIFIER '=' immediate { $2.name = $3; /* add_var($1); */ free($3); }
     | origin type IDENTIFIER '=' STRING_LITERAL { $2.name = $3; /* add_var($1); */ free($3); free($5); }
     ;
 
@@ -132,10 +151,14 @@ type: S8    { $$ = (static_variable){ .is_signed = 1, .size =  8, .address = new
     ;
 
 code: %empty
-    | loop  code
-    | if    code
-    | call  code
-    | BREAK code
+    | error   code { yyerrok; }
+    | loop    code
+    | if      code
+    | call    code
+    | LABEL   code
+    | machine code
+    | BREAK   code
+    | exit    code
     | TXOR register register  code  { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
     | TXOR register immediate code  { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
     | TXOR IDENTIFIER register code { /* assemble_xor(size_64b, type_register_register, $2, $3); */ free($2); }
@@ -147,9 +170,36 @@ loop: TLOOP code END_LOOP
     ;
 
 if: IF logic THEN code END_IF
+    | IF logic THEN code ELSE code END_IF
     ;
 
-logic: %empty /* XXX */
+logic: logical_operand TAND logical_operand
+    |  logical_operand TOR  logical_operand
+    |  logical_operand TXOR logical_operand
+    |  logical_operand '='  logical_operand
+    |  logical_operand NEQ  logical_operand
+    |  TNOT logic
+    ;
+
+sublogic: '(' logic ')'
+    ;
+
+logical_operand: operand
+    | sublogic
+    ;
+
+operand: immediate
+    | register
+    | IDENTIFIER
+    ;
+
+machine: MACHINE machine_code END_MACHINE
+    ;
+
+machine_code: %empty
+    | LITERAL machine_code
+    | STRING_LITERAL machine_code
+    | IDENTIFIER machine_code { free($1); }
     ;
 
 call: calltype IDENTIFIER arguments { free($2); }
@@ -165,10 +215,56 @@ arguments: %empty
     | immediate  arguments
     ;
 
-register: RAX   { $$ = R0; }
-    |     RBX   { $$ = R1; }
+register: RAX    { $$ = R0;    }
+    |     RBX    { $$ = R1;    }
+    |     RCX    { $$ = R2;    }
+    |     RDX    { $$ = R3;    }
+    |     RSI    { $$ = R4;    }
+    |     RDI    { $$ = R5;    }
+    |     RBP    { $$ = R6;    }
+    |     RSP    { $$ = R7;    }
+    |     RG8    { $$ = R8;    }
+    |     RG9    { $$ = R9;    }
+    |     RG10   { $$ = R10;   }
+    |     RG11   { $$ = R11;   }
+    |     RG12   { $$ = R12;   }
+    |     RG13   { $$ = R13;   }
+    |     RG14   { $$ = R14;   }
+    |     RG15   { $$ = R15;   }
+    |     RGXMM0 { $$ = 0; } /* XXX */
+    |     RGXMM1 { $$ = 0; }
+    |     RGXMM2 { $$ = 0; }
+    |     RGXMM3 { $$ = 0; }
+    |     RGXMM4 { $$ = 0; }
+    |     RGXMM5 { $$ = 0; }
+    |     RGXMM6 { $$ = 0; }
+    |     RGXMM7 { $$ = 0; }
     ;
 
 immediate: LITERAL
+    | artimetric_block
+    ;
+
+artimetric_block: '[' artimetric_expression ']' { $$ = $2; }
+    ;
+
+artimetric_expression: %empty { YYERROR; }
+    | artimetric_operand
+    | artimetric_expression '+' artimetric_operand { $$ = $1 + $3; }
+    | artimetric_expression '-' artimetric_operand { $$ = $1 - $3; }
+    | artimetric_expression '*' artimetric_operand { $$ = $1 * $3; }
+    | artimetric_expression '/' artimetric_operand { $$ = $1 / $3; }
+    | artimetric_expression '%' artimetric_operand { $$ = $1 % $3; }
+    | artimetric_expression '^' artimetric_operand { $$ = pow($1, $3); }
+    ;
+
+artimetric_operand: immediate
+    | IDENTIFIER { $$ = 0; /*XXX*/ }
+    ;
+
+exit: EXIT immediate
+    | EXIT IDENTIFIER
     ;
 %%
+
+

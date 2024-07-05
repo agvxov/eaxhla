@@ -5,7 +5,7 @@ ifeq (${DEBUG}, 1)
   CFLAGS     += -O0 -ggdb -fno-inline
   CPPFLAGS   += -DDEBUG
   FLEXFLAGS  += --trace --debug
-  BISONFLAGS += --debug
+  BISONFLAGS += --debug -Wcounterexamples
 else
   CFLAGS += -O3 -flto=auto -fno-stack-protector
 endif
@@ -18,6 +18,7 @@ endif
 
 CFLAGS   += -Wall -Wextra -Wpedantic
 CPPFLAGS += -Ilibrary/tommyds
+LDFLAGS  += -lm
 
 OUT := eaxhla
 
@@ -37,6 +38,8 @@ GENSOURCE := $(addprefix ${OBJECT.d}/,${GENSOURCE})
 GENOBJECT := $(subst .c,.o,${GENSOURCE})
 
 CPPFLAGS  += -I${OBJECT.d} -I${SOURCE.d}
+
+LDLIBS := -lm
 
 all: ${OUT}
 
@@ -63,7 +66,10 @@ bootstrap:
 
 test: ${OUT}
 	#fcpp -C -LL debug/xop.eax > debug/xop.eax.pp
-	${WRAP} ./${OUT} debug/xop.eax
+	#${WRAP} ./${OUT} debug/xop.eax
+	${WRAP} ./${OUT} debug/artimetrics.eax
+	@echo " --- ERROR TESTING BEGINS BELOW ---"
+	debug/error_test.sh
 
 clean:
 	-rm ${OUT} ${OBJECT} ${GENOBJECT} ${GENSOURCE}

@@ -5,6 +5,8 @@
 
 extern void yyfree_leftovers(void);
 
+char * yyfilename;
+
 signed main(int argc, char * argv[]) {
     if (argc < 2) {
         printf("%s: <file>\n", argv[0]);
@@ -14,7 +16,9 @@ signed main(int argc, char * argv[]) {
         yydebug = 1;
     #endif
 
-    yyin = fopen(argv[1], "r");
+    yyfilename = argv[1];
+
+    yyin = fopen(yyfilename, "r");
     yyparse();
 
     yyfree_leftovers();
