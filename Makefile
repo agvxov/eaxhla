@@ -13,7 +13,7 @@ endif
 ifeq ($(SAN), 1)
   CFLAGS += -fsanitize=address,undefined
 else
-  WRAP := valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all
+  WRAP := valgrind --show-error-list=yes --track-origins=yes --leak-check=full --show-leak-kinds=all
 endif
 
 CFLAGS   += -Wall -Wextra -Wpedantic

@@ -138,9 +138,9 @@ code: %empty
     | BREAK code
     | TXOR register register  code  { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
     | TXOR register immediate code  { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
-    | TXOR IDENTIFIER register code { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
+    | TXOR IDENTIFIER register code { /* assemble_xor(size_64b, type_register_register, $2, $3); */ free($2); }
     | TINC register code
-    | TINC IDENTIFIER code
+    | TINC IDENTIFIER code { free($2); }
     ;
 
 loop: TLOOP code END_LOOP
@@ -160,6 +160,7 @@ calltype: FASTCALL
 
 arguments: %empty
     | IDENTIFIER arguments { free($1); }
+    | STRING_LITERAL arguments { free($1); }
     | register   arguments
     | immediate  arguments
     ;

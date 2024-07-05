@@ -100,17 +100,16 @@ u64{wsnl}+ { return U64; }
         BEGIN INITIAL;
         yylval.strval = strdup(string_literal_buffer);
         puts(string_literal_buffer);
-        return LITERAL;
+        return STRING_LITERAL;
 }
 .   {
-        string_litral_buffer_size += yyleng;
-        if (string_litral_buffer_size > string_litral_buffer_capacity) {
+        if (string_litral_buffer_size + yyleng > string_litral_buffer_capacity) {
             string_litral_buffer_capacity *= 2;
             void * ignore = realloc(string_literal_buffer, string_litral_buffer_capacity);
             (void)ignore;
         }
         memcpy(string_literal_buffer + string_litral_buffer_size, yytext, yyleng);
-        puts(string_literal_buffer);
+        string_litral_buffer_size += yyleng;
     }
 }
 
@@ -155,16 +154,11 @@ void set_state(int state) {
 }
 
 void yyfree_leftovers(void) {
-    // XXX: wip
-    for (size_t i = 0; i < yy_buffer_stack_max; i++) {
-        free(yy_buffer_stack[i]);
-    }
-
-    //yy_delete_buffer(b);
-
     if (yyin) {
         fclose(yyin);
     }
+
+    yylex_destroy();
 
     free(string_literal_buffer);
 }
