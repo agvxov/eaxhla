@@ -102,7 +102,7 @@ fastcall{wsnl}+ { return FASTCALL; }
 
 \[      { return '['; }
 \]      { return ']'; }
-\+|\-|\*|\/|\%|\^ { return yytext[0]; }
+\+|\-|\*|\/|\%|\^|\: { return yytext[0]; }
 
 <IN_END>{
 program        { BEGIN INITIAL; return END_PROGRAM; }
@@ -165,7 +165,8 @@ machine        { BEGIN INITIAL; return END_MACHINE; }
           }
 }
 
-{identifier} { yylval.strval = strdup(yytext); return IDENTIFIER; }
+{identifier}  { yylval.strval = strdup(yytext); return IDENTIFIER; }
+{identifier}: { yylval.strval = strdup(yytext); return LABEL; }
 
 . { yyerror(); }
 

@@ -60,7 +60,7 @@
 
 %token EXIT BREAK
 
-%token<strval> IDENTIFIER
+%token<strval> IDENTIFIER LABEL
 
 %type<intval>  immediate
 %type<intval>  artimetric_block artimetric_expression artimetric_operand
@@ -146,9 +146,10 @@ code: %empty
     | loop    code
     | if      code
     | call    code
+    | LABEL   code
     | machine code
-    | BREAK code
-    | exit  code
+    | BREAK   code
+    | exit    code
     | TXOR register register  code  { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
     | TXOR register immediate code  { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
     | TXOR IDENTIFIER register code { /* assemble_xor(size_64b, type_register_register, $2, $3); */ free($2); }
