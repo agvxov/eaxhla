@@ -62,8 +62,8 @@ bootstrap:
 	./library/bootstrap.sh
 
 test: ${OUT}
-	fcpp -C -LL debug/xop.eax > debug/xop.eax.pp
-	${WRAP} ./${OUT} debug/xop.eax.pp
+	#fcpp -C -LL debug/xop.eax > debug/xop.eax.pp
+	${WRAP} ./${OUT} debug/xop.eax
 
 clean:
 	-rm ${OUT} ${OBJECT} ${GENOBJECT} ${GENSOURCE}

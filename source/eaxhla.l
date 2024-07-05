@@ -1,15 +1,24 @@
 %{
+    #include <stdlib.h>
     #include "eaxhla.tab.h"
+
+    char * string_literal_buffer;
+    int string_litral_buffer_size     = 0;
+    int string_litral_buffer_capacity = 128;
+
+    #define YY_USER_INIT \
+        string_literal_buffer = malloc(128);
 %}
 %option noyywrap
 
-identifier [A-Za-z_][A-z0-9_]*
+identifier [A-Za-z_][A-Za-z0-9_]*
 wsnl       [ \t\r\v\f\n]
 
 hex        [0123456789abcdef]
 uhex       [0123456789ABCDEF]
 
 %x IN_COMMENT IN_MULTILINE_COMMENT
+%x IN_STRING
 
     // XXX: ?!
 %x IN_DECLARE
@@ -49,6 +58,7 @@ unix{wsnl}+    { return UNIX; }
 \$rip{wsnl}+   { return RIP; }
 
 in{wsnl}+  { return TIN; }
+\=         { return '='; }
 
 s8{wsnl}+  { return  S8; }
 s16{wsnl}+ { return S16; }
@@ -78,6 +88,25 @@ u64{wsnl}+ { return U64; }
               return LITERAL;
           }
 
+\"  { BEGIN IN_STRING; }
+
+<IN_STRING>{
+    /* XXX: escapes */
+\"  {
+        BEGIN INITIAL;
+        yylval.strval = strdup(string_literal_buffer);
+        return LITERAL;
+}
+.   {
+        string_litral_buffer_size += yyleng;
+        if (string_litral_buffer_size > string_litral_buffer_capacity) {
+            string_litral_buffer_capacity *= 2;
+            realloc(string_literal_buffer, string_litral_buffer_capacity);
+        }
+        memcpy(string_literal_buffer + string_litral_buffer_size, yytext, yyleng);
+    }
+}
+
 xor{wsnl}+     { return TXOR; }
 inc{wsnl}+     { return TINC; }
 
@@ -106,6 +135,8 @@ fastcall{wsnl}+ { return FASTCALL; }
 
 {identifier}{wsnl}+ { yylval.strval = strdup(yytext); return IDENTIFIER; }
 
+. { yyerror(); }
+
 %%
 
 void set_state(int state) {
@@ -121,4 +152,6 @@ void yyfree_leftovers(void) {
     for (size_t i = 0; i < yy_buffer_stack_max; i++) {
         free(yy_buffer_stack[i]);
     }
+
+    free(string_literal_buffer);
 }

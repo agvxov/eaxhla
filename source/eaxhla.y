@@ -109,6 +109,7 @@ declaration_section: %empty
     ;
 
 declaration: origin type IDENTIFIER { $2.name = $3; /* add_var($1); */ free($3); }
+    | origin type IDENTIFIER '=' LITERAL { $2.name = $3; /* add_var($1); */ free($3); }
     ;
 
 origin: %empty

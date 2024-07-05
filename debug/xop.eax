@@ -6,7 +6,7 @@
  * It is distributed in the hope that it will be useful or harmful, it really depends... But no warranty what so ever, seriously. See GNU/GPLv3.
  */
 
-#include <xolatile/xtandard.eax>
+/* #include <xolatile/xtandard.eax> */
 
 fast
 procedure highlight
@@ -37,16 +37,16 @@ end procedure
 
 unix
 program xop
-    s32 file   = -1;
-    s32 size   =  0;
-    s32 offset =  0;
+    s32 file   = -1
+    s32 size   =  0
+    s32 offset =  0
 
-    u8 buffer = NULL;
+    u8 buffer = 0
 begin
     if
     /* argc != 2 */
     then
-        fatal_failure(1, "xop: xop input")
+        fastcall fatal_failure 1 "xop: xop input"
     end if
 
     fastcall file_open [argv + 1] O_RDONLY
