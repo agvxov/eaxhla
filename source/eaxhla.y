@@ -5,6 +5,7 @@
 }
 
 %code requires {
+    #include "table.h"
     // XXX this could be easily squashed later
     typedef struct {
         int is_signed;
@@ -55,7 +56,7 @@
 %token PROGRAM END_PROGRAM
 %token PROCEDURE END_PROCEDURE
 %token TLOOP END_LOOP
-%token IF THEN END_IF
+%token IF THEN ELSE END_IF
 %token BREAK
 
 %token<strval> IDENTIFIER
@@ -147,6 +148,7 @@ loop: TLOOP code END_LOOP
     ;
 
 if: IF logic THEN code END_IF
+    | IF logic THEN code ELSE code END_IF
     ;
 
 logic: %empty /* XXX */

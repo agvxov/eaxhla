@@ -3,9 +3,10 @@
 #include <tommyds/tommytrie.h>
 
 typedef struct {
-  /* size_t   size; */
-  /* int    * hash; */
-  /* void   * data; */
+  short   size;
+  int   * hash;
+  void  * data;
+  long    address;
 
   tommy_node node;
 } value_table_t;

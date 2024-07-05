@@ -1,6 +1,7 @@
 %{
     #include <stdlib.h>
     #include "eaxhla.tab.h"
+    #include "table.h"
 
     char * string_literal_buffer;
     int string_litral_buffer_size     = 0;
@@ -22,6 +23,7 @@ uhex       [0123456789ABCDEF]
 
 %x IN_COMMENT IN_MULTILINE_COMMENT
 %x IN_STRING
+%x IN_END
 
     // XXX: ?!
 %x IN_DECLARE
@@ -36,18 +38,23 @@ uhex       [0123456789ABCDEF]
 
 begin{wsnl}+ { return MYBEGIN; }
 
-    /* XXX 'end' should be its own state, with proper error handling */
 program{wsnl}+             { return PROGRAM; }
-end{wsnl}+program{wsnl}+   { return END_PROGRAM; }
 procedure{wsnl}+           { return PROCEDURE; }
-end{wsnl}+procedure{wsnl}+ { return END_PROCEDURE; }
 loop{wsnl}+                { return TLOOP; }
-end{wsnl}+loop{wsnl}+      { return END_LOOP; }
 if{wsnl}+                  { return IF; }
 then{wsnl}+                { return THEN; }
-end{wsnl}+if{wsnl}+        { return END_IF; }
 break{wsnl}+               { return BREAK; }
 
+end { BEGIN IN_END; }
+
+<IN_END>{
+program        { BEGIN INITIAL; return END_PROGRAM; }
+procedure      { BEGIN INITIAL; return END_PROCEDURE; }
+loop           { BEGIN INITIAL; return END_LOOP; }
+if             { BEGIN INITIAL; return END_IF; }
+{wsnl}         { ; }
+.              { yyerror(); }
+}
 
 fast{wsnl}+    { return FAST; }
 unix{wsnl}+    { return UNIX; }
@@ -139,7 +146,7 @@ fastcall{wsnl}+ { return FASTCALL; }
 .|\n    { ; }
 }
 
-{identifier}{wsnl}+ { yylval.strval = strdup(yytext); return IDENTIFIER; }
+{identifier} { yylval.strval = strdup(yytext); return IDENTIFIER; }
 
 . { yyerror(); }
 
