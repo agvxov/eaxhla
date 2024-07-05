@@ -16,3 +16,10 @@ xor{wsnl}+     { return XOR; }
 \$rbx{wsnl}+   { return RBX; }
 
 %%
+
+void yyfree_leftovers(void) {
+    // XXX: wip
+    for (int i = 0; i < yy_buffer_stack_max; i++) {
+        free(yy_buffer_stack[i]);
+    }
+}
