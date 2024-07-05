@@ -10,10 +10,10 @@
 
 fast
 procedure highlight
-    in s32 offset;
-    in u8 buffer;
+    in s32 offset
+    in u8 buffer
 
-    s32 byte;
+    s32 byte
 begin
     loop
         if byte = 0x90 then

@@ -50,7 +50,8 @@ ${OUT}: ${GENSOURCE} ${GENOBJECT} ${OBJECT}
 	${LINK.c} -o $@ ${OBJECT} ${GENOBJECT} ${LDLIBS}
 
 test: ${OUT}
-	${WRAP} ./${OUT} debug/test.hla
+	fcpp -C -LL debug/xop.eax > debug/xop.eax.pp
+	${WRAP} ./${OUT} debug/xop.eax.pp
 
 clean:
 	-rm ${OUT} ${OBJECT} ${GENOBJECT} ${GENSOURCE}
