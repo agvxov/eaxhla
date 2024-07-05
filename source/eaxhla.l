@@ -3,7 +3,7 @@
 %}
 %option noyywrap
 
-identifier [A-z_][A-z0-9_]*
+identifier [A-Za-z_][A-z0-9_]*
 wsnl       [ \t\r\v\f\n]
 
 hex        [0123456789abcdef]
@@ -13,6 +13,7 @@ uhex       [0123456789ABCDEF]
 
     // XXX: ?!
 %x IN_DECLARE
+%x IN_UGH
 
 %option nodefault
 %option yylineno
@@ -23,6 +24,7 @@ uhex       [0123456789ABCDEF]
 
 begin{wsnl}+ { return MYBEGIN; }
 
+    /* XXX 'end' should be its own state, with proper error handling */
 program{wsnl}+             { return PROGRAM; }
 end{wsnl}+program{wsnl}+   { return END_PROGRAM; }
 procedure{wsnl}+           { return PROCEDURE; }
@@ -32,6 +34,8 @@ end{wsnl}+loop{wsnl}+      { return END_LOOP; }
 if{wsnl}+                  { return IF; }
 then{wsnl}+                { return THEN; }
 end{wsnl}+if{wsnl}+        { return END_IF; }
+break{wsnl}+               { return BREAK; }
+
 
 fast{wsnl}+    { return FAST; }
 unix{wsnl}+    { return UNIX; }
@@ -55,6 +59,11 @@ u16{wsnl}+ { return U16; }
 u32{wsnl}+ { return U32; }
 u64{wsnl}+ { return U64; }
 
+-?[[:digit:]]+  {
+                    sscanf(yytext, "%d", &yylval.intval);
+                    return LITERAL;
+}
+
 0b[01]+             {
                         return LITERAL;
                     }
@@ -70,6 +79,9 @@ u64{wsnl}+ { return U64; }
           }
 
 xor{wsnl}+     { return TXOR; }
+inc{wsnl}+     { return TINC; }
+
+fastcall{wsnl}+ { return FASTCALL; }
 
 \/\/    { BEGIN IN_COMMENT; }
 \/\*    { BEGIN IN_MULTILINE_COMMENT; }
@@ -81,6 +93,14 @@ xor{wsnl}+     { return TXOR; }
 
 <IN_MULTILINE_COMMENT>{
 \*\/    { BEGIN INITIAL; }
+.|\n    { ; }
+}
+
+\[      { BEGIN IN_UGH; }
+
+<IN_UGH>{
+\]      { BEGIN INITIAL; yylval.strval = strdup(yytext); return IDENTIFIER; }
+    /* XXX! */
 .|\n    { ; }
 }
 

@@ -24,7 +24,8 @@
     #include "assembler.h"
 
     void yyerror() {
-        printf("\033[31mError: syntax error at line %d.\033[0m\n", yylineno);
+        printf("\033[31mError: syntax error at line %d near '%s'.\033[0m\n", yylineno, yytext);
+        yyfree_leftovers();
     }
 
     extern void set_state(int state);
@@ -52,6 +53,7 @@
 %token PROCEDURE END_PROCEDURE
 %token TLOOP END_LOOP
 %token IF THEN END_IF
+%token BREAK
 
 %token<strval> IDENTIFIER
 
@@ -74,7 +76,9 @@
 %token RBP RSP RIP
 
 // Instructions
-%token TADD TOR TADC TBB TXOR TAND TSUB TCMP TSYSCALL
+%token TADD TOR TADC TBB TXOR TAND TSUB TCMP TSYSCALL TINC
+// Instruction-likes
+%token FASTCALL
 %%
 
 hla: %empty
@@ -82,14 +86,18 @@ hla: %empty
     | function hla
     ;
 
-program: program_specifier PROGRAM IDENTIFIER declaration_section MYBEGIN code END_PROGRAM
+program: program_specifier PROGRAM IDENTIFIER declaration_section MYBEGIN code END_PROGRAM {
+            free($3);
+        }
     ;
 
 program_specifier: %empty
     | UNIX
     ;
 
-function: function_specifier PROCEDURE IDENTIFIER declaration_section MYBEGIN code END_PROCEDURE
+function: function_specifier PROCEDURE IDENTIFIER declaration_section MYBEGIN code END_PROCEDURE {
+            free($3);
+        }
     ;
 
 function_specifier: %empty
@@ -100,7 +108,7 @@ declaration_section: %empty
     | declaration declaration_section
     ;
 
-declaration: origin type IDENTIFIER { $2.name = $3; /* add_var($1); */ }
+declaration: origin type IDENTIFIER { $2.name = $3; /* add_var($1); */ free($3); }
     ;
 
 origin: %empty
@@ -118,10 +126,15 @@ type: S8    { $$ = (static_variable){ .is_signed = 1, .size =  8, .address = new
     ;
 
 code: %empty
-    | loop
-    | if
-    | TXOR register register  { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
-    | TXOR register immediate { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
+    | loop  code
+    | if    code
+    | call  code
+    | BREAK code
+    | TXOR register register  code  { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
+    | TXOR register immediate code  { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
+    | TXOR IDENTIFIER register code { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
+    | TINC register code
+    | TINC IDENTIFIER code
     ;
 
 loop: TLOOP code END_LOOP
@@ -131,6 +144,18 @@ if: IF logic THEN code END_IF
     ;
 
 logic:
+    ;
+
+call: calltype IDENTIFIER arguments { free($2); }
+    ;
+
+calltype: FASTCALL
+    ;
+
+arguments: %empty
+    | IDENTIFIER arguments { free($1); }
+    | register   arguments
+    | immediate  arguments
     ;
 
 register: RAX   { $$ = R0; }
