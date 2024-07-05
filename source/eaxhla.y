@@ -23,6 +23,8 @@
     #include "eaxhla.yy.h"
     #include "assembler.h"
 
+    extern void yyfree_leftovers(void);
+
     void yyerror() {
         printf("\033[31mError: syntax error at line %d near '%s'.\033[0m\n", yylineno, yytext);
         yyfree_leftovers();
@@ -31,12 +33,13 @@
     extern void set_state(int state);
 
     long new_static(int size) {
+        (void)size;
         return 0;
     }
 %}
 
 %union{
-    int intval;
+    long intval;
     char * strval;
     static_variable varval;
 }
@@ -58,6 +61,7 @@
 %token<strval> IDENTIFIER
 
 %token<intval> LITERAL
+%token<strval> STRING_LITERAL
 
 %token FAST
 
@@ -110,6 +114,7 @@ declaration_section: %empty
 
 declaration: origin type IDENTIFIER { $2.name = $3; /* add_var($1); */ free($3); }
     | origin type IDENTIFIER '=' LITERAL { $2.name = $3; /* add_var($1); */ free($3); }
+    | origin type IDENTIFIER '=' STRING_LITERAL { $2.name = $3; /* add_var($1); */ free($3); free($5); }
     ;
 
 origin: %empty
@@ -144,7 +149,7 @@ loop: TLOOP code END_LOOP
 if: IF logic THEN code END_IF
     ;
 
-logic:
+logic: %empty /* XXX */
     ;
 
 call: calltype IDENTIFIER arguments { free($2); }
@@ -163,6 +168,6 @@ register: RAX   { $$ = R0; }
     |     RBX   { $$ = R1; }
     ;
 
-immediate: LITERAL { printf("%d", yylval.intval); }
+immediate: LITERAL
     ;
 %%

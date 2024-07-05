@@ -8,6 +8,9 @@
 
     #define YY_USER_INIT \
         string_literal_buffer = malloc(128);
+
+    void yyfree_leftovers(void);
+    void yyerror(void);
 %}
 %option noyywrap
 
@@ -70,21 +73,22 @@ u32{wsnl}+ { return U32; }
 u64{wsnl}+ { return U64; }
 
 -?[[:digit:]]+  {
-                    sscanf(yytext, "%d", &yylval.intval);
+                    yylval.intval = strtol(yytext, NULL, 10);
                     return LITERAL;
 }
 
 0b[01]+             {
+                        yylval.intval = strtol(yytext, NULL, 2);
                         return LITERAL;
                     }
 
 0x{hex}+  {
-              sscanf(yytext + 2, "%x", &yylval.intval);
+              yylval.intval = strtol(yytext + 2, NULL, 16);
               return LITERAL;
           }
 
 0x{uhex}+ {
-              sscanf(yytext + 2, "%X", &yylval.intval);
+              yylval.intval = strtol(yytext + 2, NULL, 16);
               return LITERAL;
           }
 
@@ -95,15 +99,18 @@ u64{wsnl}+ { return U64; }
 \"  {
         BEGIN INITIAL;
         yylval.strval = strdup(string_literal_buffer);
+        puts(string_literal_buffer);
         return LITERAL;
 }
 .   {
         string_litral_buffer_size += yyleng;
         if (string_litral_buffer_size > string_litral_buffer_capacity) {
             string_litral_buffer_capacity *= 2;
-            realloc(string_literal_buffer, string_litral_buffer_capacity);
+            void * ignore = realloc(string_literal_buffer, string_litral_buffer_capacity);
+            (void)ignore;
         }
         memcpy(string_literal_buffer + string_litral_buffer_size, yytext, yyleng);
+        puts(string_literal_buffer);
     }
 }
 
@@ -151,6 +158,12 @@ void yyfree_leftovers(void) {
     // XXX: wip
     for (size_t i = 0; i < yy_buffer_stack_max; i++) {
         free(yy_buffer_stack[i]);
+    }
+
+    //yy_delete_buffer(b);
+
+    if (yyin) {
+        fclose(yyin);
     }
 
     free(string_literal_buffer);
