@@ -465,6 +465,21 @@ nnn:	nop
 	mov qword[x8], 11223344h
 
 	nop
+	nop
+	nop
+
+xxx:	nop
+	jmp xxx
+	nop
+	jmp fff
+	nop
+	jmp rcx
+	nop
+	jmp r9
+	nop
+	jmp qword[x4]
+
+	nop
 
 	nop
 	nop
