@@ -240,6 +240,34 @@ static void build_move_if (operation_index operation,
 	//~displacement (4, 0X12345678); // Not implemented at this point!
 }
 
+// SPECIAL!
+static void build_move (size_index      size,
+                        type_index      to,
+                        next            destination,
+                        type_index      from,
+                        next            source) {
+	/* */
+	build_short_prefix (size == D16);
+
+	build_long_prefix (size == D64,
+	                  (to   == REG) && (upper ((form) destination)),
+	                  (from == REG) && (upper ((form) source)));
+
+	place ((to == REG) && (from == REG), (byte) (0X88 + (size != D8)));
+	place ((to == REG) && (from == MEM), (byte) (0X8A + (size != D8)));
+	place ((to == MEM) && (from == REG), (byte) (0X88 + (size != D8)));
+
+	build_register_redirection ((to == REG) && (from == MEM), destination);
+	build_register_redirection ((to == MEM) && (from == REG), source);
+
+	place ((to == REG) && (from == IMM), (byte) (0XB0
+	                                           + 0X08 * (size != D8)
+	                                           + 0X01 * (destination & 0X07)));
+
+	place ((to == MEM) && (from == IMM), (byte) (0XC6 + (size != D8)));
+	place ((to == MEM) && (from == IMM), (byte) (0X05));
+}
+
 next   token_count;
 byte * token_array;
 
@@ -278,6 +306,11 @@ void assemble (next   count,
 			build_move_if (array [index + 0], array [index + 1],
 			               array [index + 2], array [index + 3],
 			               array [index + 4], array [index + 5]);
+			index += 5;
+		} else if (array [index] == MOV) {
+			build_move_if (array [index + 1], array [index + 2],
+			               array [index + 3], array [index + 4],
+			               array [index + 5]);
 			index += 5;
 		}
 	}
