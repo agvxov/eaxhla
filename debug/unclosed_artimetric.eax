@@ -1,3 +1,2 @@
 program a
-begin
-[
+    u8 var = [

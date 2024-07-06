@@ -63,7 +63,8 @@
 %token TIN
 %token S8 S16 S32 S64
 %token U8 U16 U32 U64
-%type<varval> type
+%type<intval> type
+%type<varval> declaration
 
 // Registers
 %type<intval> register
@@ -76,6 +77,11 @@
 
 // Instructions
 %token TADD TOR TADC TBB TXOR TAND TSUB TCMP TSYSCALL TINC
+%token INOP // better temp prefix?
+%token IADD
+%token ISYSCALL
+%token IMOV
+%token IXOR
 
 // Instruction-likes
 %token FASTCALL
@@ -120,18 +126,21 @@ declaration_section: %empty
 
 declaration:
       variable_specifier type IDENTIFIER {
-        $2.name = make_scoped_name(scope, $3);
-        add_variable($2);
+        $$.name = make_scoped_name(scope, $3);
+        add_variable($$);
     }
-    | variable_specifier type IDENTIFIER '=' immediate {
-        $2.name = make_scoped_name(scope, $3);
-        $2.value = $5;
-        add_variable($2);
+    | variable_specifier type IDENTIFIER '=' LITERAL {
+        $$.name = make_scoped_name(scope, $3);
+        if (!can_fit($2, $5)) {
+            issue_warning("the value \033[1m'%lld'\033[0m will overflow in assignement", $5);
+        }
+        $$.value = $5;
+        add_variable($$);
     }
     | variable_specifier type IDENTIFIER '=' STRING_LITERAL {
-        $2.name = make_scoped_name(scope, $3);
-        $2.value = $5;
-        add_variable($2);
+        $$.name = make_scoped_name(scope, $3);
+        $$.value = $5;
+        add_variable($$);
     }
     ;
 
@@ -139,14 +148,26 @@ variable_specifier: %empty
     | TIN
     ;
 
-type: S8    { $$ = (variable_t){ .size =  8, .address = new_static( 8), .value = 0 }; }
-    | S16   { $$ = (variable_t){ .size = 16, .address = new_static(16), .value = 0 }; }
-    | S32   { $$ = (variable_t){ .size = 32, .address = new_static(32), .value = 0 }; }
-    | S64   { $$ = (variable_t){ .size = 64, .address = new_static(64), .value = 0 }; }
-    | U8    { $$ = (variable_t){ .size =  8, .address = new_static( 8), .value = 0 }; }
-    | U16   { $$ = (variable_t){ .size = 16, .address = new_static(16), .value = 0 }; }
-    | U32   { $$ = (variable_t){ .size = 32, .address = new_static(32), .value = 0 }; }
-    | U64   { $$ = (variable_t){ .size = 64, .address = new_static(64), .value = 0 }; }
+type: S8    { $$ =  S8; }
+    | S16   { $$ = S16; }
+    | S32   { $$ = S32; }
+    | S64   { $$ = S64; }
+    | U8    { $$ =  U8; }
+    | U16   { $$ = U16; }
+    | U32   { $$ = U32; }
+    | U64   { $$ = U64; }
+    ;
+
+immediate: LITERAL
+    | IDENTIFIER
+    ;
+
+memory: artimetric_block
+    ;
+
+value: artimetric_block
+    | LITERAL
+    | IDENTIFIER
     ;
 
 code: %empty
@@ -158,11 +179,28 @@ code: %empty
     | machine code
     | BREAK   code
     | exit    code
-    | TXOR register register   code  { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
-    | TXOR register immediate  code  { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
-    | TXOR IDENTIFIER register code { /* assemble_xor(size_64b, type_register_register, $2, $3); */ free($2); }
+    | instruction code
+    ;
+
+instruction: INOP { ; }
+    /*
+    | TXOR register register   code  { /* assemble_xor(size_64b, type_register_register, $2, $3); * / }
+    | TXOR register immediate  code  { /* assemble_xor(size_64b, type_register_register, $2, $3); * / }
+    | TXOR IDENTIFIER register code { /* assemble_xor(size_64b, type_register_register, $2, $3); * / free($2); }
     | TINC register            code
     | TINC IDENTIFIER          code { free($2); }
+    */
+    | IADD register register 
+    | IADD register immediate
+    | IADD register memory
+    | ISYSCALL
+    | IMOV register register
+    | IMOV memory   register
+    | IMOV register memory
+    | IMOV register immediate
+    | IMOV memory   immediate
+    | IXOR register register
+    | IXOR register memory
     ;
 
 loop: TLOOP code END_LOOP
@@ -182,15 +220,12 @@ logic: logical_operand TAND logical_operand
 
 logical_operand: sublogic
     | register
-    | immediate
+    | artimetric_block
+    | LITERAL
     | IDENTIFIER
     ;
 
 sublogic: '(' logic ')'
-    ;
-
-memory: immediate
-    | IDENTIFIER
     ;
 
 machine: MACHINE machine_code END_MACHINE
@@ -209,10 +244,11 @@ calltype: FASTCALL
     ;
 
 arguments: %empty
-    | IDENTIFIER     arguments { free($1); }
-    | STRING_LITERAL arguments { free($1); }
-    | register       arguments
-    | immediate      arguments
+    | IDENTIFIER       arguments { free($1); }
+    | STRING_LITERAL   arguments { free($1); }
+    | LITERAL          arguments
+    | register         arguments
+    | artimetric_block arguments
     ;
 
 register: RAX    { $$ = R0;    }
@@ -241,10 +277,6 @@ register: RAX    { $$ = R0;    }
     |     RGXMM7 { $$ = 0; }
     ;
 
-immediate: LITERAL
-    | artimetric_block
-    ;
-
 artimetric_block: '[' artimetric_expression ']' { $$ = $2; }
     ;
 
@@ -258,11 +290,11 @@ artimetric_expression: %empty { $$ = 0; }
     | artimetric_expression '^' artimetric_operand { $$ = pow($1, $3); }
     ;
 
-artimetric_operand: immediate
+artimetric_operand: LITERAL
+    | STRING_LITERAL
     | IDENTIFIER { $$ = 0; /*XXX*/ }
     ;
 
-exit: EXIT immediate
-    | EXIT IDENTIFIER { free($2); }
+exit: EXIT value
     ;
 %%

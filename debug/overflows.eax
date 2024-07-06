@@ -1,0 +1,6 @@
+program main
+    u8 a = 10
+    u8 b = 10000
+    u8 c = -200
+begin
+end program

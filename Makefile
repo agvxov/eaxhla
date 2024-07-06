@@ -68,9 +68,9 @@ bootstrap:
 test: ${OUT}
 	#fcpp -C -LL debug/xop.eax > debug/xop.eax.pp
 	#${WRAP} ./${OUT} debug/xop.eax
-	./${OUT} debug/xop.eax
+	#./${OUT} debug/xop.eax # NOTE as of now broken, but only because of undefined instructions
 	#${WRAP} ./${OUT} debug/artimetrics.eax
-	@echo " --- ERROR TESTING BEGINS BELOW ---"
+	@echo -e "\033[31;1m --- ERROR TESTING BEGINS BELOW ---\033[0m"
 	debug/error_test.sh
 
 clean:

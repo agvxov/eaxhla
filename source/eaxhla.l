@@ -1,7 +1,6 @@
 %{
     #include <stdlib.h>
     #include "eaxhla.tab.h"
-    #include "table.h"
 
     char * string_literal_buffer;
     int string_litral_buffer_size     = 0;
@@ -96,9 +95,18 @@ u64{wsnl}+ { return U64; }
 
 \+|\-|\*|\/|\%|\^|\: { return yytext[0]; }
 
-xor{wsnl}+      { return TXOR; }
-inc{wsnl}+      { return TINC; }
 fastcall{wsnl}+ { return FASTCALL; }
+
+    /* --- Instrunctions begin here --- */
+    /*
+    xor{wsnl}+      { return TXOR; }
+    inc{wsnl}+      { return TINC; }
+    */
+add{wsnl}+      { return IADD; }
+syscall{wsnl}+  { return ISYSCALL; }
+mov{wsnl}+  { return IMOV; }
+xor{wsnl}+  { return IXOR; }
+    /* --- Instrunctions end here --- */
 
 <IN_END>{
 program        { BEGIN INITIAL; free(scope); scope = NULL; return END_PROGRAM; }

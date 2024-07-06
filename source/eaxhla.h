@@ -3,8 +3,7 @@
 #include <tommyds/tommyhashtbl.h>
 
 typedef struct {
-  short      size;
-  long       address;
+  int        size;
   long       value;
   char *     name;
   unsigned   _hash;
@@ -17,6 +16,7 @@ extern int eaxhla_init(void);
 extern int eaxhla_destroy(void);
 
 extern char * make_scoped_name(const char * const scope, char * name);
+extern int can_fit(int type, long long value);
 
 extern void add_variable(variable_t variable);
 extern variable_t * get_variable(const char * const name);

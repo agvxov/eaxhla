@@ -6,3 +6,4 @@
 ./eaxhla debug/double_declare.eax
 ./eaxhla debug/empty.eax
 ./eaxhla debug/double_program.eax
+./eaxhla debug/overflows.eax

@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include "eaxhla.tab.h"
+
 tommy_hashtable variable_table;
 
 char * scope = NULL;
@@ -52,6 +54,45 @@ void add_variable(variable_t variable) {
                             heap_variable,
                             heap_variable->_hash
                         );
+}
+
+/* Are these literals ugly? yes.
+ * However it would be much more painful to calculate the values inline.
+ */
+int can_fit(int type, long long value) {
+    unsigned long long max = 0;
+    long long min = 0;
+    switch (type) {
+        case U8: {
+            max = 255;
+        } break;
+        case U16: {
+            max = 65535;
+        } break;
+        case U32: {
+            max = 4294967295;
+        } break;
+        case U64: {
+            max = 9223372036854775807;
+        } break;
+        case S8: {
+            min = -128;
+            max =  127;
+        } break;
+        case S16: {
+            min = -256;
+            max =  255;
+        } break;
+        case S32: {
+            min = -65536;
+            max =  65535;
+        } break;
+        case S64: {
+            min = -4294967296;
+            max =  4294967295;
+        } break;
+    }
+    return value > 0 ? (unsigned long long)value < max : value > min;
 }
 
 char * make_scoped_name(const char * const scope, char * name) {
