@@ -2,10 +2,10 @@ program main
     k8 kek
 begin
     wigglecall func
-    xor $rsp $rsp
-    xor $rsp $rsp
-    poke $rsp
-    xor $rsp $rsp
-    xor $rsp $rsp
-    xor $rsp $rsp
+    xor $rsp rsp
+    xor rsp rsp
+    poke rsp
+    xor rsp rsp
+    xor rsp rsp
+    xor rsp rsp
 end program

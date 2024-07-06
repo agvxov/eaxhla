@@ -29,59 +29,59 @@ uhex       [0123456789ABCDEF]
 
 {wsnl}*  { ; }
 
-begin{wsnl}+ { return MYBEGIN; }
+begin        { return MYBEGIN; }
 
-program{wsnl}+             { return PROGRAM; }
-procedure{wsnl}+           { return PROCEDURE; }
-loop{wsnl}+                { return TLOOP; }
-if{wsnl}+                  { return IF; }
-then{wsnl}+                { return THEN; }
-machine{wsnl}+             { return MACHINE; }
+program                    { return PROGRAM; }
+procedure                  { return PROCEDURE; }
+loop                       { return TLOOP; }
+if                         { return IF; }
+then                       { return THEN; }
+machine                    { return MACHINE; }
 
-break{wsnl}+               { return BREAK; }
-exit{wsnl}+                { return EXIT;  }
+break                      { return BREAK; }
+exit                       { return EXIT;  }
 
 end { BEGIN IN_END; }
 
-fast{wsnl}+    { return FAST; }
-unix{wsnl}+    { return UNIX; }
+fast           { return FAST; }
+unix           { return UNIX; }
 
-rax{wsnl}+   { return RAX;    }
-rbx{wsnl}+   { return RBX;    }
-rcx{wsnl}+   { return RCX;    }
-rdx{wsnl}+   { return RDX;    }
-rbp{wsnl}+   { return RBP;    }
-rsp{wsnl}+   { return RSP;    }
-rip{wsnl}+   { return RIP;    }
-rsi{wsnl}+   { return RSI;    }
-rdi{wsnl}+   { return RDI;    }
-r8{wsnl}+    { return RG8;    }
-r9{wsnl}+    { return RG9;    }
-r10{wsnl}+   { return RG10;   }
-r11{wsnl}+   { return RG11;   }
-r12{wsnl}+   { return RG12;   }
-r13{wsnl}+   { return RG13;   }
-r14{wsnl}+   { return RG14;   }
-xmm0{wsnl}+  { return RGXMM0; }
-xmm1{wsnl}+  { return RGXMM1; }
-xmm2{wsnl}+  { return RGXMM2; }
-xmm3{wsnl}+  { return RGXMM3; }
-xmm4{wsnl}+  { return RGXMM4; }
-xmm5{wsnl}+  { return RGXMM5; }
-xmm6{wsnl}+  { return RGXMM6; }
-xmm7{wsnl}+  { return RGXMM7; }
+rax          { return RAX;    }
+rbx          { return RBX;    }
+rcx          { return RCX;    }
+rdx          { return RDX;    }
+rbp          { return RBP;    }
+rsp          { return RSP;    }
+rip          { return RIP;    }
+rsi          { return RSI;    }
+rdi          { return RDI;    }
+r8           { return RG8;    }
+r9           { return RG9;    }
+r10          { return RG10;   }
+r11          { return RG11;   }
+r12          { return RG12;   }
+r13          { return RG13;   }
+r14          { return RG14;   }
+xmm0         { return RGXMM0; }
+xmm1         { return RGXMM1; }
+xmm2         { return RGXMM2; }
+xmm3         { return RGXMM3; }
+xmm4         { return RGXMM4; }
+xmm5         { return RGXMM5; }
+xmm6         { return RGXMM6; }
+xmm7         { return RGXMM7; }
 
-in{wsnl}+  { return TIN; }
+in         { return TIN; }
 \=         { return '='; }
 
-s8{wsnl}+  { return  S8; }
-s16{wsnl}+ { return S16; }
-s32{wsnl}+ { return S32; }
-s64{wsnl}+ { return S64; }
-u8{wsnl}+  { return  U8; }
-u16{wsnl}+ { return U16; }
-u32{wsnl}+ { return U32; }
-u64{wsnl}+ { return U64; }
+s8         { return  S8; }
+s16        { return S16; }
+s32        { return S32; }
+s64        { return S64; }
+u8         { return  U8; }
+u16        { return U16; }
+u32        { return U32; }
+u64        { return U64; }
 
 \"  { BEGIN IN_STRING; }
 
@@ -95,17 +95,17 @@ u64{wsnl}+ { return U64; }
 
 \+|\-|\*|\/|\%|\^|\: { return yytext[0]; }
 
-fastcall{wsnl}+ { return FASTCALL; }
+fastcall { return FASTCALL; }
 
     /* --- Instrunctions begin here --- */
     /*
     xor{wsnl}+      { return TXOR; }
     inc{wsnl}+      { return TINC; }
     */
-add{wsnl}+      { return IADD; }
-syscall{wsnl}+  { return ISYSCALL; }
-mov{wsnl}+  { return IMOV; }
-xor{wsnl}+  { return IXOR; }
+add      { return IADD; }
+syscall  { return ISYSCALL; }
+mov      { return IMOV; }
+xor      { return IXOR; }
     /* --- Instrunctions end here --- */
 
 <IN_END>{
@@ -181,7 +181,7 @@ machine        { BEGIN INITIAL; return END_MACHINE; }
 {identifier}  { yylval.strval = strdup(yytext); return IDENTIFIER; }
 {identifier}: { yylval.strval = strdup(yytext); return LABEL; }
 
-. { issue_error("scanner jammed. This is likely a bug in the program"); /* XXX some kind of emergency termination */ }
+. { issue_error("unknown symbol \033[1m'%c'\033[0m", yytext[0]); }
 
 %%
 

@@ -215,6 +215,7 @@ logic: logical_operand TAND logical_operand
     |  logical_operand TXOR logical_operand
     |  logical_operand '='  logical_operand
     |  logical_operand NEQ  logical_operand
+    |  sublogic
     |  TNOT logic
     ;
 

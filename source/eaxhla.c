@@ -41,6 +41,9 @@ int table_compare_unsigned(const void * arg, const void * obj) {
 
 void add_variable(variable_t variable) {
     if (get_variable(variable.name)) {
+        // XXX: this should say the varname, but this function does not know it
+        //       in fact this source file should not be reporting errors,
+        //       it should be returning an error and the parser should check.
         issue_error("variable declared twice");
         return;
     }
@@ -92,7 +95,7 @@ int can_fit(int type, long long value) {
             max =  4294967295;
         } break;
     }
-    return value > 0 ? (unsigned long long)value < max : value > min;
+    return value > 0 ? (unsigned long long)value <= max : value >= min;
 }
 
 char * make_scoped_name(const char * const scope, char * name) {
