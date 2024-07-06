@@ -1,4 +1,5 @@
 .PHONY: clean test
+.SUFFIXES:
 
 ifeq (${DEBUG}, 1)
   LFLAGS     += --debug --trace
@@ -25,7 +26,7 @@ OUT := eaxhla
 SOURCE.d  := source
 OBJECT.d  := object
 
-SOURCE    := main.c assembler.c table.c
+SOURCE    := main.c assembler.c eaxhla.c
 OBJECT    := $(addprefix ${OBJECT.d}/,${SOURCE})
 OBJECT    := ${OBJECT:.c=.o}
 
@@ -59,7 +60,7 @@ ${OBJECT.d}/%.o: ${SOURCE.d}/%.c
 	${COMPILE.c} -o $@ $<
 
 ${OUT}: ${GENSOURCE} ${GENOBJECT} ${OBJECT} ${LIB}
-	${LINK.c} -o $@ ${OBJECT} ${GENOBJECT} ${LDLIBS}
+	${LINK.c} -o $@ ${OBJECT} ${GENOBJECT} ${LDLIBS} library/tommyds/tommy.o
 
 bootstrap:
 	./library/bootstrap.sh
@@ -67,7 +68,8 @@ bootstrap:
 test: ${OUT}
 	#fcpp -C -LL debug/xop.eax > debug/xop.eax.pp
 	#${WRAP} ./${OUT} debug/xop.eax
-	${WRAP} ./${OUT} debug/artimetrics.eax
+	./${OUT} debug/xop.eax
+	#${WRAP} ./${OUT} debug/artimetrics.eax
 	@echo " --- ERROR TESTING BEGINS BELOW ---"
 	debug/error_test.sh
 

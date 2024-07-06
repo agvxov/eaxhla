@@ -9,9 +9,6 @@
 
     #define YY_USER_INIT \
         string_literal_buffer = malloc(128);
-
-    void yyfree_leftovers(void);
-    void yyerror(const char * errmsg);
 %}
 %option noyywrap
 
@@ -78,9 +75,6 @@ unix{wsnl}+    { return UNIX; }
 in{wsnl}+  { return TIN; }
 \=         { return '='; }
 
-\!\=       { return NEQ; }
-\!         { return TNOT; }
-
 s8{wsnl}+  { return  S8; }
 s16{wsnl}+ { return S16; }
 s32{wsnl}+ { return S32; }
@@ -92,21 +86,23 @@ u64{wsnl}+ { return U64; }
 
 \"  { BEGIN IN_STRING; }
 
-xor{wsnl}+     { return TXOR; }
-inc{wsnl}+     { return TINC; }
-
-fastcall{wsnl}+ { return FASTCALL; }
+\!\=       { return NEQ; }
+\!         { return TNOT; }
 
 \/\/    { BEGIN IN_COMMENT; }
 \/\*    { BEGIN IN_MULTILINE_COMMENT; }
 
-\[      { return '['; }
-\]      { return ']'; }
+\[|\]   { return yytext[0]; }
+
 \+|\-|\*|\/|\%|\^|\: { return yytext[0]; }
 
+xor{wsnl}+      { return TXOR; }
+inc{wsnl}+      { return TINC; }
+fastcall{wsnl}+ { return FASTCALL; }
+
 <IN_END>{
-program        { BEGIN INITIAL; return END_PROGRAM; }
-procedure      { BEGIN INITIAL; return END_PROCEDURE; }
+program        { BEGIN INITIAL; free(scope); scope = NULL; return END_PROGRAM; }
+procedure      { BEGIN INITIAL; free(scope); scope = NULL; return END_PROCEDURE; }
 loop           { BEGIN INITIAL; return END_LOOP; }
 if             { BEGIN INITIAL; return END_IF; }
 machine        { BEGIN INITIAL; return END_MACHINE; }
@@ -115,7 +111,7 @@ machine        { BEGIN INITIAL; return END_MACHINE; }
 }
 
 <IN_UNKNOWN_END>{
-.*  { yyerror("unknown end sequence"); BEGIN INITIAL; return 0; }
+.*  { issue_error("unknown end-sequence \033[1m'%s'\033[0m", yytext); BEGIN INITIAL; return 0; }
 }
 
 <IN_STRING>{
@@ -123,7 +119,6 @@ machine        { BEGIN INITIAL; return END_MACHINE; }
 \"  {
         BEGIN INITIAL;
         yylval.strval = strdup(string_literal_buffer);
-        puts(string_literal_buffer);
         return STRING_LITERAL;
 }
 .   {
@@ -140,23 +135,23 @@ machine        { BEGIN INITIAL; return END_MACHINE; }
 <IN_COMMENT>{
 \n      { BEGIN INITIAL; }
 .*      { ; }
-<<EOF>> { yytext = strdup("<EOF>"); yyerror("unterminated comment"); yyterminate(); }
+<<EOF>> { yytext = strdup("<EOF>"); issue_error("unterminated comment"); yyterminate(); }
 }
 
 <IN_MULTILINE_COMMENT>{
 \*\/    { BEGIN INITIAL; }
 .|\n    { ; }
-<<EOF>> { yytext = strdup("<EOF>"); yyerror("unterminated comment"); yyterminate(); }
+<<EOF>> { yytext = strdup("<EOF>"); issue_error("unterminated comment"); yyterminate(); }
 }
 
 <INITIAL,IN_ARTIMETRIC_BLOCK>{
 -?[[:digit:]]+  {
-                    yylval.intval = strtol(yytext, NULL, 10);
-                    return LITERAL;
-}
+              yylval.intval = strtol(yytext, NULL, 10);
+              return LITERAL;
+          }
 
 0b[01]+   {
-              yylval.intval = strtol(yytext, NULL, 2);
+              yylval.intval = strtol(yytext + 2, NULL, 2);
               return LITERAL;
           }
 
@@ -172,13 +167,13 @@ machine        { BEGIN INITIAL; return END_MACHINE; }
 }
 
 <IN_ARTIMETRIC_BLOCK>{
-<<EOF>> { yytext = strdup("<EOF>"); yyerror("unterminated artimetric block"); yyterminate(); }
+<<EOF>> { yytext = strdup("<EOF>"); issue_error("unterminated artimetric block"); yyterminate(); }
 }
 
 {identifier}  { yylval.strval = strdup(yytext); return IDENTIFIER; }
 {identifier}: { yylval.strval = strdup(yytext); return LABEL; }
 
-. { yyerror("scanner jammed"); }
+. { issue_error("scanner jammed. This is likely a bug in the program"); /* XXX some kind of emergency termination */ }
 
 %%
 

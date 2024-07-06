@@ -6,7 +6,7 @@
  * It is distributed in the hope that it will be useful or harmful, it really depends... But no warranty what so ever, seriously. See GNU/GPLv3.
  */
 
-/* #include <xolatile/xtandard.eax> */
+// #include <xolatile/xtandard.eax>
 
 fast
 procedure highlight

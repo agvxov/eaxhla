@@ -1,60 +1,37 @@
-%code provides {
-    enum {
-        STATE_DECLARE,
-    };
-}
-
 %code requires {
-    #include "table.h"
-    // XXX this could be easily squashed later
-    typedef struct {
-        int is_signed;
-        int size;
-        long address;
-        char * name; // hash tables and shit
-    } static_variable;
-
-    // struct program
-    // struct function
+    #include "eaxhla.h"
 }
-
 %{
     #include <stdio.h>
     #include <math.h>
 
     #include "eaxhla.yy.h"
     #include "assembler.h"
+    #include "eaxhla.h"
 
     extern void yyfree_leftovers(void);
     extern char * yyfilename;
 
     void yyerror(const char * errmsg) {
-        printf("\033[1m%s:%d:\033[0m \033[31mError\033[0m: %s near \033[1m'%s'\033[0m.\n",
-                    yyfilename,
-                    yylineno,
-                    errmsg,
-                    yytext
-                );
+        issue_error("%s near \033[1m'%s'\033[0m", errmsg, yytext);
     }
 
-    long new_static(int size) {
+    long new_static(int size) { // XXX might not be required
         (void)size;
         return 0;
     }
 %}
 
-    // %define parse.error detailed
-
 %union{
     long intval;
     char * strval;
-    static_variable varval;
+    variable_t varval;
 }
 
-/* NOTE: while naming, if my name collided with something in assembler.h i just
- *        added a 'T' prefix. this is obviously horrible and should be fixed,
- *        but that will require careful discussion with xolatile.
- *        for the time being its fine
+/* XXX NOTE: while naming, if my name collided with something in assembler.h i just
+ *   added a 'T' prefix. this is obviously horrible and should be fixed,
+ *   but that will require careful discussion with xolatile.
+ *   for the time being its fine
  */
 
 %token MYBEGIN
@@ -65,8 +42,6 @@
 %token IF THEN ELSE END_IF
 %token MACHINE END_MACHINE
 
-%token EXIT BREAK
-
 %token<strval> IDENTIFIER LABEL
 
 %type<intval>  immediate
@@ -74,13 +49,15 @@
 %token<intval> LITERAL
 %token<strval> STRING_LITERAL
 
+// Specifiers
 %token FAST
-
 %token UNIX
 
 // Logic
 %token NEQ TNOT
-//%token TOR TXOR // these are (in)conveniently instructions too
+/*
+%token TOR TXOR // these are (in)conveniently instructions too
+*/
 
 // Type info
 %token TIN
@@ -99,27 +76,37 @@
 
 // Instructions
 %token TADD TOR TADC TBB TXOR TAND TSUB TCMP TSYSCALL TINC
+
 // Instruction-likes
 %token FASTCALL
+%token EXIT BREAK
 %%
 
-hla: %empty
+hla: %empty            // { issue_warning("empty file, noting to be done."); }
     | program  hla
     | function hla
     ;
 
-program: program_specifier PROGRAM IDENTIFIER declaration_section MYBEGIN code END_PROGRAM {
-            free($3);
-        }
+program: program_head declaration_section MYBEGIN code END_PROGRAM
     ;
+
+program_head: program_specifier PROGRAM IDENTIFIER {
+        if (is_program_found) {
+            issue_error("only 1 entry point is allowed and a program block was already found");
+            YYERROR;
+        }
+        is_program_found = 1;
+        scope = $3;
+    };
 
 program_specifier: %empty
     | UNIX
     ;
 
-function: function_specifier PROCEDURE IDENTIFIER declaration_section MYBEGIN code END_PROCEDURE {
-            free($3);
-        }
+function: function_head declaration_section MYBEGIN code END_PROCEDURE
+    ;
+
+function_head: function_specifier PROCEDURE IDENTIFIER { scope = $3; }
     ;
 
 function_specifier: %empty
@@ -131,23 +118,35 @@ declaration_section: %empty
     | error declaration_section { yyerrok; }
     ;
 
-declaration: origin type IDENTIFIER { $2.name = $3; /* add_var($1); */ free($3); }
-    | origin type IDENTIFIER '=' immediate { $2.name = $3; /* add_var($1); */ free($3); }
-    | origin type IDENTIFIER '=' STRING_LITERAL { $2.name = $3; /* add_var($1); */ free($3); free($5); }
+declaration:
+      variable_specifier type IDENTIFIER {
+        $2.name = make_scoped_name(scope, $3);
+        add_variable($2);
+    }
+    | variable_specifier type IDENTIFIER '=' immediate {
+        $2.name = make_scoped_name(scope, $3);
+        $2.value = $5;
+        add_variable($2);
+    }
+    | variable_specifier type IDENTIFIER '=' STRING_LITERAL {
+        $2.name = make_scoped_name(scope, $3);
+        $2.value = $5;
+        add_variable($2);
+    }
     ;
 
-origin: %empty
+variable_specifier: %empty
     | TIN
     ;
 
-type: S8    { $$ = (static_variable){ .is_signed = 1, .size =  8, .address = new_static( 8), .name = NULL, }; }
-    | S16   { $$ = (static_variable){ .is_signed = 1, .size = 16, .address = new_static(16), .name = NULL, }; }
-    | S32   { $$ = (static_variable){ .is_signed = 1, .size = 32, .address = new_static(32), .name = NULL, }; }
-    | S64   { $$ = (static_variable){ .is_signed = 1, .size = 64, .address = new_static(64), .name = NULL, }; }
-    | U8    { $$ = (static_variable){ .is_signed = 0, .size =  8, .address = new_static( 8), .name = NULL, }; }
-    | U16   { $$ = (static_variable){ .is_signed = 0, .size = 16, .address = new_static(16), .name = NULL, }; }
-    | U32   { $$ = (static_variable){ .is_signed = 0, .size = 32, .address = new_static(32), .name = NULL, }; }
-    | U64   { $$ = (static_variable){ .is_signed = 0, .size = 64, .address = new_static(64), .name = NULL, }; }
+type: S8    { $$ = (variable_t){ .size =  8, .address = new_static( 8), .value = 0 }; }
+    | S16   { $$ = (variable_t){ .size = 16, .address = new_static(16), .value = 0 }; }
+    | S32   { $$ = (variable_t){ .size = 32, .address = new_static(32), .value = 0 }; }
+    | S64   { $$ = (variable_t){ .size = 64, .address = new_static(64), .value = 0 }; }
+    | U8    { $$ = (variable_t){ .size =  8, .address = new_static( 8), .value = 0 }; }
+    | U16   { $$ = (variable_t){ .size = 16, .address = new_static(16), .value = 0 }; }
+    | U32   { $$ = (variable_t){ .size = 32, .address = new_static(32), .value = 0 }; }
+    | U64   { $$ = (variable_t){ .size = 64, .address = new_static(64), .value = 0 }; }
     ;
 
 code: %empty
@@ -155,15 +154,15 @@ code: %empty
     | loop    code
     | if      code
     | call    code
-    | LABEL   code
+    | LABEL   code { free($1); }
     | machine code
     | BREAK   code
     | exit    code
-    | TXOR register register  code  { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
-    | TXOR register immediate code  { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
+    | TXOR register register   code  { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
+    | TXOR register immediate  code  { /* assemble_xor(size_64b, type_register_register, $2, $3); */ }
     | TXOR IDENTIFIER register code { /* assemble_xor(size_64b, type_register_register, $2, $3); */ free($2); }
-    | TINC register code
-    | TINC IDENTIFIER code { free($2); }
+    | TINC register            code
+    | TINC IDENTIFIER          code { free($2); }
     ;
 
 loop: TLOOP code END_LOOP
@@ -181,15 +180,16 @@ logic: logical_operand TAND logical_operand
     |  TNOT logic
     ;
 
+logical_operand: sublogic
+    | register
+    | immediate
+    | IDENTIFIER
+    ;
+
 sublogic: '(' logic ')'
     ;
 
-logical_operand: operand
-    | sublogic
-    ;
-
-operand: immediate
-    | register
+memory: immediate
     | IDENTIFIER
     ;
 
@@ -197,9 +197,9 @@ machine: MACHINE machine_code END_MACHINE
     ;
 
 machine_code: %empty
-    | LITERAL machine_code
+    | LITERAL        machine_code
     | STRING_LITERAL machine_code
-    | IDENTIFIER machine_code { free($1); }
+    | IDENTIFIER     machine_code { free($1); }
     ;
 
 call: calltype IDENTIFIER arguments { free($2); }
@@ -209,10 +209,10 @@ calltype: FASTCALL
     ;
 
 arguments: %empty
-    | IDENTIFIER arguments { free($1); }
+    | IDENTIFIER     arguments { free($1); }
     | STRING_LITERAL arguments { free($1); }
-    | register   arguments
-    | immediate  arguments
+    | register       arguments
+    | immediate      arguments
     ;
 
 register: RAX    { $$ = R0;    }
@@ -248,7 +248,7 @@ immediate: LITERAL
 artimetric_block: '[' artimetric_expression ']' { $$ = $2; }
     ;
 
-artimetric_expression: %empty { YYERROR; }
+artimetric_expression: %empty { $$ = 0; }
     | artimetric_operand
     | artimetric_expression '+' artimetric_operand { $$ = $1 + $3; }
     | artimetric_expression '-' artimetric_operand { $$ = $1 - $3; }
@@ -263,8 +263,6 @@ artimetric_operand: immediate
     ;
 
 exit: EXIT immediate
-    | EXIT IDENTIFIER
+    | EXIT IDENTIFIER { free($2); }
     ;
 %%
-
-
