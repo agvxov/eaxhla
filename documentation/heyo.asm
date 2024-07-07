@@ -16,14 +16,14 @@ segment readable writable
 
 heyo: db 72, 69, 89, 79, 10
 
-;~MOV, D8, REG, R0, IMM, 1,
-;~MOV, D8, REG, R7, IMM, 1,
-;~MOV, D8, REG, R6, IMM, 4198597,
-;~MOV, D8, REG, R2, IMM, 5,
-;~SYSCALL,
-;~MOV, D8, REG, R0, IMM, 60,
-;~MOV, D8, REG, R7, IMM, 0,
-;~SYSCALL,
+;~MOV D8 REG R0 IMM 1
+;~MOV D8 REG R7 IMM 1                                                        ***
+;~MOV D32 REG R6 IMM 4198597
+;~MOV D8 REG R2 IMM 5
+;~SYSCALL
+;~MOV D8 REG R0 IMM 60
+;~MOV D8 REG R7 IMM 0                                                        ***
+;~SYSCALL
 
 ;~7F 45 4C 46 02 01 01 03
 ;~00 00 00 00 00 00 00 00
