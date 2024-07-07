@@ -1,7 +1,7 @@
 # HLA
 
 ## General
-+ x86_64
++ x86\_64
 + GPLv3-only
 
 ## Technologies
@@ -22,35 +22,39 @@ NOTE: the compiler front-end should be able to handle the preprocessing someway,
 
 ## Types
 ```
-<prefix><size>
+<int prefix><int size>
+<float prefix><float size>
 ```
 
-prefixes:
+int prefixes:
 + s - signed
 + u - unsigned
 
-sizes:
+int sizes:
 + 8
 + 16
 + 32
 + 64
 
-floating point types?
-
-prefix:
+float prefixes:
 + f (guarantee IEEE)
 
-size:
-+ 32 (float)
-+ 64 (double)
-+ 80? (long double)
-+ 128? (long double)
+float sizes:
++ 32
++ 64
++ 80?
++ 128?
 
-All of these types would be generically available unless disabled by some compiler option. All of the traditional
-types would be enabled by default or require said flag to become usable, this hypothetical flag (`-ftraditional-types`)
-would then need implementation and support. In the future traditional types could be enabled by default along with
-a flag like (`-fno-terry-types`) to disable EAXCC standard typing. If these types are ever disabled by default
+All of these types would be generically available unless disabled by some compiler option.
+All of the traditional types would be enabled by default or require said flag to become usable,
+this hypothetical flag (`-ftraditional-types`) would then need implementation and support.
+In the future traditional types could be enabled by default along with a flag like
+(`-fno-terry-types`) to disable EAXCC standard typing.
+If these types are ever disabled by default
 then we'll utilize the flag (`-fterry-types`) to enable them.
+// but why emil? are we planning to support C type names?
+  // if so, why are they not listed above?
+  // if not, does that mean no variables an be declared?
 
 ## Syntax
 ### Macros
@@ -58,14 +62,13 @@ then we'll utilize the flag (`-fterry-types`) to enable them.
 + use a preprocessor
 ### Asm
 + no ',' argument deliteters
-+ optional "[]" argument parenthesizing
 ### Machine code
 ```
 machine
     // literal values
 end machine
 ```
-All literal values (string or numeric) is copied as machine code
+All literal values (string or numeric) are copied as machine code.
 ### Logic
 + only evaulated in _logical blocks_
 #### logical blocks
