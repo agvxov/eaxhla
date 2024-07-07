@@ -28,8 +28,18 @@ entry $
 	sbb [x1], cl
 	sbb byte[x1], 11h
 
-; 4C 01 C9 48 03 0D E1 11 00 00 48 81 C1 44 33 22 11 48 01 0D D3 11 00 00 48 81 05 C8 11 00 00 44 33 22 11 44 09 C9 0B 0D BB 11 00 00 81 C9 44 33 22 11 09 0D AF 11 00 00 81 0D A5 11 00 00 44 33 22 11 66 44 11 C9 66 13 0D 98 11 00 00 66 81 D1 22 11 66 11 0D 8C 11 00 00 66 81 15 83 11 00 00 22 11 44 18 C9 1A 0D 79 11 00 00 80 D9 11 18 0D 70 11 00 00 80 1D 69 11 00 00 11
-; 4C 01 C9 48 03 0D FF FF FF FF 48 81 C2 44 33 4C 01 0D FF FF FF FF 48 81 05 FF FF FF FF 44 33 44 09 C9 0B 0D FF FF FF FF 81 CA 44 33 22 11 44 09 0D FF FF FF FF 81 0D FF FF FF FF 44 33 22 11 66 44 11 C9 66 13 0D FF FF FF FF 66 81 D2 44 33 66 44 11 0D FF FF FF FF 66 81 15 FF FF FF FF 44 33 44 18 C9 1A 0D FF FF FF FF 80 D9 44 44 18 0D FF FF FF FF 80 1C FF FF FF FF 44
+	;~add rcx  r9                      | ADD D64 REG R1 REG R9
+	;~4C 01 C9                         | 4C 01 C9
+	;~add rcx  [x8]                    | ADD D64 REG R1 MEM 0
+	;~48 03 0D E1 11 00 00             | 48 03 0D FF FF FF FF
+	;~add rcx  11223344h               | ADD D64 REG R1 IMM 0X11223344U
+	;~48 81 C1 44 33 22 11             | 48 81 C2 44 33 22 11
+	      ;~^^                                 ^^
+	;~add [x8] rcx                     | ADD D64 MEM 0  REG R9
+	;~48 01 0D D3 11 00 00             | 4C 01 0D FF FF FF FF
+	;~^^                                 ^^
+	;~add [x8] 11223344h               | ADD D64 MEM 0  IMM 0X11223344U
+	;~48 81 05 C8 11 00 00 44 33 22 11 | 48 81 05 FF FF FF FF 44 33 22 11
 
 	nop
 	nop

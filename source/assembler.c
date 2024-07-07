@@ -60,8 +60,8 @@ static void print (form       when,
 	/* */
 	place ((when != 0) && (size >= D8),  (byte) ((data >>  0) & 0XFF));
 	place ((when != 0) && (size >= D16), (byte) ((data >>  8) & 0XFF));
-	place ((when != 0) && (size == D32), (byte) ((data >> 16) & 0XFF));
-	place ((when != 0) && (size == D32), (byte) ((data >> 24) & 0XFF));
+	place ((when != 0) && (size >= D32), (byte) ((data >> 16) & 0XFF));
+	place ((when != 0) && (size >= D32), (byte) ((data >> 24) & 0XFF));
 }
 
 static form valid (form data) { return ((data >= 0) && (data <= 15)); }
