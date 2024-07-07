@@ -282,13 +282,13 @@ register: RAX    { $$ = R0;    }
     |     RGXMM7 { $$ = 0; }
         /* XXX !!! */
 register: EAX    { $$ = R0; }
-    |     EBX    { $$ = R1; }
-    |     ECX    { $$ = R2; }
-    |     EDX    { $$ = R3; }
-    |     ESI    { $$ = R4; }
-    |     EDI    { $$ = R5; }
-    |     EBP    { $$ = R6; }
-    |     ESP    { $$ = R7; }
+    |     EBX    { $$ = R3; }
+    |     ECX    { $$ = R1; }
+    |     EDX    { $$ = R2; }
+    |     ESI    { $$ = R6; }
+    |     EDI    { $$ = R7; }
+    |     EBP    { $$ = R5; }
+    |     ESP    { $$ = R4; }
     ;
 
 artimetric_block: '{' artimetric_expression '}' { $$ = $2; }

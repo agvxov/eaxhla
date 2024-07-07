@@ -69,6 +69,8 @@ void append_instruction_t6 (int t6, int w, int d, int r, int s, int i) {
 	append_token (r);  // register
 	append_token (s);  // source
 	append_token (i);  // immediate
+
+	printf ("> MOV D32 REG %i IMM %i\n", r, i);
 }
 
 void append_instruction_t1 (int t1) {
