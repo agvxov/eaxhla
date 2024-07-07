@@ -54,9 +54,9 @@ static void place (form when,
 	token_count += (next) when;
 }
 
-static void print (form when,
-                   form size,
-                   next data) {
+static void print (form       when,
+                   size_index size,
+                   next       data) {
 	/* */
 	place ((when != 0) && (size >= D8),  (byte) ((data >>  0) & 0XFF));
 	place ((when != 0) && (size >= D16), (byte) ((data >>  8) & 0XFF));
@@ -83,8 +83,8 @@ static void build_long_prefix (form use_big_registers,
 	/* */
 	place (use_big_registers || use_new_destination || use_new_source,
 	       (byte) (0X40
-	             + 0X01 * use_new_source
-	             + 0X04 * use_new_destination
+	             + 0X01 * use_new_destination
+	             + 0X04 * use_new_source
 	             + 0X08 * use_big_registers));
 }
 
@@ -237,7 +237,7 @@ static void build_jump (size_index size,
                         type_index to,
                         next       destination) {
 	/* */
-	place ((to == REG) && upper (destination), (byte) 0X41);
+	place ((to == REG) && upper ((form) destination), (byte) 0X41);
 
 	place (to == REL, (byte) (0XE9 + 0X02 * (size == D8)));
 	place (to == REG, (byte) 0XFF);
@@ -275,11 +275,11 @@ static void build_move (size_index size,
 	place ((to == MEM) && (from == IMM), (byte) (0XC6 + (size != D8)));
 	place ((to == MEM) && (from == IMM), (byte) (0X05));
 
-	//~print ((to == REG) && (from == MEM), D32,  (next) ~0);
-	//~print ((to == REG) && (from == IMM), size, source);
-	//~print ((to == MEM) && (from == REG), D32,  (next) ~0);
-	//~print ((to == MEM) && (from == IMM), D32,  (next) ~0);
-	//~print ((to == MEM) && (from == IMM), size, source);
+	print ((to == REG) && (from == MEM), D32,  (next) ~0);
+	print ((to == REG) && (from == IMM), size, source);
+	print ((to == MEM) && (from == REG), D32,  (next) ~0);
+	print ((to == MEM) && (from == IMM), D32,  (next) ~0);
+	print ((to == MEM) && (from == IMM), size, source);
 }
 
 next   token_count;
@@ -322,13 +322,13 @@ void assemble (next   count,
 			               array [index + 4], array [index + 5]);
 			index += 5;
 		} else if (array [index] == JMP) {
-			build_jump_if (array [index + 1], array [index + 2],
-			               array [index + 3]);
+			build_jump (array [index + 1], array [index + 2],
+			            array [index + 3]);
 			index += 3;
 		} else if (array [index] == MOV) {
-			build_move_if (array [index + 1], array [index + 2],
-			               array [index + 3], array [index + 4],
-			               array [index + 5]);
+			build_move (array [index + 1], array [index + 2],
+			            array [index + 3], array [index + 4],
+			            array [index + 5]);
 			index += 5;
 		} else {
 			exit (EXIT_FAILURE); // For debugging only!
