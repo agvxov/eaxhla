@@ -4,9 +4,7 @@
 #include "../source/assembler.h"
 #include "../source/assembler.c"
 
-#define COUNT (6 * 20)
-
-static unsigned int array [COUNT] = {
+static unsigned int array [] = {
 	ADD, D64, REG, R1, REG, R9,
 	ADD, D64, REG, R1, MEM, 0,
 	ADD, D64, REG, R1, IMM, 0X11223344U,
@@ -31,9 +29,10 @@ static unsigned int array [COUNT] = {
 
 int main (void) {
 	unsigned int index;
+
 	token_array = malloc (144UL * sizeof (* token_array));
 
-	assemble (COUNT, array);
+	assemble ((unsigned int) (sizeof (array) / sizeof (array [0])), array);
 
 	printf ("> %u\n", token_count);
 
