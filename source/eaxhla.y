@@ -198,7 +198,7 @@ instruction: INOP { ; }
     | IMOV register register
     | IMOV memory   register
     | IMOV register memory
-    | IMOV register immediate { append_instruction_t6 (MOV, D32, REG, $2, REG, $3); }
+    | IMOV register immediate { append_instruction_t6 (MOV, D32, REG, (int) $2, REG, (int) $3); }
     | IMOV memory   immediate
     | IXOR register register
     | IXOR register memory
