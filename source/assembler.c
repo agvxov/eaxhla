@@ -240,6 +240,53 @@ static void build_move_if (operation_index operation,
 	//~displacement (4, 0X12345678); // Not implemented at this point!
 }
 
+// SPECIAL!
+static void build_jump (size_index size,
+                        type_index to,
+                        next       destination) {
+	/* */
+	place ((to == REG) && upper (destination), (byte) 0X41);
+
+	place (to == REL, (byte) (0XE9 + 0X02 * (size == D8)));
+	place (to == REG, (byte) 0XFF);
+	place (to == REG, (byte) (0XE0 + 0X01 * (destination & 0X07)));
+	place (to == MEM, (byte) 0XFF);
+	place (to == MEM, (byte) 0X25);
+
+	//~displacement (to == MEM, 4, 0X12345678); // Keep when in mind!
+}
+
+// VERY FUCKING SPECIAL!
+static void build_move (size_index size,
+                        type_index to,
+                        next       destination,
+                        type_index from,
+                        next       source) {
+	/* */
+	build_short_prefix (size == D16);
+
+	build_long_prefix (size == D64,
+	                  (to   == REG) && (upper ((form) destination)),
+	                  (from == REG) && (upper ((form) source)));
+
+	place ((to == REG) && (from == REG), (byte) (0X88 + (size != D8)));
+	place ((to == REG) && (from == MEM), (byte) (0X8A + (size != D8)));
+	place ((to == MEM) && (from == REG), (byte) (0X88 + (size != D8)));
+
+	build_register_redirection ((to == REG) && (from == MEM), destination);
+	build_register_redirection ((to == MEM) && (from == REG), source);
+
+	place ((to == REG) && (from == IMM), (byte) (0XB0
+	                                           + 0X08 * (size != D8)
+	                                           + 0X01 * (destination & 0X07)));
+
+	place ((to == MEM) && (from == IMM), (byte) (0XC6 + (size != D8)));
+	place ((to == MEM) && (from == IMM), (byte) (0X05));
+
+	//~displacement (4, 0X12345678); // Not implemented at this point!
+	//~immediate?   (4, 0X12345678); // Not implemented at this point!
+}
+
 next   token_count;
 byte * token_array;
 
@@ -279,6 +326,17 @@ void assemble (next   count,
 			               array [index + 2], array [index + 3],
 			               array [index + 4], array [index + 5]);
 			index += 5;
+		} else if (array [index] == JMP) {
+			build_jump_if (array [index + 1], array [index + 2],
+			               array [index + 3]);
+			index += 3;
+		} else if (array [index] == MOV) {
+			build_move_if (array [index + 1], array [index + 2],
+			               array [index + 3], array [index + 4],
+			               array [index + 5]);
+			index += 5;
+		} else {
+			exit (EXIT_FAILURE); // For debugging only!
 		}
 	}
 }

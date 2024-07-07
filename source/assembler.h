@@ -9,7 +9,7 @@ typedef enum {
 } size_index;
 
 typedef enum {
-	NIL,              REG,              MEM,              IMM,
+	REL,              REG,              MEM,              IMM,
 } type_index;
 
 typedef enum {

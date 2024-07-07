@@ -450,6 +450,36 @@ nnn:	nop
 	cmovg r9, r9; 4D 0F 4F C9
 
 	nop
+	nop
+	nop
+
+	nop
+	mov rcx, rdx
+	nop
+	mov rdx, [x8]
+	nop
+	mov qword[x8], rdx
+	nop
+	mov rdx, 1122334455667788h
+	nop
+	mov qword[x8], 11223344h
+
+	nop
+	nop
+	nop
+
+xxx:	nop
+	jmp xxx
+	nop
+	jmp fff
+	nop
+	jmp rcx
+	nop
+	jmp r9
+	nop
+	jmp qword[x4]
+
+	nop
 
 	nop
 	nop
