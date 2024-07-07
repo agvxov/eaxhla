@@ -5,7 +5,7 @@ typedef unsigned int  next;
 typedef unsigned char byte;
 
 typedef enum {
-	D64,              D32,              D16,              D8,
+	D8,               D16,              D32,              D64,
 } size_index;
 
 typedef enum {

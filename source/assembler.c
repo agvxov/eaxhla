@@ -54,6 +54,16 @@ static void place (form when,
 	token_count += (next) when;
 }
 
+static void print (form when,
+                   form size,
+                   next data) {
+	/* */
+	place ((when != 0) && (size >= D8),  (byte) ((data >>  0) & 0XFF));
+	place ((when != 0) && (size >= D16), (byte) ((data >>  8) & 0XFF));
+	place ((when != 0) && (size == D32), (byte) ((data >> 16) & 0XFF));
+	place ((when != 0) && (size == D32), (byte) ((data >> 24) & 0XFF));
+}
+
 static form valid (form data) { return ((data >= 0) && (data <= 15)); }
 static form lower (form data) { return ((data >= 0) && (data <=  7)); }
 static form upper (form data) { return ((data >= 8) && (data <= 15)); }
@@ -61,30 +71,6 @@ static form upper (form data) { return ((data >= 8) && (data <= 15)); }
 // Important stuff that I need to handle later, it saves bytes!
 static form far  (next label) { return (1); /* DO NOT CHANGE YET! */ }
 static form near (next label) { return (0); /* DO NOT CHANGE YET! */ }
-
-// --
-static void displacement (form size,
-                          next data) {
-	/* */
-	(void) size;
-
-	place (1, (data >> 24) & 0XFF);
-	place (1, (data >> 16) & 0XFF);
-	place (1, (data >>  8) & 0XFF);
-	place (1, (data >>  0) & 0XFF);
-}
-
-// --
-static void immediate (form size,
-                       next data) {
-	/* */
-	(void) size;
-
-	place (1, (data >> 24) & 0XFF);
-	place (1, (data >> 16) & 0XFF);
-	place (1, (data >>  8) & 0XFF);
-	place (1, (data >>  0) & 0XFF);
-}
 
 static void build_short_prefix (form when) {
 	place (when, 0X66);
@@ -156,6 +142,12 @@ static void build_regular (operation_index operation,
 
 	build_register_redirection ((to == REG) && (from == MEM), destination);
 	build_register_redirection ((to == MEM) && (from == REG), source);
+
+	print ((to == REG) && (from == MEM), D32,  (next) ~0);
+	print ((to == REG) && (from == IMM), size, source);
+	print ((to == MEM) && (from == REG), D32,  (next) ~0);
+	print ((to == MEM) && (from == IMM), D32,  (next) ~0);
+	print ((to == MEM) && (from == IMM), size, source);
 }
 
 // IRREGULAR_BEGIN-IRREGULAR_END D8-D64 REG/MEM R0-R15/MEM
@@ -283,8 +275,11 @@ static void build_move (size_index size,
 	place ((to == MEM) && (from == IMM), (byte) (0XC6 + (size != D8)));
 	place ((to == MEM) && (from == IMM), (byte) (0X05));
 
-	//~displacement (4, 0X12345678); // Not implemented at this point!
-	//~immediate?   (4, 0X12345678); // Not implemented at this point!
+	//~print ((to == REG) && (from == MEM), D32,  (next) ~0);
+	//~print ((to == REG) && (from == IMM), size, source);
+	//~print ((to == MEM) && (from == REG), D32,  (next) ~0);
+	//~print ((to == MEM) && (from == IMM), D32,  (next) ~0);
+	//~print ((to == MEM) && (from == IMM), size, source);
 }
 
 next   token_count;
