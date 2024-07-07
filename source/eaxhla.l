@@ -71,6 +71,16 @@ xmm5         { return RGXMM5; }
 xmm6         { return RGXMM6; }
 xmm7         { return RGXMM7; }
 
+eax          { return EAX; }
+ebx          { return EBX; }
+ecx          { return ECX; }
+edx          { return EDX; }
+ebp          { return EBP; }
+esp          { return ESP; }
+eip          { return EIP; }
+esi          { return ESI; }
+edi          { return EDI; }
+
 in         { return TIN; }
 \=         { return '='; }
 

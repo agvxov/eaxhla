@@ -71,8 +71,9 @@ test: ${OUT}
 	#${WRAP} ./${OUT} debug/xop.eax
 	#./${OUT} debug/xop.eax # NOTE as of now broken, but only because of undefined instructions
 	#${WRAP} ./${OUT} debug/artimetrics.eax
-	@echo -e "\033[31;1m --- ERROR TESTING BEGINS BELOW ---\033[0m"
-	debug/error_test.sh
+	#@echo -e "\033[31;1m --- ERROR TESTING BEGINS BELOW ---\033[0m"
+	#debug/error_test.sh
+	./${OUT} debug/heyo_world.eax
 
 clean:
 	-rm ${OUT} ${OBJECT} ${GENOBJECT} ${GENSOURCE}

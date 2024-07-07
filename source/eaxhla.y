@@ -76,6 +76,10 @@
 %token RG8 RG9 RG10 RG11 RG12 RG13 RG14 RG15
 %token RGXMM0 RGXMM1 RGXMM2 RGXMM3 RGXMM4 RGXMM5 RGXMM6 RGXMM7
 
+%token EBP ESP EIP
+%token EAX EBX ECX EDX
+%token ESI EDI
+
 // Instructions
 %token TADD TOR TADC TBB TXOR TAND TSUB TCMP TSYSCALL TINC
 %token INOP // better temp prefix?
@@ -198,7 +202,7 @@ instruction: INOP { ; }
     | IMOV register register
     | IMOV memory   register
     | IMOV register memory
-    | IMOV register immediate { append_instruction_t6 (MOV, D32, REG, (int) $2, REG, (int) $3); }
+    | IMOV register immediate { append_instruction_t6 (MOV, D32, REG, (int) $2, IMM, (int) $3); }
     | IMOV memory   immediate
     | IXOR register register
     | IXOR register memory
@@ -276,6 +280,15 @@ register: RAX    { $$ = R0;    }
     |     RGXMM5 { $$ = 0; }
     |     RGXMM6 { $$ = 0; }
     |     RGXMM7 { $$ = 0; }
+        /* XXX !!! */
+register: EAX    { $$ = R0; }
+    |     EBX    { $$ = R1; }
+    |     ECX    { $$ = R2; }
+    |     EDX    { $$ = R3; }
+    |     ESI    { $$ = R4; }
+    |     EDI    { $$ = R5; }
+    |     EBP    { $$ = R6; }
+    |     ESP    { $$ = R7; }
     ;
 
 artimetric_block: '{' artimetric_expression '}' { $$ = $2; }
