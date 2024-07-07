@@ -191,14 +191,14 @@ instruction: INOP { ; }
     | TINC register            code
     | TINC IDENTIFIER          code { free($2); }
     */
-    | IADD register register 
+    | IADD register register
     | IADD register immediate
     | IADD register memory
-    | ISYSCALL
+    | ISYSCALL { append_instruction_t1 (SYSCALL); }
     | IMOV register register
     | IMOV memory   register
     | IMOV register memory
-    | IMOV register immediate
+    | IMOV register immediate { append_instruction_t6 (MOV, D32, REG, $2, REG, $3); }
     | IMOV memory   immediate
     | IXOR register register
     | IXOR register memory

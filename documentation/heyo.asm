@@ -2,19 +2,29 @@ format ELF64 executable 3
 
 segment readable executable
 
-	mov al,  1
-	mov dil, 1
+	mov eax, 1
+	mov edi, 1
 	mov esi, heyo
-	mov dl,  5
+	mov edx, 5
 	syscall
 
-	mov al,  60
-	mov dil, 0
+	mov eax, 60
+	mov edi, 0
 	syscall
 
 segment readable writable
 
 heyo: db 72, 69, 89, 79, 10
+
+;~B8 01 00 00 00
+;~BF 01 00 00 00
+;~BE D2 10 40 00
+;~BA 05 00 00 00
+;~0F 05
+
+;~B8 3C 00 00 00
+;~BF 00 00 00 00
+;~0F 05
 
 ;~MOV D8 REG R0 IMM 1
 ;~MOV D8 REG R7 IMM 1                                                        ***

@@ -48,7 +48,8 @@ ${OBJECT.d}/%.yy.c: ${SOURCE.d}/%.l
 	flex ${FLEXFLAGS} --header-file=object/$(basename $(notdir $<)).yy.h -o $@ $<
 
 ${OBJECT.d}/%.tab.c: ${SOURCE.d}/%.y
-	bison ${BISONFLAGS} --header=object/$(basename $(notdir $<)).tab.h -o $@ $<
+#~	bison ${BISONFLAGS} --header=object/$(basename $(notdir $<)).tab.h -o $@ $<
+	bison ${BISONFLAGS} --defines=object/$(basename $(notdir $<)).tab.h -o $@ $<
 
 ${OBJECT.d}/%.yy.o: ${OBJECT.d}/%.yy.c
 	${COMPILE.c} -o $@ $<
