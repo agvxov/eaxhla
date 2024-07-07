@@ -91,9 +91,9 @@ u64        { return U64; }
 \/\/    { BEGIN IN_COMMENT; }
 \/\*    { BEGIN IN_MULTILINE_COMMENT; }
 
-\[|\]   { return yytext[0]; }
-
-\+|\-|\*|\/|\%|\^|\: { return yytext[0]; }
+\[|\]|\{|\}|\+|\-|\*|\/|\%|\^|\: {
+        return yytext[0];
+    }
 
 fastcall { return FASTCALL; }
 
@@ -126,8 +126,13 @@ machine        { BEGIN INITIAL; return END_MACHINE; }
     /* XXX: escapes; multiline strings will die */
 \"  {
         BEGIN INITIAL;
+        if (yyleng <= WORD_SIZE_IN_BYTES) {
+            memcpy(&yylval.intval, yytext, WORD_SIZE_IN_BYTES);
+            return LITERAL;
+        }
+
         yylval.strval = strdup(string_literal_buffer);
-        return STRING_LITERAL;
+        return ARRAY_LITERAL;
 }
 .   {
         if (string_litral_buffer_size + yyleng > string_litral_buffer_capacity) {

@@ -2,6 +2,8 @@
 
 #include <tommyds/tommyhashtbl.h>
 
+#define WORD_SIZE_IN_BYTES (64/8)
+
 typedef struct {
   int        size;
   long       value;

@@ -45,9 +45,10 @@
 %token<strval> IDENTIFIER LABEL
 
 %type<intval>  immediate
+%type<intval>  memory dereference
 %type<intval>  artimetric_block artimetric_expression artimetric_operand
 %token<intval> LITERAL
-%token<strval> STRING_LITERAL
+%token<strval> ARRAY_LITERAL
 
 // Specifiers
 %token FAST
@@ -137,11 +138,6 @@ declaration:
         $$.value = $5;
         add_variable($$);
     }
-    | variable_specifier type IDENTIFIER '=' STRING_LITERAL {
-        $$.name = make_scoped_name(scope, $3);
-        $$.value = $5;
-        add_variable($$);
-    }
     ;
 
 variable_specifier: %empty
@@ -159,10 +155,15 @@ type: S8    { $$ =  S8; }
     ;
 
 immediate: LITERAL
-    | IDENTIFIER
+    | IDENTIFIER { $$ = 0; /* XXX: how the fuck do i dereference? */}
     ;
 
 memory: artimetric_block
+    | dereference
+    ;
+
+dereference: '[' IDENTIFIER '+' value  ']' { $$ = 0; /* XXX: how the fuck do i dereference? */ }
+    | '[' IDENTIFIER '-' value  ']' { $$ = 0; /* XXX: how the fuck do i dereference? */ }
     ;
 
 value: artimetric_block
@@ -234,7 +235,7 @@ machine: MACHINE machine_code END_MACHINE
 
 machine_code: %empty
     | LITERAL        machine_code
-    | STRING_LITERAL machine_code
+    | ARRAY_LITERAL  machine_code
     | IDENTIFIER     machine_code { free($1); }
     ;
 
@@ -246,7 +247,6 @@ calltype: FASTCALL
 
 arguments: %empty
     | IDENTIFIER       arguments { free($1); }
-    | STRING_LITERAL   arguments { free($1); }
     | LITERAL          arguments
     | register         arguments
     | artimetric_block arguments
@@ -278,7 +278,7 @@ register: RAX    { $$ = R0;    }
     |     RGXMM7 { $$ = 0; }
     ;
 
-artimetric_block: '[' artimetric_expression ']' { $$ = $2; }
+artimetric_block: '{' artimetric_expression '}' { $$ = $2; }
     ;
 
 artimetric_expression: %empty { $$ = 0; }
@@ -292,7 +292,6 @@ artimetric_expression: %empty { $$ = 0; }
     ;
 
 artimetric_operand: LITERAL
-    | STRING_LITERAL
     | IDENTIFIER { $$ = 0; /*XXX*/ }
     ;
 
