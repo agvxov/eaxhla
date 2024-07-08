@@ -290,13 +290,20 @@ static void build_move (size_index size,
 	print ((to == MEM) && (from == IMM), size, source);
 }
 
-next   token_count;
-byte * token_array;
+next   token_count = 0;
+byte * token_array = NULL;
+
+int error_empty_array = 0;
 
 void assemble (next   count,
                next * array) {
 	/* */
 	next index;
+
+	if ((count == 0) || (array == NULL)) {
+		error_empty_array = 1;
+		return;
+	}
 
 	for (index = 0; index < count; ++index) {
 		if ((array [index] >= REGULAR_BEGIN)
