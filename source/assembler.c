@@ -293,7 +293,7 @@ static void build_move (size_index size,
 next   token_count = 0;
 byte * token_array = NULL;
 
-int error_empty_array = 0;
+int was_instruction_array_empty = 0;
 
 void assemble (next   count,
                next * array) {
@@ -301,7 +301,7 @@ void assemble (next   count,
 	next index;
 
 	if ((count == 0) || (array == NULL)) {
-		error_empty_array = 1;
+		was_instruction_array_empty = 1;
 		return;
 	}
 

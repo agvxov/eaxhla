@@ -48,6 +48,10 @@ signed main(int argc, char * argv[]) {
         dump ("test_me_please");
     }
 
+    if (was_instruction_array_empty) {
+        issue_warning("the input did not contain any instructions");
+    }
+
     yyfree_leftovers();
 
     eaxhla_destroy();

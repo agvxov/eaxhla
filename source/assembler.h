@@ -65,7 +65,7 @@ typedef enum {
 extern next   token_count;
 extern byte * token_array;
 
-extern int error_empty_array;
+extern int was_instruction_array_empty;
 
 extern void assemble (next count, next * array);
 
