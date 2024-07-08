@@ -153,7 +153,7 @@ void issue_warning(const char * const format, ...) {
     char * msg;
     const int ignore = vasprintf(&msg, format, args);
     (void)ignore;
-    printf("\033[1m%s:%d:\033[0m \033[35mWarning\033[0m: %s.\n",
+    fprintf(stderr, "\033[1m%s:%d:\033[0m \033[35mWarning\033[0m: %s.\n",
                 yyfilename,
                 yylineno,
                 msg
@@ -171,7 +171,7 @@ void issue_error(const char * const format, ...) {
     char * msg;
     const int ignore = vasprintf(&msg, format, args);
     (void)ignore;
-    printf("\033[1m%s:%d:\033[0m \033[31mError\033[0m: %s.\n",
+    fprintf(stderr, "\033[1m%s:%d:\033[0m \033[31mError\033[0m: %s.\n",
                 yyfilename,
                 yylineno,
                 msg
