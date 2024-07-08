@@ -15,11 +15,6 @@
     void yyerror(const char * errmsg) {
         issue_error("%s near \033[1m'%s'\033[0m", errmsg, yytext);
     }
-
-    long new_static(int size) { // XXX might not be required
-        (void)size;
-        return 0;
-    }
 %}
 
 %union{
@@ -39,7 +34,7 @@
 
 %token PROGRAM END_PROGRAM
 %token PROCEDURE END_PROCEDURE
-%token TLOOP END_LOOP
+%token REPEAT END_REPEAT
 %token IF THEN ELSE END_IF
 %token MACHINE END_MACHINE
 
@@ -48,6 +43,7 @@
 %type<intval>  immediate
 %type<intval>  memory dereference
 %type<intval>  artimetric_block artimetric_expression artimetric_operand
+%type<intval>  value
 %token<intval> LITERAL
 %token<strval> ARRAY_LITERAL
 
@@ -138,6 +134,7 @@ declaration_section: %empty
 declaration:
       variable_specifier type IDENTIFIER {
         $$.name = make_scoped_name(scope, $3);
+        $$.elements = 1;
         add_variable($$);
     }
     | variable_specifier type IDENTIFIER '=' LITERAL {
@@ -145,7 +142,19 @@ declaration:
         if (!can_fit($2, $5)) {
             issue_warning("the value \033[1m'%lld'\033[0m will overflow in assignement", $5);
         }
+        $$.elements = 1;
         $$.value = $5;
+        add_variable($$);
+    }
+    | variable_specifier type '<' value '>' IDENTIFIER {
+        $$.name = make_scoped_name(scope, $6);
+        $$.elements = $4;
+        add_variable($$);
+    }
+    | variable_specifier type '<' value '>' IDENTIFIER '=' ARRAY_LITERAL {
+        $$.name = make_scoped_name(scope, $6);
+        $$.elements = $4;
+        $$.array_value = $8;
         add_variable($$);
     }
     ;
@@ -178,12 +187,17 @@ dereference: '[' IDENTIFIER '+' value  ']' { $$ = 0; /* XXX: how the fuck do i d
 
 value: artimetric_block
     | LITERAL
-    | IDENTIFIER
+    | IDENTIFIER        {
+        char * varname = make_scoped_name(scope, $1);
+        variable_t * var = get_variable(varname);
+        $$ = var->value;
+        free(var);
+    }
     ;
 
 code: %empty
     | error   code { yyerrok; }
-    | loop    code
+    | repeat  code
     | if      code
     | call    code
     | LABEL   code { free($1); }
@@ -214,7 +228,7 @@ instruction: INOP { ; }
     | IXOR register memory
     ;
 
-loop: TLOOP code END_LOOP
+repeat: REPEAT code END_REPEAT
     ;
 
 if: IF logic THEN code END_IF

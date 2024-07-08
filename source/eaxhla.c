@@ -22,10 +22,10 @@ int is_program_found = 0;
 static
 void dump_variable(void * data) {
     variable_t * variable = (variable_t*)data;
-    printf("{ .name = '%s', .value = '%ld', .size = %d }\n",
+    printf("{ .name = '%s', .value = '%ld', .elements = %d }\n",
             variable->name,
             variable->value,
-            variable->size
+            variable->elements
     );
 }
 

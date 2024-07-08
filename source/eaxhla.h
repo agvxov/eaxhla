@@ -5,8 +5,11 @@
 #define WORD_SIZE_IN_BYTES (64/8)
 
 typedef struct {
-  int        size;
-  long       value;
+  union {
+      long   value;
+      void * array_value;
+  };
+  int        elements;
   char *     name;
   unsigned   _hash;
   tommy_node _node;

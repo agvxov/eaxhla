@@ -33,7 +33,7 @@ begin        { return MYBEGIN; }
 
 program                    { return PROGRAM; }
 procedure                  { return PROCEDURE; }
-loop                       { return TLOOP; }
+repeat                     { return REPEAT; }
 if                         { return IF; }
 then                       { return THEN; }
 machine                    { return MACHINE; }
@@ -109,7 +109,7 @@ u64        { return U64; }
 \/\/    { BEGIN IN_COMMENT; }
 \/\*    { BEGIN IN_MULTILINE_COMMENT; }
 
-\[|\]|\{|\}|\+|\-|\*|\/|\%|\^|\: {
+\[|\]|\{|\}|\+|\-|\*|\/|\%|\^|\:|\<|\> {
         return yytext[0];
     }
 
@@ -129,7 +129,7 @@ xor      { return IXOR; }
 <IN_END>{
 program        { BEGIN INITIAL; free(scope); scope = NULL; return END_PROGRAM; }
 procedure      { BEGIN INITIAL; free(scope); scope = NULL; return END_PROCEDURE; }
-loop           { BEGIN INITIAL; return END_LOOP; }
+repeat         { BEGIN INITIAL; return END_REPEAT; }
 if             { BEGIN INITIAL; return END_IF; }
 machine        { BEGIN INITIAL; return END_MACHINE; }
 {wsnl}         { ; }
