@@ -132,10 +132,12 @@ static void build_regular (operation_index operation,
 
 	place (1, (byte) (0X08 * (operation - REGULAR_BEGIN)
 	     + (destination & 0X07) * ((to == REG) && (from == IMM))
+	     + 0X01 * ((to   == MEM) && (from == IMM) && (size == D8)) //
+	     - 0X01 * ((to   == REG) && (from == IMM))                 //
 	     + 0X01 *  (size != D8)
-	     + 0X02 * ((from == MEM) && (to == REG))
-	     + 0X04 * ((from == IMM) && (to == MEM))
-	     + 0XC0 * ((from == IMM) && (to == REG))));
+	     + 0X02 * ((to   == REG) && (from == MEM))
+	     + 0X04 * ((to   == MEM) && (from == IMM))
+	     + 0XC0 * ((to   == REG) && (from == IMM))));
 
 	build_register_direction ((to == REG) && (from == REG),
 	                          destination, source);
