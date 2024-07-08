@@ -5,7 +5,7 @@
 #include "../source/assembler.c"
 
 static unsigned int array [] = {
-	#include "xlatten.txt"
+	#include "include.txt"
 };
 
 int main (void) {

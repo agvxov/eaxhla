@@ -64,6 +64,7 @@ static void print (form       when,
 	place ((when != 0) && (size >= D32), (byte) ((data >> 24) & 0XFF));
 }
 
+static form front (form data) { return ((data >= 4) && (data <=  7)); }
 static form valid (form data) { return ((data >= 0) && (data <= 15)); }
 static form lower (form data) { return ((data >= 0) && (data <=  7)); }
 static form upper (form data) { return ((data >= 8) && (data <= 15)); }
@@ -79,10 +80,11 @@ static void build_short_prefix (form when) {
 // 40-4D!0X02
 static void build_long_prefix (form use_big_registers,
                                form use_new_destination,
-                               form use_new_source) {
+                               form use_new_source,
+                               form use_front_register) {
 	/* */
-	place (use_big_registers || use_new_destination || use_new_source,
-	       (byte) (0X40
+	place (use_big_registers || use_new_destination || use_new_source || use_front_register,
+	       (byte) (0X40 * use_front_register
 	             + 0X01 * use_new_destination
 	             + 0X04 * use_new_source
 	             + 0X08 * use_big_registers));
@@ -126,7 +128,8 @@ static void build_regular (operation_index operation,
 
 	build_long_prefix (size == D64,
 	                  (to   == REG) && (upper ((form) destination)),
-	                  (from == REG) && (upper ((form) source)));
+	                  (from == REG) && (upper ((form) source)),
+	                  (size == D8) && (to == REG) && (from == REG) && (front (destination) || front (source)));
 
 	build_constant (from == IMM, size);
 
@@ -161,7 +164,8 @@ static void build_irregular (operation_index operation,
 	build_short_prefix (size == D16);
 
 	build_long_prefix (size == D64,
-	                  (to   == REG) && (upper ((form) destination)), 0);
+	                  (to   == REG) && (upper ((form) destination)), 0,
+	                  (to == REG) && front (destination));
 
 	place (1, (byte) (0XF6
 	     + 0X08 * ((operation == INC) || (operation == DEC))
@@ -221,7 +225,8 @@ static void build_move_if (operation_index operation,
 
 	build_long_prefix (size == D64,
 	                  (to   == REG) && (upper ((form) destination)),
-	                  (from == REG) && (upper ((form) source)));
+	                  (from == REG) && (upper ((form) source)),
+	                  (to == REG) && (from == REG) && (front (destination) || front (source)));
 
 	place (1, 0X0F);
 	place (1, (byte) (0X40 + operation - MOVE_IF_BEGIN));
@@ -261,7 +266,8 @@ static void build_move (size_index size,
 
 	build_long_prefix (size == D64,
 	                  (to   == REG) && (upper ((form) destination)),
-	                  (from == REG) && (upper ((form) source)));
+	                  (from == REG) && (upper ((form) source)),
+	                  (to == REG) && (from == REG) && (front (destination) || front (source)));
 
 	place ((to == REG) && (from == REG), (byte) (0X88 + (size != D8)));
 	place ((to == REG) && (from == MEM), (byte) (0X8A + (size != D8)));
