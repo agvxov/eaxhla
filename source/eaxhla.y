@@ -138,6 +138,7 @@ declaration_section: %empty
 declaration:
       variable_specifier type IDENTIFIER {
         $$.name = make_scoped_name(scope, $3);
+        $$.elements = 1;
         add_variable($$);
     }
     | variable_specifier type IDENTIFIER '=' LITERAL {
@@ -145,7 +146,19 @@ declaration:
         if (!can_fit($2, $5)) {
             issue_warning("the value \033[1m'%lld'\033[0m will overflow in assignement", $5);
         }
+        $$.elements = 1;
         $$.value = $5;
+        add_variable($$);
+    }
+    | variable_specifier type '<' value '>' IDENTIFIER {
+        $$.name = make_scoped_name(scope, $6);
+        $$.elements = $4;
+        add_variable($$);
+    }
+    | variable_specifier type '<' value '>' IDENTIFIER '=' ARRAY_LITERAL {
+        $$.name = make_scoped_name(scope, $6);
+        $$.elements = $4;
+        $$.array_value = $8;
         add_variable($$);
     }
     ;
