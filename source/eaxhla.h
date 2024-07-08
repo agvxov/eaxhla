@@ -12,6 +12,14 @@ typedef struct {
   tommy_node _node;
 } variable_t;
 
+#define REGISTER64_MASK 0x00;
+#define REGISTER32_MASK 0x01;
+
+typedef struct {
+    int number : 6;
+    int size   : 2;
+} cpuregister_t;
+
 extern int system_type;
 
 extern char * scope;

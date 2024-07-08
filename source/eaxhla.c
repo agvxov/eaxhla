@@ -16,7 +16,6 @@ tommy_hashtable variable_table;
 
 char * scope = NULL;
 int is_program_found = 0;
-
 #if DEBUG == 1
 static
 void dump_variable(void * data) {

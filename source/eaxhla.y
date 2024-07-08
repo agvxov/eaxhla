@@ -26,6 +26,7 @@
     long intval;
     char * strval;
     variable_t varval;
+    cpuregister_t regval;
 }
 
 /* XXX NOTE: while naming, if my name collided with something in assembler.h i just
@@ -68,7 +69,7 @@
 %type<varval> declaration
 
 // Registers
-%type<intval> register
+%type<regval> register register64 register32
 
 %token RBP RSP RIP
 %token RAX RBX RCX RDX
@@ -79,6 +80,7 @@
 %token EBP ESP EIP
 %token EAX EBX ECX EDX
 %token ESI EDI
+%token RG8D RG9D RG10D RG11D RG12D RG13D RG14D RG15D
 
 // Instructions
 %token TADD TOR TADC TBB TXOR TAND TSUB TCMP TSYSCALL TINC
@@ -206,7 +208,7 @@ instruction: INOP { ; }
     | IMOV register register
     | IMOV memory   register
     | IMOV register memory
-    | IMOV register immediate { append_instruction_t6 (MOV, D32, REG, (int) $2, IMM, (int) $3); }
+    | IMOV register immediate { append_instruction_t6 (MOV, $2.size, REG, $2.number, IMM, (int) $3); }
     | IMOV memory   immediate
     | IXOR register register
     | IXOR register memory
@@ -260,39 +262,52 @@ arguments: %empty
     | artimetric_block arguments
     ;
 
-register: RAX    { $$ = R0;    }
-    |     RBX    { $$ = R1;    }
-    |     RCX    { $$ = R2;    }
-    |     RDX    { $$ = R3;    }
-    |     RSI    { $$ = R4;    }
-    |     RDI    { $$ = R5;    }
-    |     RBP    { $$ = R6;    }
-    |     RSP    { $$ = R7;    }
-    |     RG8    { $$ = R8;    }
-    |     RG9    { $$ = R9;    }
-    |     RG10   { $$ = R10;   }
-    |     RG11   { $$ = R11;   }
-    |     RG12   { $$ = R12;   }
-    |     RG13   { $$ = R13;   }
-    |     RG14   { $$ = R14;   }
-    |     RG15   { $$ = R15;   }
-    |     RGXMM0 { $$ = 0; } /* XXX */
-    |     RGXMM1 { $$ = 0; }
-    |     RGXMM2 { $$ = 0; }
-    |     RGXMM3 { $$ = 0; }
-    |     RGXMM4 { $$ = 0; }
-    |     RGXMM5 { $$ = 0; }
-    |     RGXMM6 { $$ = 0; }
-    |     RGXMM7 { $$ = 0; }
-        /* XXX !!! */
-register: EAX    { $$ = R0; }
-    |     EBX    { $$ = R3; }
-    |     ECX    { $$ = R1; }
-    |     EDX    { $$ = R2; }
-    |     ESI    { $$ = R6; }
-    |     EDI    { $$ = R7; }
-    |     EBP    { $$ = R5; }
-    |     ESP    { $$ = R4; }
+register: register64 { $$ = $1; $$.size = D64; }
+    |     register32 { $$ = $1; $$.size = D32; }
+    ;
+
+register64: RAX    { $$.number = R0;    }
+    |       RBX    { $$.number = R1;    }
+    |       RCX    { $$.number = R2;    }
+    |       RDX    { $$.number = R3;    }
+    |       RSI    { $$.number = R4;    }
+    |       RDI    { $$.number = R5;    }
+    |       RBP    { $$.number = R6;    }
+    |       RSP    { $$.number = R7;    }
+    |       RG8    { $$.number = R8;    }
+    |       RG9    { $$.number = R9;    }
+    |       RG10   { $$.number = R10;   }
+    |       RG11   { $$.number = R11;   }
+    |       RG12   { $$.number = R12;   }
+    |       RG13   { $$.number = R13;   }
+    |       RG14   { $$.number = R14;   }
+    |       RG15   { $$.number = R15;   }
+    |       RGXMM0 { $$.number = 0; } /* XXX */
+    |       RGXMM1 { $$.number = 0; }
+    |       RGXMM2 { $$.number = 0; }
+    |       RGXMM3 { $$.number = 0; }
+    |       RGXMM4 { $$.number = 0; }
+    |       RGXMM5 { $$.number = 0; }
+    |       RGXMM6 { $$.number = 0; }
+    |       RGXMM7 { $$.number = 0; }
+    ;
+
+register32: EAX    { $$.number = R0;  }
+    |       EBX    { $$.number = R3;  }
+    |       ECX    { $$.number = R1;  }
+    |       EDX    { $$.number = R2;  }
+    |       ESI    { $$.number = R6;  }
+    |       EDI    { $$.number = R7;  }
+    |       EBP    { $$.number = R5;  }
+    |       ESP    { $$.number = R4;  }
+    |       RG8D   { $$.number = R8;  }
+    |       RG9D   { $$.number = R9;  }
+    |       RG10D  { $$.number = R10; }
+    |       RG11D  { $$.number = R11; }
+    |       RG12D  { $$.number = R12; }
+    |       RG13D  { $$.number = R13; }
+    |       RG14D  { $$.number = R14; }
+    |       RG15D  { $$.number = R15; }
     ;
 
 artimetric_block: '{' artimetric_expression '}' { $$ = $2; }

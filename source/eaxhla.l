@@ -62,6 +62,7 @@ r11          { return RG11;   }
 r12          { return RG12;   }
 r13          { return RG13;   }
 r14          { return RG14;   }
+
 xmm0         { return RGXMM0; }
 xmm1         { return RGXMM1; }
 xmm2         { return RGXMM2; }
@@ -71,15 +72,22 @@ xmm5         { return RGXMM5; }
 xmm6         { return RGXMM6; }
 xmm7         { return RGXMM7; }
 
-eax          { return EAX; }
-ebx          { return EBX; }
-ecx          { return ECX; }
-edx          { return EDX; }
-ebp          { return EBP; }
-esp          { return ESP; }
-eip          { return EIP; }
-esi          { return ESI; }
-edi          { return EDI; }
+eax          { return EAX;    }
+ebx          { return EBX;    }
+ecx          { return ECX;    }
+edx          { return EDX;    }
+ebp          { return EBP;    }
+esp          { return ESP;    }
+eip          { return EIP;    }
+esi          { return ESI;    }
+edi          { return EDI;    }
+r8d          { return RG8D;   }
+r9d          { return RG9D;   }
+r10d         { return RG10D;  }
+r11d         { return RG11D;  }
+r12d         { return RG12D;  }
+r13d         { return RG13D;  }
+r14d         { return RG14D;  }
 
 in         { return TIN; }
 \=         { return '='; }
