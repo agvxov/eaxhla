@@ -1,8 +1,0 @@
-procedure a
-    nop
-end procedure
-
-unix
-program main
-    wigglecall a
-end program
