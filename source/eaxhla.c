@@ -178,3 +178,14 @@ void issue_error(const char * const format, ...) {
             );
     free(msg);
 }
+
+int system_type = 
+  #if defined(__unix__)
+    UNIX
+  #elif defined(_WIN64)
+    WIN64
+  #else
+    #error Your system was not recognized.
+    0
+  #endif
+;

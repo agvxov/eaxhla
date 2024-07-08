@@ -12,6 +12,8 @@ typedef struct {
   tommy_node _node;
 } variable_t;
 
+extern int system_type;
+
 extern char * scope;
 
 extern int eaxhla_init(void);

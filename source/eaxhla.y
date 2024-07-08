@@ -52,7 +52,7 @@
 
 // Specifiers
 %token FAST
-%token UNIX
+%token UNIX WIN64
 
 // Logic
 %token NEQ TNOT
@@ -111,7 +111,11 @@ program_head: program_specifier PROGRAM IDENTIFIER {
     };
 
 program_specifier: %empty
-    | UNIX
+    | system_specifier
+    ;
+
+system_specifier: UNIX { system_type = UNIX; }
+    | WIN64 { system_type = WIN64; }
     ;
 
 function: function_head declaration_section MYBEGIN code END_PROCEDURE
