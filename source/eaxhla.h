@@ -1,4 +1,4 @@
-#ifndef TABLE_H_
+#ifndef EAXHLA_H
 
 #include <tommyds/tommyhashtbl.h>
 
@@ -28,5 +28,5 @@ extern void issue_error(const char * format, ...);
 
 extern int is_program_found;
 
-#define TABLE_H_
+#define EAXHLA_H
 #endif
