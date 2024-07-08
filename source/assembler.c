@@ -169,6 +169,9 @@ static void build_irregular (operation_index operation,
 	build_long_prefix (size == D64,
 	                  (to   == REG) && (upper ((form) destination)), 0);
 
+	// 40>front
+	place ((size == D8) && (to == REG) && front (destination), (byte) 0X40);
+
 	place (1, (byte) (0XF6
 	     + 0X08 * ((operation == INC) || (operation == DEC))
 	     + 0X01 * (size       != D8)));

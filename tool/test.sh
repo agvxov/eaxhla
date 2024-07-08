@@ -2,6 +2,6 @@
 
 set -xe
 
-diff -s -y -t --color=auto flatten.txt xlatten.txt
+diff flatten.txt xlatten.txt
 
 exit
