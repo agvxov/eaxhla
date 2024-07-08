@@ -43,9 +43,10 @@ signed main(int argc, char * argv[]) {
 
     yyparse();
 
-	assemble (t_count, t_array);
-
-	dump ("test_me_please");
+    if (!has_encountered_error) {
+        assemble (t_count, t_array);
+        dump ("test_me_please");
+    }
 
     yyfree_leftovers();
 
@@ -54,7 +55,7 @@ signed main(int argc, char * argv[]) {
 	free (token_array);
 	free (t_array);
 
-    return 0;
+    return has_encountered_error;
 }
 
 void append_token (int t) {

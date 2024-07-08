@@ -22,6 +22,8 @@ typedef struct {
 
 extern int system_type;
 
+extern int has_encountered_error;
+
 extern char * scope;
 
 extern int eaxhla_init(void);
