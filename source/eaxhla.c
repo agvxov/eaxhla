@@ -182,6 +182,36 @@ void issue_error(const char * const format, ...) {
     free(msg);
 }
 
+extern unsigned int * t_array;
+extern unsigned int   t_count;
+
+static
+void append_token (int t) {
+    // XXX rewrite this and use memcpy
+	t_array [t_count] = t;
+	t_count += 1;
+}
+
+void append_instruction_t1 (int t1) {
+	append_token (t1); // operation
+}
+
+void append_instruction_t4 (int t4, int w, int d, int r) {
+	append_token (t4); // operation
+	append_token (w);  // width
+	append_token (d);  // destination
+	append_token (r);  // register
+}
+
+void append_instruction_t6 (int t6, int w, int d, int r, int s, int i) {
+	append_token (t6); // operation
+	append_token (w);  // width
+	append_token (d);  // destination
+	append_token (r);  // register
+	append_token (s);  // source
+	append_token (i);  // immediate
+}
+
 int system_type = 
   #if defined(__unix__)
     UNIX

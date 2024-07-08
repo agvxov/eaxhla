@@ -25,6 +25,7 @@ typedef struct {
 
 extern int system_type;
 
+extern int is_program_found;
 extern int has_encountered_error;
 
 extern char * scope;
@@ -38,10 +39,12 @@ extern int can_fit(int type, long long value);
 extern void add_variable(variable_t variable);
 extern variable_t * get_variable(const char * const name);
 
+extern void append_instruction_t1 (int t1);
+extern void append_instruction_t4 (int t4, int w, int d, int r);
+extern void append_instruction_t6 (int t6, int w, int d, int r, int s, int i);
+
 extern void issue_warning(const char * format, ...);
 extern void issue_error(const char * format, ...);
-
-extern int is_program_found;
 
 #define EAXHLA_H
 #endif

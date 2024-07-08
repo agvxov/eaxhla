@@ -1,12 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static unsigned int * t_array = NULL;
-static unsigned int   t_count = 0;
-
-extern void append_token (int t);
-extern void append_instruction_t6 (int t6, int w, int d, int r, int s, int i);
-extern void append_instruction_t1 (int t1);
+unsigned int * t_array = NULL;
+unsigned int   t_count = 0;
 
 static void dump (const char * file_name);
 
@@ -60,26 +56,6 @@ signed main(int argc, char * argv[]) {
 	free (t_array);
 
     return has_encountered_error;
-}
-
-void append_token (int t) {
-	t_array [t_count] = t;
-	t_count += 1;
-}
-
-void append_instruction_t6 (int t6, int w, int d, int r, int s, int i) {
-	append_token (t6); // operation
-	append_token (w);  // width
-	append_token (d);  // destination
-	append_token (r);  // register
-	append_token (s);  // source
-	append_token (i);  // immediate
-
-	printf ("> MOV D32 REG %i IMM %i\n", r, i);
-}
-
-void append_instruction_t1 (int t1) {
-	append_token (t1); // operation
 }
 
 void dump (const char * file_name) {
