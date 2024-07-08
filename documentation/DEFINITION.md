@@ -20,6 +20,17 @@ NOTE: the compiler front-end should be able to handle the preprocessing someway,
 2. bison creates partial syntax trees (since we dont optimize, we can render in relatively small chunks because not all that much context is needed)
 3. xolatile magic
 
+## Command line interface
+```
+eaxhla <options> <file>
+```
+
+options:
+```
+    -o | --output <file>
+    -a | --architecture <architecture>
+```
+
 ## Types
 ```
 <int prefix><int size>
@@ -57,11 +68,29 @@ then we'll utilize the flag (`-fterry-types`) to enable them.
   // if not, does that mean no variables an be declared?
 
 ## Syntax
+
 ### Macros
 + fuck macros
 + use a preprocessor
+
+### Comments
+```c
+    // single line comment
+    /* multi
+       line
+       comment */
+```
+HLA uses C/C++ comments,
+but C comments cannot be multilined.
+Nested multiline comments are still not allowed.
+
 ### Asm
 + no ',' argument deliteters
+#### The following instructions are fully supported:
+```asm
+    ; XXX fillin
+```
+
 ### Machine code
 ```
 machine
@@ -69,10 +98,13 @@ machine
 end machine
 ```
 All literal values (string or numeric) are copied as machine code.
+
 ### Logic
 + only evaulated in _logical blocks_
+
 #### logical blocks
 + if-then-else-end-if
+
 #### operators
 + =
 + >
@@ -84,6 +116,7 @@ All literal values (string or numeric) are copied as machine code.
 + and
 + or
 + xor
+
 ### Functions
 ```
 <qualifyiers>
@@ -97,10 +130,19 @@ end <type>
 qualifier:
 + fast -> use the fastcall calling convention
 + ? stack -> place all arguments on the stack
+
+type:
++ procedure
++ ? function
+
 ### labels
 ```C
 my_label:
 ```
+
+Labels act like variables,
+but should not be dereferenced.
+Feel free to use them inside jump instructions.
 
 ### Come back to later
 + `register`
