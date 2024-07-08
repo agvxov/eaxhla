@@ -109,7 +109,7 @@ u64        { return U64; }
 \/\/    { BEGIN IN_COMMENT; }
 \/\*    { BEGIN IN_MULTILINE_COMMENT; }
 
-\[|\]|\{|\}|\+|\-|\*|\/|\%|\^|\: {
+\[|\]|\{|\}|\+|\-|\*|\/|\%|\^|\:|\<|\> {
         return yytext[0];
     }
 

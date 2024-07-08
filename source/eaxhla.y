@@ -43,6 +43,7 @@
 %type<intval>  immediate
 %type<intval>  memory dereference
 %type<intval>  artimetric_block artimetric_expression artimetric_operand
+%type<intval>  value
 %token<intval> LITERAL
 %token<strval> ARRAY_LITERAL
 
@@ -186,7 +187,12 @@ dereference: '[' IDENTIFIER '+' value  ']' { $$ = 0; /* XXX: how the fuck do i d
 
 value: artimetric_block
     | LITERAL
-    | IDENTIFIER
+    | IDENTIFIER        {
+        char * varname = make_scoped_name(scope, $1);
+        variable_t * var = get_variable(varname);
+        $$ = var->value;
+        free(var);
+    }
     ;
 
 code: %empty
