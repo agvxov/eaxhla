@@ -20,24 +20,24 @@ static char * fi [] = {
 int main (void) {
 	int a, w, t, d, f, s;
 
-	//~for (a = 0; a < (int) (sizeof (fa) / sizeof (* fa)); ++a) {
-		//~for (w = 0; w < 4; ++w) {
-			//~for (d = 0; d < 16; ++d) {
-				//~for (s = 0; s < 16; ++s) {
-					//~printf ("NOP, %s, %s, %s, %s,\n", fa [a], fw [w], fr [d], fr [s]);
-				//~}
-			//~}
-		//~}
-	//~}
-
-	a = 0;
-	w = 3;
-
-	for (d = 0; d < 16; ++d) {
-		for (s = 0; s < 16; ++s) {
-			printf ("NOP, %s, %s, %s, %s,\n", fa [a], fw [w], fr [d], fr [s]);
+	for (a = 0; a < (int) (sizeof (fa) / sizeof (* fa)); ++a) {
+		for (w = 0; w < 4; ++w) {
+			for (d = 0; d < 16; ++d) {
+				for (s = 0; s < 16; ++s) {
+					printf ("NOP, %s, %s, %s, %s,\n", fa [a], fw [w], fr [d], fr [s]);
+				}
+			}
 		}
 	}
+
+	//~a = 0;
+	//~w = 3;
+
+	//~for (d = 0; d < 16; ++d) {
+		//~for (s = 0; s < 16; ++s) {
+			//~printf ("NOP, %s, %s, %s, %s,\n", fa [a], fw [w], fr [d], fr [s]);
+		//~}
+	//~}
 
 	return (0);
 }

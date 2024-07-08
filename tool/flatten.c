@@ -33,26 +33,26 @@ int main (void) {
 	printf ("nop\n");
 	printf ("nop\n");
 
-	//~for (a = 0; a < (int) (sizeof (fa) / sizeof (* fa)); ++a) {
-		//~for (w = 0; w < 4; ++w) {
-			//~for (d = 0; d < 16; ++d) {
-				//~for (s = 0; s < 16; ++s) {
-					//~printf ("nop\n");
-					//~printf ("%s %s, %s\n", fa [a], fr [d + 16 * w], fr [s + 16 * w]);
-				//~}
-			//~}
-		//~}
-	//~}
-
-	a = 0;
-	w = 3;
-
-	for (d = 0; d < 16; ++d) {
-		for (s = 0; s < 16; ++s) {
-			printf ("nop\n");
-			printf ("%s %s, %s\n", fa [a], fr [d + 16 * w], fr [s + 16 * w]);
+	for (a = 0; a < (int) (sizeof (fa) / sizeof (* fa)); ++a) {
+		for (w = 0; w < 4; ++w) {
+			for (d = 0; d < 16; ++d) {
+				for (s = 0; s < 16; ++s) {
+					printf ("nop\n");
+					printf ("%s %s, %s\n", fa [a], fr [d + 16 * w], fr [s + 16 * w]);
+				}
+			}
 		}
 	}
+
+	//~a = 0;
+	//~w = 3;
+
+	//~for (d = 0; d < 16; ++d) {
+		//~for (s = 0; s < 16; ++s) {
+			//~printf ("nop\n");
+			//~printf ("%s %s, %s\n", fa [a], fr [d + 16 * w], fr [s + 16 * w]);
+		//~}
+	//~}
 
 	printf ("nop\n");
 	printf ("nop\n");
