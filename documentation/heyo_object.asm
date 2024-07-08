@@ -1,8 +1,10 @@
-format ELF64 executable 3
+format ELF64
 
-segment readable executable
+public _start
 
-entry $
+section '.text' executable
+
+_start:
 
 	mov eax, 1
 	mov edi, 1
@@ -14,6 +16,6 @@ entry $
 	mov edi, 0
 	syscall
 
-segment readable writable
+section '.data' writable
 
 heyo: db "heyo world!", 10
