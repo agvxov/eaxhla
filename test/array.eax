@@ -1,0 +1,4 @@
+program main
+    u8<10> myarray
+begin
+end program
