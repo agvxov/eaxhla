@@ -34,7 +34,7 @@
 
 %token PROGRAM END_PROGRAM
 %token PROCEDURE END_PROCEDURE
-%token TLOOP END_LOOP
+%token REPEAT END_REPEAT
 %token IF THEN ELSE END_IF
 %token MACHINE END_MACHINE
 
@@ -191,7 +191,7 @@ value: artimetric_block
 
 code: %empty
     | error   code { yyerrok; }
-    | loop    code
+    | repeat  code
     | if      code
     | call    code
     | LABEL   code { free($1); }
@@ -222,7 +222,7 @@ instruction: INOP { ; }
     | IXOR register memory
     ;
 
-loop: TLOOP code END_LOOP
+repeat: REPEAT code END_REPEAT
     ;
 
 if: IF logic THEN code END_IF
