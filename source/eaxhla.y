@@ -15,11 +15,6 @@
     void yyerror(const char * errmsg) {
         issue_error("%s near \033[1m'%s'\033[0m", errmsg, yytext);
     }
-
-    long new_static(int size) { // XXX might not be required
-        (void)size;
-        return 0;
-    }
 %}
 
 %union{
