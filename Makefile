@@ -73,7 +73,8 @@ test: ${OUT}
 	#${WRAP} ./${OUT} debug/artimetrics.eax
 	#@echo -e "\033[31;1m --- ERROR TESTING BEGINS BELOW ---\033[0m"
 	#debug/error_test.sh
-	./${OUT} debug/heyo_world.eax
+	#./${OUT} debug/heyo_world.eax
+	ORIGIN="$$(realpath .)" PATH="$$(realpath .):${PATH}" cmdtest
 
 clean:
 	-rm ${OUT} ${OBJECT} ${GENOBJECT} ${GENSOURCE}

@@ -14,6 +14,8 @@
 
 tommy_hashtable variable_table;
 
+int has_encountered_error = 0;
+
 char * scope = NULL;
 int is_program_found = 0;
 #if DEBUG == 1
@@ -163,6 +165,8 @@ void issue_warning(const char * const format, ...) {
 void issue_error(const char * const format, ...) {
     extern char * yyfilename;
     extern int yylineno;
+
+    has_encountered_error = 1;
 
     va_list args;
     va_start(args, format);

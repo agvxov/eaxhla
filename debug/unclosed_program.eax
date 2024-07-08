@@ -1,5 +1,0 @@
-unix
-program main
-begin
-    exit 1
-end rpogram
