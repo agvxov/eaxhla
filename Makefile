@@ -79,4 +79,14 @@ test: ${OUT}
 clean:
 	-rm ${OUT} ${OBJECT} ${GENOBJECT} ${GENSOURCE}
 
+${OBJECT.d}/%.pp: debug/%.tcl
+	tclsh $< > $@
+
+plug: ${OBJECT.d}/token_list.pp ${OBJECT.d}/scanner_instructions.pp ${OBJECT.d}/parser_rules.pp
+	plug -u -d token_list '' -d scanner_instructions '' -d parser_rules '' source/eaxhla.l source/eaxhla.y
+	plug -g -e token_list           ${OBJECT.d}/token_list.pp           source/eaxhla.y
+	plug -g -e scanner_instructions ${OBJECT.d}/scanner_instructions.pp source/eaxhla.l
+	plug -g -e parser_rules         ${OBJECT.d}/parser_rules.pp         source/eaxhla.l
+	
+
 .PHONY: test clean bootstrap
