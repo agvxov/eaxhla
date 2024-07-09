@@ -85,6 +85,7 @@
 %token ISYSCALL
 %token IMOV
 %token IXOR
+// #placeholder<token_list> COLLAPSED
 
 // Instruction-likes
 %token FASTCALL
@@ -226,6 +227,7 @@ instruction: INOP { ; }
     | IMOV memory   immediate
     | IXOR register register
     | IXOR register memory
+    // #placeholder<parser_rules> COLLAPSED
     ;
 
 repeat: REPEAT code END_REPEAT

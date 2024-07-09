@@ -124,6 +124,8 @@ add      { return IADD; }
 syscall  { return ISYSCALL; }
 mov      { return IMOV; }
 xor      { return IXOR; }
+    /* #placeholder<scanner_instructions> COLLAPSED
+    */
     /* --- Instrunctions end here --- */
 
 <IN_END>{
