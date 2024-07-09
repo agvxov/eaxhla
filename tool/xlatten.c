@@ -18,19 +18,39 @@ static char * fr [] = {
 };
 
 static char * fi [] = {
-	"0x11", "0x1122", "0x11223344", "0x1122334455667788",
+	"IMM, 0x11223344", "IMM, 0x11223344", "IMM, 0x1122", "IMM, 0x11", //, "IMM, 0x1122334455667788",
 };
 
 int main (void) {
 	int a, w, t, d, f, s;
 
-	for (a = 0; a < (int) (sizeof (faa) / sizeof (* faa)); ++a) {
+	for (a = 0; a < (int) (sizeof (fa) / sizeof (* fa)); ++a) {
 		for (w = 0; w < 4; ++w) {
 			for (d = 0; d < 16; ++d) {
-				printf ("NOP, %s, %s, %s,\n", faa [a], fw [w], fr [d]);
+				//~for (s = 0; s < 16; ++s) {
+					printf ("NOP, %s, %s, %s, %s,\n", fa [a], fw [w], fr [d], fi [w]);
+				//~}
 			}
 		}
 	}
+
+	//~for (a = 0; a < (int) (sizeof (faa) / sizeof (* faa)); ++a) {
+		//~for (w = 0; w < 4; ++w) {
+			//~for (d = 0; d < 16; ++d) {
+				//~for (s = 0; s < 16; ++s) {
+					//~printf ("NOP, %s, %s, %s, %s,\n", faa [a], fw [w], fr [d], fi [s]);
+				//~}
+			//~}
+		//~}
+	//~}
+
+	//~for (a = 0; a < (int) (sizeof (faa) / sizeof (* faa)); ++a) {
+		//~for (w = 0; w < 4; ++w) {
+			//~for (d = 0; d < 16; ++d) {
+				//~printf ("NOP, %s, %s, %s,\n", faa [a], fw [w], fr [d]);
+			//~}
+		//~}
+	//~}
 
 	return (0);
 }

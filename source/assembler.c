@@ -172,9 +172,9 @@ static void build_irregular (operation_index operation,
 	// 40>front
 	place ((size == D8) && (to == REG) && front (destination), (byte) 0X40);
 
-	place (1, (byte) (0XF6
+	place (1, (byte) (0XF8
 	     + 0X08 * ((operation == INC) || (operation == DEC))
-	     + 0X01 * (size       != D8)));
+	     - 0X01 * (size       == D8)));
 
 	place (to == REG, (byte) (0XC0
 	     + 0X08 * (operation - IRREGULAR_BEGIN))

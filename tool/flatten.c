@@ -24,7 +24,7 @@ static char * fm [] = {
 };
 
 static char * fi [] = {
-	"11h", "1122h", "11223344h", "1122334455667788h",
+	"11223344h", "11223344h", "1122h", "11h",  // "1122334455667788h",
 };
 
 int main (void) {
@@ -37,25 +37,25 @@ int main (void) {
 	printf ("nop\n");
 	printf ("nop\n");
 
-	//~for (a = 0; a < (int) (sizeof (fa) / sizeof (* fa)); ++a) {
+	for (a = 0; a < (int) (sizeof (fa) / sizeof (* fa)); ++a) {
+		//~for (w = 0; w < 4; ++w) {
+			for (d = 0; d < 64; ++d) {
+				//~for (s = 0; s < 16; ++s) {
+					printf ("nop\n");
+					printf ("%s %s, %s\n", fa [a], fr [d], fi [d / 16]);
+				//~}
+			}
+		//~}
+	}
+
+	//~for (a = 0; a < (int) (sizeof (faa) / sizeof (* faa)); ++a) {
 		//~for (w = 0; w < 4; ++w) {
 			//~for (d = 0; d < 16; ++d) {
-				//~for (s = 0; s < 16; ++s) {
-					//~printf ("nop\n");
-					//~printf ("%s %s, %s\n", fa [a], fr [d + 16 * w], fr [s + 16 * w]);
-				//~}
+				//~printf ("nop\n");
+				//~printf ("%s %s\n", faa [a], fr [d + 16 * w]);
 			//~}
 		//~}
 	//~}
-
-	for (a = 0; a < (int) (sizeof (faa) / sizeof (* faa)); ++a) {
-		for (w = 0; w < 4; ++w) {
-			for (d = 0; d < 16; ++d) {
-				printf ("nop\n");
-				printf ("%s %s\n", faa [a], fr [d + 16 * w]);
-			}
-		}
-	}
 
 	printf ("nop\n");
 	printf ("nop\n");
