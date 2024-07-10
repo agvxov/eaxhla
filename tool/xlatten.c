@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 static char * fw [] = {
-	"D64", "D32", "D16", "D8"
+	"D8", "D16", "D32", "D64"
 };
 
 static char * fa [] = {
@@ -18,11 +18,21 @@ static char * fr [] = {
 };
 
 static char * fi [] = {
-	"IMM, 0x11223344", "IMM, 0x11223344", "IMM, 0x1122", "IMM, 0x11", //, "IMM, 0x1122334455667788",
+	"IMM, 0x11", "IMM, 0x1122", "IMM, 0x11223344", "IMM, 0x11223344"
 };
 
 int main (void) {
 	int a, w, t, d, f, s;
+
+	for (a = 0; a < (int) (sizeof (fa) / sizeof (* fa)); ++a) {
+		for (w = 0; w < 4; ++w) {
+			for (d = 0; d < 16; ++d) {
+				for (s = 0; s < 16; ++s) {
+						printf ("NOP, %s, %s, %s, %s,\n", fa [a], fw [w], fr [d], fr [s]);
+				}
+			}
+		}
+	}
 
 	for (a = 0; a < (int) (sizeof (fa) / sizeof (* fa)); ++a) {
 		for (w = 0; w < 4; ++w) {

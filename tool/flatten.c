@@ -9,14 +9,14 @@ static char * faa [] = {
 };
 
 static char * fr [] = {
-	"rax",    "rcx",    "rdx",    "rbx",    "rsp",    "rbp",    "rsi",    "rdi",
-	"r8",     "r9",     "r10",    "r11",    "r12",    "r13",    "r14",    "r15",
-	"eax",    "ecx",    "edx",    "ebx",    "esp",    "ebp",    "esi",    "edi",
-	"r8d",    "r9d",    "r10d",   "r11d",   "r12d",   "r13d",   "r14d",   "r15d",
+	"al",     "cl",     "dl",     "bl",     "spl",    "bpl",    "sil",    "dil",
+	"r8b",    "r9b",    "r10b",   "r11b",   "r12b",   "r13b",   "r14b",   "r15b",
 	"ax",     "cx",     "dx",     "bx",     "sp",     "bp",     "si",     "di",
 	"r8w",    "r9w",    "r10w",   "r11w",   "r12w",   "r13w",   "r14w",   "r15w",
-	"al",     "cl",     "dl",     "bl",     "spl",    "bpl",    "sil",    "dil",
-	"r8b",    "r9b",    "r10b",   "r11b",   "r12b",   "r13b",   "r14b",   "r15b"
+	"eax",    "ecx",    "edx",    "ebx",    "esp",    "ebp",    "esi",    "edi",
+	"r8d",    "r9d",    "r10d",   "r11d",   "r12d",   "r13d",   "r14d",   "r15d",
+	"rax",    "rcx",    "rdx",    "rbx",    "rsp",    "rbp",    "rsi",    "rdi",
+	"r8",     "r9",     "r10",    "r11",    "r12",    "r13",    "r14",    "r15"
 };
 
 static char * fm [] = {
@@ -24,7 +24,7 @@ static char * fm [] = {
 };
 
 static char * fi [] = {
-	"11223344h", "11223344h", "1122h", "11h",  // "1122334455667788h",
+	"11h", "1122h", "11223344h", "11223344h"
 };
 
 int main (void) {
@@ -38,14 +38,16 @@ int main (void) {
 	printf ("nop\n");
 
 	// INR REG REG
-	//~for (a = 0; a < (int) (sizeof (faa) / sizeof (* faa)); ++a) {
-		//~for (w = 0; w < 4; ++w) {
-			//~for (d = 0; d < 16; ++d) {
-				//~printf ("nop\n");
-				//~printf ("%s %s\n", faa [a], fr [d + 16 * w]);
-			//~}
-		//~}
-	//~}
+	for (a = 0; a < (int) (sizeof (fa) / sizeof (* fa)); ++a) {
+		for (w = 0; w < 4; ++w) {
+			for (d = 0; d < 16; ++d) {
+				for (s = 0; s < 16; ++s) {
+					printf ("nop\n");
+					printf ("%s %s, %s\n", fa [a], fr [d + 16 * w], fr [s + 16 * w]);
+				}
+			}
+		}
+	}
 
 	// INR REG IMM
 	for (a = 0; a < (int) (sizeof (fa) / sizeof (* fa)); ++a) {
