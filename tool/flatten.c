@@ -37,17 +37,7 @@ int main (void) {
 	printf ("nop\n");
 	printf ("nop\n");
 
-	for (a = 0; a < (int) (sizeof (fa) / sizeof (* fa)); ++a) {
-		//~for (w = 0; w < 4; ++w) {
-			for (d = 0; d < 64; ++d) {
-				//~for (s = 0; s < 16; ++s) {
-					printf ("nop\n");
-					printf ("%s %s, %s\n", fa [a], fr [d], fi [d / 16]);
-				//~}
-			}
-		//~}
-	}
-
+	// INR REG REG
 	//~for (a = 0; a < (int) (sizeof (faa) / sizeof (* faa)); ++a) {
 		//~for (w = 0; w < 4; ++w) {
 			//~for (d = 0; d < 16; ++d) {
@@ -56,6 +46,24 @@ int main (void) {
 			//~}
 		//~}
 	//~}
+
+	// INR REG IMM
+	for (a = 0; a < (int) (sizeof (fa) / sizeof (* fa)); ++a) {
+		for (d = 0; d < 64; ++d) {
+			printf ("nop\n");
+			printf ("%s %s, %s\n", fa [a], fr [d], fi [d / 16]);
+		}
+	}
+
+	// INI REG
+	for (a = 0; a < (int) (sizeof (faa) / sizeof (* faa)); ++a) {
+		for (w = 0; w < 4; ++w) {
+			for (d = 0; d < 16; ++d) {
+				printf ("nop\n");
+				printf ("%s %s\n", faa [a], fr [d + 16 * w]);
+			}
+		}
+	}
 
 	printf ("nop\n");
 	printf ("nop\n");

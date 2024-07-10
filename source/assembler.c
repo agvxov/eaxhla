@@ -130,16 +130,24 @@ static void build_regular (operation_index operation,
 	                  (from == REG) && (upper ((form) source)));
 
 	// 40>front
-	place ((size == D8) && (to == REG) && (from == REG)
-	      && ((front (destination) && lower (source))
-	      ||  (lower (destination) && front (source))), (byte) 0X40);
+	place ((size == D8) && (to == REG) && ((from == REG) || (from == IMM))
+	      && (((front (destination) && lower (source))
+	      ||  (lower (destination) && front (source))) ||
+	      ((to == REG) && (from == IMM) && front (destination))),
+	      (byte) 0X40);
 
-	build_constant (from == IMM, size);
+	build_constant ((from == IMM) && (to == REG) && (destination != 0), size);
 
-	place (1, (byte) (0X08 * (operation - REGULAR_BEGIN)
+	place ((from == IMM) && (to == REG) && (destination == 0),
+	      (byte) (0X05
+	     + 0X08 * (operation & 0X07))
+	     - 0X01 * (size == D8));
+
+	place ((from == IMM) && (to == REG) && (destination != 0),
+	     (byte) (0X08 * (operation - REGULAR_BEGIN)
 	     + (destination & 0X07) * ((to == REG) && (from == IMM))
 	     + 0X01 * ((to   == MEM) && (from == IMM) && (size == D8)) //
-	     - 0X01 * ((to   == REG) && (from == IMM))                 //
+	     - 0X01 * ((to   == REG) && (from == IMM) && (size != D8)) //
 	     + 0X01 *  (size != D8)
 	     + 0X02 * ((to   == REG) && (from == MEM))
 	     + 0X04 * ((to   == MEM) && (from == IMM))
@@ -172,7 +180,7 @@ static void build_irregular (operation_index operation,
 	// 40>front
 	place ((size == D8) && (to == REG) && front (destination), (byte) 0X40);
 
-	place (1, (byte) (0XF8
+	place (1, (byte) (0XF7
 	     + 0X08 * ((operation == INC) || (operation == DEC))
 	     - 0X01 * (size       == D8)));
 
