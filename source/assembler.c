@@ -132,18 +132,18 @@ static void build_regular (operation_index operation,
 	// 40>front
 	place ((size == D8) && (to == REG) && ((from == REG) || (from == IMM))
 	      && (((front (destination) && lower (source))
-	      ||  (lower (destination) && front (source))) ||
+	      ||   (lower (destination) && front (source))) ||
 	      ((to == REG) && (from == IMM) && front (destination))),
 	      (byte) 0X40);
-
-	build_constant ((from == IMM) && (to == REG) && (destination != 0), size);
 
 	place ((from == IMM) && (to == REG) && (destination == 0),
 	      (byte) (0X05
 	     + 0X08 * (operation & 0X07))
 	     - 0X01 * (size == D8));
 
-	place ((from == IMM) && (to == REG) && (destination != 0),
+	build_constant ((from == IMM) && ! ((to == REG) && (destination == 0)), size);
+
+	place (! ((from == IMM) && (to == REG) && (destination == 0)),
 	     (byte) (0X08 * (operation - REGULAR_BEGIN)
 	     + (destination & 0X07) * ((to == REG) && (from == IMM))
 	     + 0X01 * ((to   == MEM) && (from == IMM) && (size == D8)) //
