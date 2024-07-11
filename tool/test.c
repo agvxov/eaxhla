@@ -11,15 +11,15 @@ static unsigned int array [] = {
 int main (void) {
 	unsigned int index;
 
-	token_array = malloc (1024UL * 1024UL * sizeof (* token_array));
+	text_sector_byte = malloc (1024UL * 1024UL * sizeof (* text_sector_byte));
 
 	assemble ((unsigned int) (sizeof (array) / sizeof (array [0])), array);
 
-	for (index = 0; index < token_count; ++index) {
-		printf ("%c%02X", (token_array [index] == 0x90) ? '\n' : ' ', token_array [index]);
+	for (index = 0; index < text_sector_size; ++index) {
+		printf ("%c%02X", (text_sector_byte [index] == 0x90) ? '\n' : ' ', text_sector_byte [index]);
 	}
 
-	free (token_array);
+	free (text_sector_byte);
 
 	return (0);
 }

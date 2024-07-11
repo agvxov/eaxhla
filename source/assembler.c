@@ -32,9 +32,9 @@ static next * imbue_size;*/
 static void place (form when,
                    byte data) {
 	/* */
-	token_array [token_count] = data;
+	text_sector_byte [text_sector_size] = data;
 
-	token_count += (next) when;
+	text_sector_size += (next) when;
 }
 
 static void print (form       when,
@@ -269,7 +269,7 @@ static void build_move (size_index size,
 	build_register_redirection ((to == REG) && (from == MEM), destination);
 	build_register_redirection ((to == MEM) && (from == REG), source);
 
-	place ((to == REG) && (from == IMM), (byte) (0xb0
+	place ((to == REG) && (from == IMM), (byte) (0xb8
 	                                           + 0x08 * (size != D8)
 	                                           + 0x01 * (destination & 0x07)));
 
@@ -277,14 +277,14 @@ static void build_move (size_index size,
 	place ((to == MEM) && (from == IMM), (byte) (0x05));
 
 	print ((to == REG) && (from == MEM), D32,  (next) ~0);
-	print ((to == REG) && (from == IMM), size, source);
+	print ((to == REG) && (from == IMM), D32, source);
 	print ((to == MEM) && (from == REG), D32,  (next) ~0);
 	print ((to == MEM) && (from == IMM), D32,  (next) ~0);
 	print ((to == MEM) && (from == IMM), size, source);
 }
 
-next   token_count = 0;
-byte * token_array = NULL;
+next   text_sector_size = 0;
+byte * text_sector_byte = NULL;
 
 int was_instruction_array_empty = 0;
 

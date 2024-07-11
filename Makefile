@@ -26,7 +26,7 @@ OUT := eaxhla
 SOURCE.d  := source
 OBJECT.d  := object
 
-SOURCE    := main.c assembler.c eaxhla.c
+SOURCE    := main.c assembler.c eaxhla.c unix.c
 OBJECT    := $(addprefix ${OBJECT.d}/,${SOURCE})
 OBJECT    := ${OBJECT:.c=.o}
 
