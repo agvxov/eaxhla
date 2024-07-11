@@ -53,6 +53,7 @@ typedef enum {
 	FNOP,             FXAM,             FABS,             FSCALE,
 	FSIN,             FCOS,             FSQRT,            FCHS,
 	FXCH,             FREM,             FLDPI,            FLDZ,
+	DECLARE,
 } operation_index;
 
 typedef enum {
