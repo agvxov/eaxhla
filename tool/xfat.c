@@ -37,7 +37,7 @@ int main (int argc, char * * argv) {
 
 	file = file_close (file);
 
-	execute ("cat x.c && gcc x.c && ./a.out && echo -- && rm a.out x.c");
+	execute ("gcc x.c && ./a.out && echo -- && rm a.out x.c");
 
 	return (log_success);
 }
