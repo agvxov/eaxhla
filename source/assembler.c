@@ -2,23 +2,6 @@
 
 #include <stdlib.h>
 
-/*
-gcc -c -ansi -Wall -Wextra -Wpedantic -Werror:
-	-- warns about trailing comma in enumerations.
-	-- kept because of chad coding standard.
-	-- unused functions for now, obviously...
-clang -c -ansi -Weverything -Werror:
-	-- exactly same warnings as with gcc above.
-splint -fcnuse +boolint +charint assembler.c:
-	-- we obviously ignore unused functions for now.
-	-- we assume bool is int, which is true.
-	-- we assume char is int, which is true.
-	-- assembler.c:167:13: Function fabs shadows outer declaration
-	-- ^ function from <math.h>, which we don't even use.
-splint assembler.h:
-	-- no warnings at all.
-*/
-
 #define REGULAR_BEGIN   (ADD)
 #define REGULAR_END     (CMP)
 #define IRREGULAR_BEGIN (INC)
@@ -40,10 +23,10 @@ splint assembler.h:
 #define MOVE_IF_COUNT   (MOVE_IF_END   - MOVE_IF_BEGIN   + 1)
 
 // Regulates displacement, immediate, label, variable, constant, string data.
-static next * empty_from;
+/*static next * empty_from;
 static next * empty_to;
 static next * imbue_with;
-static next * imbue_size;
+static next * imbue_size;*/
 
 // Main function.
 static void place (form when,
@@ -58,23 +41,22 @@ static void print (form       when,
                    size_index size,
                    next       data) {
 	/* */
-	place ((when != 0) && (size >= D8),  (byte) ((data >>  0) & 0XFF));
-	place ((when != 0) && (size >= D16), (byte) ((data >>  8) & 0XFF));
-	place ((when != 0) && (size >= D32), (byte) ((data >> 16) & 0XFF));
-	place ((when != 0) && (size >= D32), (byte) ((data >> 24) & 0XFF));
+	place ((when != 0) && (size >= D8),  (byte) ((data >>  0) & 0xff));
+	place ((when != 0) && (size >= D16), (byte) ((data >>  8) & 0xff));
+	place ((when != 0) && (size >= D32), (byte) ((data >> 16) & 0xff));
+	place ((when != 0) && (size >= D32), (byte) ((data >> 24) & 0xff));
 }
 
 static form front (form data) { return ((data >= 4) && (data <=  7)); }
-static form valid (form data) { return ((data >= 0) && (data <= 15)); }
 static form lower (form data) { return ((data >= 0) && (data <=  7)); }
 static form upper (form data) { return ((data >= 8) && (data <= 15)); }
 
 // Important stuff that I need to handle later, it saves bytes!
-static form far  (next label) { return (1); /* DO NOT CHANGE YET! */ }
-static form near (next label) { return (0); /* DO NOT CHANGE YET! */ }
+static form far  (next label) { return (label && 1); }
+static form near (next label) { return (label && 0); }
 
 static void build_short_prefix (form when) {
-	place (when, 0X66);
+	place (when, 0x66);
 }
 
 // 40-4D!0X02
@@ -83,10 +65,10 @@ static void build_long_prefix (form use_big_registers,
                                form use_new_source) {
 	/* */
 	place (use_big_registers || use_new_destination || use_new_source,
-	       (byte) (0X40
-	             + 0X01 * use_new_destination
-	             + 0X04 * use_new_source
-	             + 0X08 * use_big_registers));
+	       (byte) (0x40
+	             + 0x01 * use_new_destination
+	             + 0x04 * use_new_source
+	             + 0x08 * use_big_registers));
 }
 
 // C0-FF
@@ -94,25 +76,25 @@ static void build_register_direction (form when,
                                       next destination,
                                       next source) {
 	/* */
-	place (when, (byte) (0XC0
-	     + 0X01 * (destination & 0X07)
-	     + 0X08 * (source      & 0X07)));
+	place (when, (byte) (0xc0
+	     + 0x01 * (destination & 0x07)
+	     + 0x08 * (source      & 0x07)));
 }
 
 // 05-3D
 static void build_register_redirection (form when,
                                         next direction) {
 	/* */
-	place (when, (byte) (0X05
-	     + 0X08 * (direction & 0X07)));
+	place (when, (byte) (0x05
+	     + 0x08 * (direction & 0x07)));
 }
 
 // 80/81
 static void build_constant (form       when,
                             size_index size) {
 	/* */
-	place (when, (byte) (0X80
-	     + 0X01 * (size != D8)));
+	place (when, (byte) (0x80
+	     + 0x01 * (size != D8)));
 }
 
 // REGULAR_BEGIN-REGULAR_END D8-D64 REG/MEM R0-R15/MEM -||-/IMM -||-/IMM
@@ -134,24 +116,24 @@ static void build_regular (operation_index operation,
 	      && (((front (destination) && lower (source))
 	      ||   (lower (destination) && front (source))) ||
 	      ((to == REG) && (from == IMM) && front (destination))),
-	      (byte) 0X40);
+	      (byte) 0x40);
 
 	place ((from == IMM) && (to == REG) && (destination == 0),
-	      (byte) (0X05
-	     + 0X08 * (operation & 0X07))
-	     - 0X01 * (size == D8));
+	      (byte) (0x05
+	     + 0x08 * (operation & 0x07))
+	     - 0x01 * (size == D8));
 
 	build_constant ((from == IMM) && ! ((to == REG) && (destination == 0)), size);
 
 	place (! ((from == IMM) && (to == REG) && (destination == 0)),
-	     (byte) (0X08 * (operation - REGULAR_BEGIN)
-	     + (destination & 0X07) * ((to == REG) && (from == IMM))
-	     + 0X01 * ((to   == MEM) && (from == IMM) && (size == D8)) //
-	     - 0X01 * ((to   == REG) && (from == IMM) && (size != D8)) //
-	     + 0X01 *  (size != D8)
-	     + 0X02 * ((to   == REG) && (from == MEM))
-	     + 0X04 * ((to   == MEM) && (from == IMM))
-	     + 0XC0 * ((to   == REG) && (from == IMM))));
+	     (byte) (0x08 * (operation - REGULAR_BEGIN)
+	     + (destination & 0x07) * ((to == REG) && (from == IMM))
+	     + 0x01 * ((to   == MEM) && (from == IMM) && (size == D8)) //
+	     - 0x01 * ((to   == REG) && (from == IMM) && (size != D8)) //
+	     + 0x01 *  (size != D8)
+	     + 0x02 * ((to   == REG) && (from == MEM))
+	     + 0x04 * ((to   == MEM) && (from == IMM))
+	     + 0xc0 * ((to   == REG) && (from == IMM))));
 
 	build_register_direction ((to == REG) && (from == REG),
 	                          destination, source);
@@ -178,24 +160,24 @@ static void build_irregular (operation_index operation,
 	                  (to   == REG) && (upper ((form) destination)), 0);
 
 	// 40>front
-	place ((size == D8) && (to == REG) && front (destination), (byte) 0X40);
+	place ((size == D8) && (to == REG) && front (destination), (byte) 0x40);
 
-	place (1, (byte) (0XF7
-	     + 0X08 * ((operation == INC) || (operation == DEC))
-	     - 0X01 * (size       == D8)));
+	place (1, (byte) (0xf7
+	     + 0x08 * ((operation == INC) || (operation == DEC))
+	     - 0x01 * (size       == D8)));
 
-	place (to == REG, (byte) (0XC0
-	     + 0X08 * (operation - IRREGULAR_BEGIN))
-	     + 0X01 * (destination & 0X07));
+	place (to == REG, (byte) (0xc0
+	     + 0x08 * (operation - IRREGULAR_BEGIN))
+	     + 0x01 * (destination & 0x07));
 
-	place (to == MEM, (byte) (0X05
-	     + 0X08 * (operation - IRREGULAR_BEGIN)));
+	place (to == MEM, (byte) (0x05
+	     + 0x08 * (operation - IRREGULAR_BEGIN)));
 }
 
 // SPECIAL_1_BEGIN-SPECIAL_1_END
 static void build_special_1 (operation_index operation) {
 	const byte data [1 * SPECIAL_1_COUNT] = {
-		0X90, 0XC3, 0XCB, 0XC9, 0XF0, 0XF4
+		0x90, 0xc3, 0xcb, 0xc9, 0xf0, 0xf4
 	};
 
 	place (1, data [operation - SPECIAL_1_BEGIN]);
@@ -204,8 +186,8 @@ static void build_special_1 (operation_index operation) {
 // SPECIAL_2_BEGIN-SPECIAL_2_END
 static void build_special_2 (operation_index operation) {
 	const byte data [2 * SPECIAL_2_COUNT] = {
-		0X0F, 0X0F, 0X0F, 0X0F, 0XF3, 0X0F,
-		0X34, 0X35, 0X05, 0X07, 0X90, 0XA2
+		0x0f, 0x0f, 0x0f, 0x0f, 0xf3, 0x0f,
+		0x34, 0x35, 0x05, 0x07, 0x90, 0xa2
 	};
 
 	place (1, data [operation - SPECIAL_2_BEGIN]);
@@ -219,9 +201,9 @@ static void build_jump_if (operation_index operation,
 	/* */
 	(void) size; /* HIGHLY DEPENDS FOR FAR AND NEAR JUMPS! */
 
-	place (far  (location), 0X0F); /* EVERYTHING IS FAR JUMP! */
-	place (far  (location), (byte) (0X80 + operation - JUMP_IF_BEGIN));
-	place (near (location), (byte) (0X70 + operation - JUMP_IF_BEGIN));
+	place (far  (location), 0x0f); /* EVERYTHING IS FAR JUMP! */
+	place (far  (location), (byte) (0x80 + operation - JUMP_IF_BEGIN));
+	place (near (location), (byte) (0x70 + operation - JUMP_IF_BEGIN));
 
 	//~displacement (4, 0X12345678);
 }
@@ -240,8 +222,8 @@ static void build_move_if (operation_index operation,
 	                  (to   == REG) && (upper ((form) destination)),
 	                  (from == REG) && (upper ((form) source)));
 
-	place (1, 0X0F);
-	place (1, (byte) (0X40 + operation - MOVE_IF_BEGIN));
+	place (1, 0x0f);
+	place (1, (byte) (0x40 + operation - MOVE_IF_BEGIN));
 
 	build_register_direction ((to == REG) && (from == REG),
 	                          destination, source);
@@ -258,13 +240,13 @@ static void build_jump (size_index size,
 	/* */
 	place ((to == REG) && upper ((form) destination), (byte) 0X41);
 
-	place (to == REL, (byte) (0XE9 + 0X02 * (size == D8)));
-	place (to == REG, (byte) 0XFF);
-	place (to == REG, (byte) (0XE0 + 0X01 * (destination & 0X07)));
-	place (to == MEM, (byte) 0XFF);
-	place (to == MEM, (byte) 0X25);
+	place (to == REL, (byte) (0xe9 + 0x02 * (size == D8)));
+	place (to == REG, (byte) 0xff);
+	place (to == REG, (byte) (0xe0 + 0x01 * (destination & 0x07)));
+	place (to == MEM, (byte) 0xff);
+	place (to == MEM, (byte) 0x25);
 
-	//~displacement (to == MEM, 4, 0X12345678); // Keep when in mind!
+	//~displacement (to == MEM, 4, 0x12345678); // Keep when in mind!
 }
 
 // VERY FUCKING SPECIAL!
@@ -280,19 +262,19 @@ static void build_move (size_index size,
 	                  (to   == REG) && (upper ((form) destination)),
 	                  (from == REG) && (upper ((form) source)));
 
-	place ((to == REG) && (from == REG), (byte) (0X88 + (size != D8)));
-	place ((to == REG) && (from == MEM), (byte) (0X8A + (size != D8)));
-	place ((to == MEM) && (from == REG), (byte) (0X88 + (size != D8)));
+	place ((to == REG) && (from == REG), (byte) (0x88 + (size != D8)));
+	place ((to == REG) && (from == MEM), (byte) (0x8a + (size != D8)));
+	place ((to == MEM) && (from == REG), (byte) (0x88 + (size != D8)));
 
 	build_register_redirection ((to == REG) && (from == MEM), destination);
 	build_register_redirection ((to == MEM) && (from == REG), source);
 
-	place ((to == REG) && (from == IMM), (byte) (0XB0
-	                                           + 0X08 * (size != D8)
-	                                           + 0X01 * (destination & 0X07)));
+	place ((to == REG) && (from == IMM), (byte) (0xb0
+	                                           + 0x08 * (size != D8)
+	                                           + 0x01 * (destination & 0x07)));
 
-	place ((to == MEM) && (from == IMM), (byte) (0XC6 + (size != D8)));
-	place ((to == MEM) && (from == IMM), (byte) (0X05));
+	place ((to == MEM) && (from == IMM), (byte) (0xc6 + (size != D8)));
+	place ((to == MEM) && (from == IMM), (byte) (0x05));
 
 	print ((to == REG) && (from == MEM), D32,  (next) ~0);
 	print ((to == REG) && (from == IMM), size, source);

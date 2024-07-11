@@ -16,6 +16,8 @@ typedef enum {
 } type_index;
 
 typedef enum {
+	XDCL,             XLBL,             XRPT,             XLCT,
+	/* HIGHLY EXPERIMENTAL CODE ABOVE... */
 	ADD,              OR,               ADC,              SBB,
 	AND,              SUB,              XOR,              CMP,
 	/* */
@@ -53,7 +55,6 @@ typedef enum {
 	FNOP,             FXAM,             FABS,             FSCALE,
 	FSIN,             FCOS,             FSQRT,            FCHS,
 	FXCH,             FREM,             FLDPI,            FLDZ,
-	DECLARE,
 } operation_index;
 
 typedef enum {
