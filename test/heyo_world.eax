@@ -1,15 +1,13 @@
 program heyo_world
+	s8 <12> message "Heyo world!\n" // AVAR D8 12 ...
+begin                                   // DECL 0XFFFFFFFFU
 
-begin
+	mov eax 1                       // MOV D32 REG R0 IMM 1
+	mov edi 1                       // MOV D32 REG R7 IMM 1
+	mov esi message                 // MOV D32 REG R6 MEM 0 [message]
+	mov edx 12                      // MOV D32 REG R2 IMM 12
+	syscall                         // SYSCALL
 
-	mov eax 1
-	mov edi 1
-	mov esi 4198610
-	mov edx 12
-	syscall
-
-	mov eax 60
-	mov edi 0
-	syscall
-
-end program
+end program                             // MOV D64 REG R0 IMM 0X3CU
+                                        // MOV D64 REG R7 IMM 0X0U
+                                        // SYSCALL

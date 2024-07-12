@@ -10,6 +10,7 @@ static void dump (const char * file_name);
 #include "eaxhla.yy.h"
 #include "eaxhla.tab.h"
 #include "assembler.h"
+#include "unix.h"
 
 extern void yyfree_leftovers(void);
 
@@ -21,7 +22,7 @@ signed main(int argc, char * argv[]) {
         return 1;
     }
 
-	token_array = calloc (1440UL, sizeof (* token_array));
+	text_sector_byte = calloc (1440UL, sizeof (* text_sector_byte));
 	t_array     = calloc (1440UL, sizeof (* t_array));
 
     #if DEBUG == 1
@@ -52,43 +53,29 @@ signed main(int argc, char * argv[]) {
 
     eaxhla_destroy();
 
-	free (token_array);
+	free (text_sector_byte);
 	free (t_array);
 
     return has_encountered_error;
 }
 
 void dump (const char * file_name) {
-/* DO NOT TRY THIS AT HOME! */
-#define hackery \
-"\x7F\x45\x4C\x46\x02\x01\x01\x03"\
-"\x00\x00\x00\x00\x00\x00\x00\x00"\
-"\x02\x00\x3E\x00\x01\x00\x00\x00"\
-"\xB0\x00\x40\x00\x00\x00\x00\x00"\
-"\x40\x00\x00\x00\x00\x00\x00\x00"\
-"\x00\x00\x00\x00\x00\x00\x00\x00"\
-"\x00\x00\x00\x00\x40\x00\x38\x00"\
-"\x02\x00\x40\x00\x00\x00\x00\x00"\
-"\x01\x00\x00\x00\x05\x00\x00\x00"\
-"\x00\x00\x00\x00\x00\x00\x00\x00"\
-"\x00\x00\x40\x00\x00\x00\x00\x00"\
-"\x00\x00\x40\x00\x00\x00\x00\x00"\
-"\xC5\x00\x00\x00\x00\x00\x00\x00"\
-"\xC5\x00\x00\x00\x00\x00\x00\x00"\
-"\x00\x10\x00\x00\x00\x00\x00\x00"\
-"\x01\x00\x00\x00\x06\x00\x00\x00"\
-"\xC5\x00\x00\x00\x00\x00\x00\x00"\
-"\xC5\x10\x40\x00\x00\x00\x00\x00"\
-"\xC5\x10\x40\x00\x00\x00\x00\x00"\
-"\x0C\x00\x00\x00\x00\x00\x00\x00"\
-"\x0C\x00\x00\x00\x00\x00\x00\x00"\
-"\x00\x10\x00\x00\x00\x00\x00\x00"
+	elf_main_header (1, 1, 1, 0);
+	elf_text_sector (34);
+	elf_data_sector (34, 12);
 
 	char meme [1024] = "";
 	FILE * file = fopen (file_name, "w");
 
-	fwrite (hackery, 1UL, 64UL + 2UL * 56UL, file);
-	fwrite (token_array, sizeof (* token_array), (size_t) token_count, file);
+	fwrite (elf_main_header_byte, 1UL, ELF_MAIN_HEADER_SIZE, file);
+	fwrite (elf_text_sector_byte, 1UL, ELF_TEXT_SECTOR_SIZE, file);
+	fwrite (elf_data_sector_byte, 1UL, ELF_DATA_SECTOR_SIZE, file);
+
+	//text
+	fwrite (text_sector_byte, sizeof (* text_sector_byte),
+	        (size_t) text_sector_size, file);
+
+	// data
 	fwrite ("heyo world!\n", 1UL, 12UL, file);
 
 	snprintf (meme, 1023UL, "chmod +x %s", file_name);

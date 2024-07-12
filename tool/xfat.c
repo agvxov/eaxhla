@@ -13,11 +13,11 @@
 "};\n"                                                                             \
 "int main (void) {\n"                                                              \
 "	unsigned int index;\n"                                                     \
-"	token_array = malloc (144UL * sizeof (* token_array));\n"                  \
+"	text_sector_byte = malloc (144UL * sizeof (* text_sector_byte));\n"        \
 "	assemble ((unsigned int) (sizeof (array) / sizeof (array [0])), array);\n" \
-"	for (index = 0; index < token_count; ++index)\n"                           \
-"		printf (\"%02X \", token_array [index]);\n"                        \
-"	free (token_array);\n"                                                     \
+"	for (index = 0; index < text_sector_size; ++index)\n"                      \
+"		printf (\"%02X \", text_sector_byte [index]);\n"                   \
+"	free (text_sector_byte);\n"                                                \
 "	return (0);\n"                                                             \
 "}\n"
 
@@ -37,7 +37,7 @@ int main (int argc, char * * argv) {
 
 	file = file_close (file);
 
-	execute ("cat x.c && gcc x.c && ./a.out && echo -- && rm a.out x.c");
+	execute ("gcc x.c && ./a.out && echo -- && rm a.out x.c");
 
 	return (log_success);
 }

@@ -16,6 +16,8 @@ typedef enum {
 } type_index;
 
 typedef enum {
+	XDCL,             XLBL,             XRPT,             XLCT,
+	/* HIGHLY EXPERIMENTAL CODE ABOVE... */
 	ADD,              OR,               ADC,              SBB,
 	AND,              SUB,              XOR,              CMP,
 	/* */
@@ -62,8 +64,8 @@ typedef enum {
 	R12,              R13,              R14,              R15,
 } operand_index;
 
-extern next   token_count;
-extern byte * token_array;
+extern next   text_sector_size;
+extern byte * text_sector_byte;
 
 extern int was_instruction_array_empty;
 
