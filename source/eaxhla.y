@@ -52,9 +52,9 @@
 %token UNIX WIN64
 
 // Logic
-%token NEQ TNOT
+%token ITNEQ
 /*
-%token TOR TXOR // these are (in)conveniently instructions too
+%token ITOR ITXOR ITAND ITNOT // these are (in)conveniently instructions too
 */
 
 // Type info
@@ -79,13 +79,10 @@
 %token RG8D RG9D RG10D RG11D RG12D RG13D RG14D RG15D
 
 // Instructions
-%token TADD TOR TADC TBB TXOR TAND TSUB TCMP TSYSCALL TINC
-%token INOP // better temp prefix?
-%token IADD
-%token ISYSCALL
-%token IMOV
-%token IXOR
-// #placeholder<token_list> COLLAPSED
+%token INOP
+// #placeholder<token_list> BEGIN
+%token ITADC ITADD ITAND ITCMP ITDEC ITDIV ITHLT ITIDIV ITIMUL ITINC ITLEAVE ITLOCK ITMUL ITNEG ITNOT ITOR ITPAUSE ITRETF ITRETN ITSBB ITSUB ITSYSCALL ITSYSENTER ITSYSEXIT ITSYSRET ITXOR
+// #placeholder<token_list> END
 
 // Instruction-likes
 %token FASTCALL
@@ -208,28 +205,6 @@ code: %empty
     | instruction code
     ;
 
-instruction: INOP { ; }
-    /*
-    | TXOR register register   code  { /* assemble_xor(size_64b, type_register_register, $2, $3); * / }
-    | TXOR register immediate  code  { /* assemble_xor(size_64b, type_register_register, $2, $3); * / }
-    | TXOR IDENTIFIER register code { /* assemble_xor(size_64b, type_register_register, $2, $3); * / free($2); }
-    | TINC register            code
-    | TINC IDENTIFIER          code { free($2); }
-    */
-    | IADD register register
-    | IADD register immediate
-    | IADD register memory
-    | ISYSCALL { append_instruction_t1 (SYSCALL); }
-    | IMOV register register
-    | IMOV memory   register
-    | IMOV register memory
-    | IMOV register immediate { append_instruction_t6 (MOV, $2.size, REG, $2.number, IMM, (int) $3); }
-    | IMOV memory   immediate
-    | IXOR register register
-    | IXOR register memory
-    // #placeholder<parser_rules> COLLAPSED
-    ;
-
 repeat: REPEAT code END_REPEAT
     ;
 
@@ -237,13 +212,13 @@ if: IF logic THEN code END_IF
     | IF logic THEN code ELSE code END_IF
     ;
 
-logic: logical_operand TAND logical_operand
-    |  logical_operand TOR  logical_operand
-    |  logical_operand TXOR logical_operand
-    |  logical_operand '='  logical_operand
-    |  logical_operand NEQ  logical_operand
+logic: logical_operand ITAND logical_operand
+    |  logical_operand ITOR  logical_operand
+    |  logical_operand ITXOR logical_operand
+    |  logical_operand '='   logical_operand
+    |  logical_operand ITNEQ logical_operand
     |  sublogic
-    |  TNOT logic
+    |  ITNOT logic
     ;
 
 logical_operand: sublogic
@@ -345,4 +320,49 @@ artimetric_operand: LITERAL
 
 exit: EXIT value
     ;
+
+instruction: INOP { append_instruction_t1(NOP); }
+    /*
+    | ISYSCALL { append_instruction_t1 (SYSCALL); }
+    | IMOV register immediate { append_instruction_t6 (MOV, $2.size, REG, $2.number, IMM, (int) $3); }
+    */
+    // #placeholder<parser_rules> BEGIN
+    | ITSYSCALL { append_instruction_t1(SYSCALL); }
+    | ITSYSRET { append_instruction_t1(SYSRET); }
+    | ITSYSEXIT { append_instruction_t1(SYSEXIT); }
+    | ITSYSENTER { append_instruction_t1(SYSENTER); }
+    | ITLEAVE { append_instruction_t1(LEAVE); }
+    | ITRETF { append_instruction_t1(RETF); }
+    | ITRETN { append_instruction_t1(RETN); }
+    | ITPAUSE { append_instruction_t1(PAUSE); }
+    | ITHLT { append_instruction_t1(HLT); }
+    | ITLOCK { append_instruction_t1(LOCK); }
+    | ITINC register { append_instruction_t4( INC, $2.size, REG, $2.number ); }
+    | ITDEC register { append_instruction_t4( DEC, $2.size, REG, $2.number ); }
+    | ITNOT register { append_instruction_t4( NOT, $2.size, REG, $2.number ); }
+    | ITNEG register { append_instruction_t4( NEG, $2.size, REG, $2.number ); }
+    | ITMUL register { append_instruction_t4( MUL, $2.size, REG, $2.number ); }
+    | ITIMUL register { append_instruction_t4( IMUL, $2.size, REG, $2.number ); }
+    | ITDIV register { append_instruction_t4( DIV, $2.size, REG, $2.number ); }
+    | ITIDIV register { append_instruction_t4( IDIV, $2.size, REG, $2.number ); }
+    | ITINC memory { append_instruction_t4( INC, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITDEC memory { append_instruction_t4( DEC, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITNOT memory { append_instruction_t4( NOT, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITNEG memory { append_instruction_t4( NEG, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITMUL memory { append_instruction_t4( MUL, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITIMUL memory { append_instruction_t4( IMUL, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITDIV memory { append_instruction_t4( DIV, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITIDIV memory { append_instruction_t4( IDIV, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITADD register register { append_instruction_t6( ADD, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITOR register register { append_instruction_t6( OR, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITADC register register { append_instruction_t6( ADC, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITSBB register register { append_instruction_t6( SBB, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITAND register register { append_instruction_t6( AND, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITSUB register register { append_instruction_t6( SUB, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITXOR register register { append_instruction_t6( XOR, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITCMP register register { append_instruction_t6( CMP, $2.size, REG, $2.number, REG, $3.number ); }
+
+    // #placeholder<parser_rules> END
+    ;
+
 %%

@@ -103,8 +103,8 @@ u64        { return U64; }
 
 \"  { BEGIN IN_STRING; }
 
-\!\=       { return NEQ; }
-\!         { return TNOT; }
+\!\=       { return ITNEQ; }
+\!         { return ITNOT; }
 
 \/\/    { BEGIN IN_COMMENT; }
 \/\*    { BEGIN IN_MULTILINE_COMMENT; }
@@ -116,15 +116,45 @@ u64        { return U64; }
 fastcall { return FASTCALL; }
 
     /* --- Instrunctions begin here --- */
-    /*
-    xor{wsnl}+      { return TXOR; }
-    inc{wsnl}+      { return TINC; }
+nop    { return INOP; }
+    /* #placeholder<scanner_instructions> BEGIN
     */
-add      { return IADD; }
-syscall  { return ISYSCALL; }
-mov      { return IMOV; }
-xor      { return IXOR; }
-    /* #placeholder<scanner_instructions> COLLAPSED
+syscall    { return ITSYSCALL; }
+sysret    { return ITSYSRET; }
+sysexit    { return ITSYSEXIT; }
+sysenter    { return ITSYSENTER; }
+leave    { return ITLEAVE; }
+retf    { return ITRETF; }
+retn    { return ITRETN; }
+pause    { return ITPAUSE; }
+hlt    { return ITHLT; }
+lock    { return ITLOCK; }
+inc    { return ITINC; }
+dec    { return ITDEC; }
+not    { return ITNOT; }
+neg    { return ITNEG; }
+mul    { return ITMUL; }
+imul    { return ITIMUL; }
+div    { return ITDIV; }
+idiv    { return ITIDIV; }
+inc    { return ITINC; }
+dec    { return ITDEC; }
+not    { return ITNOT; }
+neg    { return ITNEG; }
+mul    { return ITMUL; }
+imul    { return ITIMUL; }
+div    { return ITDIV; }
+idiv    { return ITIDIV; }
+add    { return ITADD; }
+or    { return ITOR; }
+adc    { return ITADC; }
+sbb    { return ITSBB; }
+and    { return ITAND; }
+sub    { return ITSUB; }
+xor    { return ITXOR; }
+cmp    { return ITCMP; }
+
+    /* #placeholder<scanner_instructions> END
     */
     /* --- Instrunctions end here --- */
 

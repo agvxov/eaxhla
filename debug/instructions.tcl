@@ -1,6 +1,5 @@
 set instructions {
     {syscall}
-    {nop}
     {sysret}
     {sysexit}
     {sysenter}
@@ -10,6 +9,30 @@ set instructions {
     {pause}
     {hlt}
     {lock}
+    {inc  register}
+    {dec  register}
+    {not  register}
+    {neg  register}
+    {mul  register}
+    {imul register}
+    {div  register}
+    {idiv register}
+    {inc  memory}
+    {dec  memory}
+    {not  memory}
+    {neg  memory}
+    {mul  memory}
+    {imul memory}
+    {div  memory}
+    {idiv memory}
+    {add register register}
+    {or  register register}
+    {adc register register}
+    {sbb register register}
+    {and register register}
+    {sub register register}
+    {xor register register}
+    {cmp register register}
 }
 
     # {mov register immediate}

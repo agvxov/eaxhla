@@ -2,7 +2,7 @@ source debug/instructions.tcl
 
 proc make_scanner_instructions {is} {
     proc make_scanner_instruction {i} {
-        puts [format "%s    { return I%s; }" \
+        puts [format "%s    { return IT%s; }" \
                     [lindex $i 0] \
                     [string toupper [lindex $i 0]]
             ]
@@ -11,5 +11,7 @@ proc make_scanner_instructions {is} {
         make_scanner_instruction $i
     }
 }
+
+puts "    */"
 
 make_scanner_instructions $instructions
