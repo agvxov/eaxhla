@@ -9,9 +9,8 @@ entry $
 	mov esi, heyo
 	mov edx, 12
 	syscall
-
 	mov eax, 60
-	mov edi, 0
+	mov edi, 60
 	syscall
 
 segment readable writable

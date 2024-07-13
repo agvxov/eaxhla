@@ -16,7 +16,10 @@ typedef enum {
 } type_index;
 
 typedef enum {
-	RECORD,
+	ASMDIRMEM, // Assembler directive: >LABEL '"goto" clabel;'
+	ASMDIRREL, // Assembler directive: LABEL: 'clabel:'
+	ASMDIRIMM, // Assembler directive: D8-D64 {REDO} {DATA}
+	ASMDIRREP, // Assembler directive: ...
 	/* HIGHLY EXPERIMENTAL CODE ABOVE... */
 	ADD,              OR,               ADC,              SBB,
 	AND,              SUB,              XOR,              CMP,

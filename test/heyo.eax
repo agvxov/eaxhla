@@ -1,17 +1,14 @@
 unix program heyo_world
-
+	s8 [] heyo = "Heyo world!\n"
 begin
-
 	mov eax 1
 	mov edi 1
-	mov esi 4198610
+	mov esi heyo
 	mov edx 12
 	syscall
-
 	mov eax 60
-	mov edi 0
+	mov edi 60
 	syscall
-
 end program
 
 /*
