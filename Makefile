@@ -23,6 +23,8 @@ LDFLAGS  += -lm
 
 OUT := eaxhla
 
+PLUG := tool/plug
+
 SOURCE.d  := source
 OBJECT.d  := object
 
@@ -67,26 +69,22 @@ bootstrap:
 	./library/bootstrap.sh
 
 test: ${OUT}
-	#fcpp -C -LL debug/xop.eax > debug/xop.eax.pp
 	#${WRAP} ./${OUT} debug/xop.eax
-	#./${OUT} debug/xop.eax # NOTE as of now broken, but only because of undefined instructions
-	#${WRAP} ./${OUT} debug/artimetrics.eax
-	#@echo -e "\033[31;1m --- ERROR TESTING BEGINS BELOW ---\033[0m"
-	#debug/error_test.sh
-	#./${OUT} debug/heyo_world.eax
 	ORIGIN="$$(realpath .)" PATH="$$(realpath .):${PATH}" cmdtest
 
-clean:
+clean: unplug
 	-rm ${OUT} ${OBJECT} ${GENOBJECT} ${GENSOURCE}
 
 ${OBJECT.d}/%.pp: debug/%.tcl debug/instructions.tcl
 	tclsh $< > $@
 
+unplug:
+	${PLUG} -u -d token_list '' -d scanner_instructions '' -d parser_rules '' source/eaxhla.l source/eaxhla.y
+
 plug: ${OBJECT.d}/token_list.pp ${OBJECT.d}/scanner_instructions.pp ${OBJECT.d}/parser_rules.pp
-	plug -u -d token_list '' -d scanner_instructions '' -d parser_rules '' source/eaxhla.l source/eaxhla.y
-	plug -g -e token_list           ${OBJECT.d}/token_list.pp           source/eaxhla.y
-	plug -g -e scanner_instructions ${OBJECT.d}/scanner_instructions.pp source/eaxhla.l
-	plug -g -e parser_rules         ${OBJECT.d}/parser_rules.pp         source/eaxhla.y
+	${PLUG} -g -e token_list           ${OBJECT.d}/token_list.pp           source/eaxhla.y
+	${PLUG} -g -e scanner_instructions ${OBJECT.d}/scanner_instructions.pp source/eaxhla.l
+	${PLUG} -g -e parser_rules         ${OBJECT.d}/parser_rules.pp         source/eaxhla.y
 	
 
 .PHONY: test clean bootstrap

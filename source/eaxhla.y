@@ -361,7 +361,7 @@ instruction: INOP { append_instruction_t1(NOP); }
     | ITSUB register register { append_instruction_t6( SUB, $2.size, REG, $2.number, REG, $3.number ); }
     | ITXOR register register { append_instruction_t6( XOR, $2.size, REG, $2.number, REG, $3.number ); }
     | ITCMP register register { append_instruction_t6( CMP, $2.size, REG, $2.number, REG, $3.number ); }
-    | ITMOV register immediate { append_instruction_t6( MOV, $2.size, REG, $2.number, IMM, (int)3 ); }
+    | ITMOV register immediate { append_instruction_t6( MOV, $2.size, REG, $2.number, IMM, (int)$3 ); }
 
     // #placeholder<parser_rules> END
     ;
