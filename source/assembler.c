@@ -23,10 +23,11 @@
 #define MOVE_IF_COUNT   (MOVE_IF_END   - MOVE_IF_BEGIN   + 1)
 
 // Regulates displacement, immediate, label, variable, constant, string data.
-/*static next * empty_from;
+static next   holes;
+static next * empty_from;
 static next * empty_to;
 static next * imbue_with;
-static next * imbue_size;*/
+static next * imbue_size;
 
 // Main function.
 static void place (form when,
@@ -45,6 +46,24 @@ static void print (form       when,
 	place ((when != 0) && (size >= D16), (byte) ((data >>  8) & 0xff));
 	place ((when != 0) && (size >= D32), (byte) ((data >> 16) & 0xff));
 	place ((when != 0) && (size >= D32), (byte) ((data >> 24) & 0xff));
+}
+
+static void delay (form       when,
+                   size_index size,
+                   next       data) {
+	/* */
+	empty_from [holes] = text_sector_size;
+	imbue_with [holes] = data;
+	imbue_size [holes] = size;
+
+	place ((when != 0) && (size >= D8),  (byte) ((data >>  0) & 0xff));
+	place ((when != 0) && (size >= D16), (byte) ((data >>  8) & 0xff));
+	place ((when != 0) && (size >= D32), (byte) ((data >> 16) & 0xff));
+	place ((when != 0) && (size >= D32), (byte) ((data >> 24) & 0xff));
+
+	empty_to [holes] = text_sector_size;
+
+	holes += when;
 }
 
 static form front (form data) { return ((data >= 4) && (data <=  7)); }
@@ -276,10 +295,10 @@ static void build_move (size_index size,
 	place ((to == MEM) && (from == IMM), (byte) (0xc6 + (size != D8)));
 	place ((to == MEM) && (from == IMM), (byte) (0x05));
 
-	print ((to == REG) && (from == MEM), D32,  (next) ~0);
-	print ((to == REG) && (from == IMM), D32, source);
-	print ((to == MEM) && (from == REG), D32,  (next) ~0);
-	print ((to == MEM) && (from == IMM), D32,  (next) ~0);
+	delay ((to == REG) && (from == MEM), D32,  (next) ~0);
+	print ((to == REG) && (from == IMM), size, source);
+	delay ((to == MEM) && (from == REG), D32,  (next) ~0);
+	delay ((to == MEM) && (from == IMM), D32,  (next) ~0);
 	print ((to == MEM) && (from == IMM), size, source);
 }
 

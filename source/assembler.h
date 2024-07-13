@@ -16,13 +16,13 @@ typedef enum {
 } type_index;
 
 typedef enum {
-	XDCL,             XLBL,             XRPT,             XLCT,
+	RECORD,
 	/* HIGHLY EXPERIMENTAL CODE ABOVE... */
 	ADD,              OR,               ADC,              SBB,
 	AND,              SUB,              XOR,              CMP,
 	/* */
 	INC,              DEC,              NOT,              NEG,
-	UMUL,             IMUL,             UDIV,             IDIV,
+	MUL,              IMUL,             DIV,              IDIV,
 	/* */
 	NOP,              RETN,             RETF,             LEAVE,
 	LOCK,             HLT,

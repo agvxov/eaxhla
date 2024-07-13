@@ -1,4 +1,4 @@
-program heyo_world
+unix program heyo_world
 
 begin
 
