@@ -7,6 +7,13 @@ proc make_scanner_instructions {is} {
                     [string toupper [lindex $i 0]]
             ]
     }
+
+    set isc {}
+    foreach i $is {
+        lappend isc [lindex $i 0]
+    }
+    set is [lsort -unique $isc]
+
     foreach i $is {
         make_scanner_instruction $i
     }

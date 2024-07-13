@@ -119,40 +119,32 @@ fastcall { return FASTCALL; }
 nop    { return INOP; }
     /* #placeholder<scanner_instructions> BEGIN
     */
-syscall    { return ITSYSCALL; }
-sysret    { return ITSYSRET; }
-sysexit    { return ITSYSEXIT; }
-sysenter    { return ITSYSENTER; }
+adc    { return ITADC; }
+add    { return ITADD; }
+and    { return ITAND; }
+cmp    { return ITCMP; }
+dec    { return ITDEC; }
+div    { return ITDIV; }
+hlt    { return ITHLT; }
+idiv    { return ITIDIV; }
+imul    { return ITIMUL; }
+inc    { return ITINC; }
 leave    { return ITLEAVE; }
+lock    { return ITLOCK; }
+mul    { return ITMUL; }
+neg    { return ITNEG; }
+not    { return ITNOT; }
+or    { return ITOR; }
+pause    { return ITPAUSE; }
 retf    { return ITRETF; }
 retn    { return ITRETN; }
-pause    { return ITPAUSE; }
-hlt    { return ITHLT; }
-lock    { return ITLOCK; }
-inc    { return ITINC; }
-dec    { return ITDEC; }
-not    { return ITNOT; }
-neg    { return ITNEG; }
-mul    { return ITMUL; }
-imul    { return ITIMUL; }
-div    { return ITDIV; }
-idiv    { return ITIDIV; }
-inc    { return ITINC; }
-dec    { return ITDEC; }
-not    { return ITNOT; }
-neg    { return ITNEG; }
-mul    { return ITMUL; }
-imul    { return ITIMUL; }
-div    { return ITDIV; }
-idiv    { return ITIDIV; }
-add    { return ITADD; }
-or    { return ITOR; }
-adc    { return ITADC; }
 sbb    { return ITSBB; }
-and    { return ITAND; }
 sub    { return ITSUB; }
+syscall    { return ITSYSCALL; }
+sysenter    { return ITSYSENTER; }
+sysexit    { return ITSYSEXIT; }
+sysret    { return ITSYSRET; }
 xor    { return ITXOR; }
-cmp    { return ITCMP; }
 
     /* #placeholder<scanner_instructions> END
     */
