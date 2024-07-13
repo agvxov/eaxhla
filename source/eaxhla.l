@@ -131,6 +131,7 @@ imul    { return ITIMUL; }
 inc    { return ITINC; }
 leave    { return ITLEAVE; }
 lock    { return ITLOCK; }
+mov    { return ITMOV; }
 mul    { return ITMUL; }
 neg    { return ITNEG; }
 not    { return ITNOT; }

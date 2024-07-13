@@ -81,7 +81,7 @@
 // Instructions
 %token INOP
 // #placeholder<token_list> BEGIN
-%token ITADC ITADD ITAND ITCMP ITDEC ITDIV ITHLT ITIDIV ITIMUL ITINC ITLEAVE ITLOCK ITMUL ITNEG ITNOT ITOR ITPAUSE ITRETF ITRETN ITSBB ITSUB ITSYSCALL ITSYSENTER ITSYSEXIT ITSYSRET ITXOR
+%token ITADC ITADD ITAND ITCMP ITDEC ITDIV ITHLT ITIDIV ITIMUL ITINC ITLEAVE ITLOCK ITMOV ITMUL ITNEG ITNOT ITOR ITPAUSE ITRETF ITRETN ITSBB ITSUB ITSYSCALL ITSYSENTER ITSYSEXIT ITSYSRET ITXOR
 // #placeholder<token_list> END
 
 // Instruction-likes
@@ -361,6 +361,7 @@ instruction: INOP { append_instruction_t1(NOP); }
     | ITSUB register register { append_instruction_t6( SUB, $2.size, REG, $2.number, REG, $3.number ); }
     | ITXOR register register { append_instruction_t6( XOR, $2.size, REG, $2.number, REG, $3.number ); }
     | ITCMP register register { append_instruction_t6( CMP, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITMOV register immediate { append_instruction_t6( MOV, $2.size, REG, $2.number, IMM, (int)3 ); }
 
     // #placeholder<parser_rules> END
     ;

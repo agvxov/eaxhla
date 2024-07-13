@@ -33,9 +33,8 @@ set instructions {
     {sub register register}
     {xor register register}
     {cmp register register}
+    {mov register immediate}
 }
-
-    # {mov register immediate}
     
 proc malformed_instruction {i} {
     error [format "Instruction {%s} is malformed" [join $i ", "]]
