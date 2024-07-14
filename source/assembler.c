@@ -24,7 +24,7 @@
 #define MOVE_IF_COUNT   (MOVE_IF_END   - MOVE_IF_BEGIN   + 1)
 
 // Regulates displacement, immediate, label, variable, constant, string data.
-#define TESTING_FOR_NOW (144)
+#define TESTING_FOR_NOW (4)
 static next empty_count                   = 0;
 static next empty_holes                   = 0;
 static next empty_array [TESTING_FOR_NOW] = { 0 };
@@ -51,42 +51,44 @@ static void print (form       when,
 	/* 64-BIT SUPPORT */
 }
 
-static void asmdirrel (next data) {
+static void asmdirrel (form when,
+                       next data) {
 	empty_array [empty_holes] = text_sector_size;
 	empty_imbue [empty_holes] = data;
 
-	empty_holes += 1;
+	empty_holes += (next) when;
 }
 
-static void asmdirmem (void) {
+static void asmdirmem (form when) {
 	empty_store [empty_count] = text_sector_size;
 
-	empty_count += 1;
+	empty_count += (next) when;
 }
 
 static void delay (form       when,
                    size_index size,
                    next       data) {
 	/* */
-	place ((when != 0) && (size >= D8),  (byte) 0x00);
-	place ((when != 0) && (size >= D16), (byte) 0x40);
-	place ((when != 0) && (size >= D32), (byte) 0x10);
+	asmdirrel (when, data);
+
+	place ((when != 0) && (size >= D8),  (byte) 0xb0);
+	place ((when != 0) && (size >= D16), (byte) 0x10);
+	place ((when != 0) && (size >= D32), (byte) 0x40);
 	place ((when != 0) && (size >= D32), (byte) 0x00);
 	/* NO DEREFERENCING */
 	/* 64-BIT SUPPORT */
-
-	asmdirrel (data);
 }
 
-static void asmdirimm (size_index size,
-                       next       redo,
+static void asmdirimm (form       when,
+                       size_index size,
+                       //~next       redo,
                        next       data) {
 	/* */
-	next i;
+	//~next i;
 
-	for (i = 0; i < redo; ++i) {
-		print (1, size, data);
-	}
+	//~for (i = 0; i < redo; ++i) {
+		print (when, size, data);
+	//~}
 }
 
 static form front (form data) { return ((data >= 4) && (data <=  7)); }
@@ -311,7 +313,7 @@ static void build_move (size_index size,
 	build_register_redirection ((to == REG) && (from == MEM), destination);
 	build_register_redirection ((to == MEM) && (from == REG), source);
 
-	place ((to == REG) && (from == IMM), (byte) (0xb8
+	place ((to == REG) && ((from == IMM) || (from == REL)), (byte) (0xb8
 	                                           //~+ 0x08 * (size != D8)
 	                                           + 0x01 * (destination & 0x07)));
 
@@ -319,11 +321,11 @@ static void build_move (size_index size,
 	place ((to == MEM) && (from == IMM), (byte) (0x05));
 
 	delay ((to == REG) && (from == MEM), D32,  source);
-	delay ((to == REG) && (from == REL), D32,  source);
 	print ((to == REG) && (from == IMM), size, source);
 	delay ((to == MEM) && (from == REG), D32,  (next) ~0);
 	delay ((to == MEM) && (from == IMM), D32,  (next) ~0);
 	print ((to == MEM) && (from == IMM), size, source);
+	delay ((to == REG) && (from == REL), D32,  source);
 }
 
 next   text_sector_size = 0;
@@ -343,15 +345,17 @@ void assemble (next   count,
 
 	for (index = 0; index < count; ++index) {
 		if (array [index] == ASMDIRREL) {
-			asmdirrel (array [index + 1]);
+			asmdirrel (1, array [index + 1]);
 			index += 1;
+			printf ("array <%u> %08x\n", empty_holes - 1, empty_array [empty_holes - 1]);
+			printf ("imbue <%u> %08x\n", empty_holes - 1, empty_imbue [empty_holes - 1]);
 		} else if (array [index] == ASMDIRMEM) {
-			asmdirmem ();
-			index += 0;
-		//~} else if (array [index] == ASMDIRIMM) {
-			//~asmdirimm (array [index + 1], array [index + 2],
-			           //~array [index + 3]);
-			//~index += 3;
+			asmdirmem (1);
+			index += 1;
+			printf ("store <%u> %08x\n", empty_count - 1, empty_store [empty_count - 1]);
+		} else if (array [index] == ASMDIRIMM) {
+			asmdirimm (1, array [index + 1], array [index + 2]);
+			index += 2;
 		//~} else if (array [index] == ASMDIRREP) {
 		} else if ((array [index] >= REGULAR_BEGIN)
 		&&  (array [index] <= REGULAR_END)) {
@@ -395,16 +399,18 @@ void assemble (next   count,
 			            array [index + 5]);
 			index += 5;
 		} else {
-			exit (array [index]); // For debugging only!
+			//~exit (array [index]); // For debugging only!
 		}
 	}
-
-	return;
 
 	for (index = 0; index < empty_holes; ++index) {
 		next set = 0, get = empty_array [index];
 		memcpy (& set, & text_sector_byte [get], sizeof (set));
 		set += empty_store [empty_imbue [index]];
 		memcpy (& text_sector_byte [get], & set, sizeof (set));
+		//~text_sector_byte [get + 3] += (byte) ((empty_store [empty_imbue [index]] >>  0) & 0xff);
+		//~text_sector_byte [get + 2] += (byte) ((empty_store [empty_imbue [index]] >>  8) & 0xff);
+		//~text_sector_byte [get + 1] += (byte) ((empty_store [empty_imbue [index]] >> 16) & 0xff);
+		//~text_sector_byte [get + 0] += (byte) ((empty_store [empty_imbue [index]] >> 24) & 0xff);
 	}
 }
