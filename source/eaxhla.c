@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include "debug.h"
 #include "eaxhla.tab.h"
 
 tommy_hashtable variable_table;
@@ -18,22 +19,6 @@ int has_encountered_error = 0;
 
 char * scope = NULL;
 int is_program_found = 0;
-#if DEBUG == 1
-static
-void dump_variable(void * data) {
-    variable_t * variable = (variable_t*)data;
-    printf("{ .name = '%s', .value = '%ld', .elements = %d }\n",
-            variable->name,
-            variable->value,
-            variable->elements
-    );
-}
-
-static
-void dump_variables(void) {
-    tommy_hashtable_foreach(&variable_table, dump_variable);
-}
-#endif
 
 static
 int table_compare_unsigned(const void * arg, const void * obj) {
@@ -136,9 +121,7 @@ void free_variable(void * data) {
 }
 
 int eaxhla_destroy(void) {
-  #if DEBUG == 1
-    dump_variables();
-  #endif
+    debug_dump_variables();
     tommy_hashtable_foreach(&variable_table, free_variable);
     tommy_hashtable_done(&variable_table);
     return 0;

@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "debug.h"
+
 #define REGULAR_BEGIN   (ADD)
 #define REGULAR_END     (CMP)
 #define IRREGULAR_BEGIN (INC)
@@ -347,12 +349,12 @@ void assemble (next   count,
 		if (array [index] == ASMDIRREL) {
 			asmdirrel (1, array [index + 1]);
 			index += 1;
-			printf ("array <%u> %08x\n", empty_holes - 1, empty_array [empty_holes - 1]);
-			printf ("imbue <%u> %08x\n", empty_holes - 1, empty_imbue [empty_holes - 1]);
+			debug_printf ("array <%u> %08x\n", empty_holes - 1, empty_array [empty_holes - 1]);
+			debug_printf ("imbue <%u> %08x\n", empty_holes - 1, empty_imbue [empty_holes - 1]);
 		} else if (array [index] == ASMDIRMEM) {
 			asmdirmem (1);
 			index += 1;
-			printf ("store <%u> %08x\n", empty_count - 1, empty_store [empty_count - 1]);
+			debug_printf ("store <%u> %08x\n", empty_count - 1, empty_store [empty_count - 1]);
 		} else if (array [index] == ASMDIRIMM) {
 			asmdirimm (1, array [index + 1], array [index + 2]);
 			index += 2;
@@ -374,7 +376,7 @@ void assemble (next   count,
 			index += 0;
 		} else if ((array [index] >= SPECIAL_2_BEGIN)
 		       &&  (array [index] <= SPECIAL_2_END)) {
-			printf ("spc\n");
+			debug_printf ("spc\n");
 			build_special_2 (array [index + 0]);
 			index += 0;
 		} else if ((array [index] >= JUMP_IF_BEGIN)
@@ -393,7 +395,7 @@ void assemble (next   count,
 			            array [index + 3]);
 			index += 3;
 		} else if (array [index] == MOV) {
-			printf ("mov\n");
+			debug_printf ("mov\n");
 			build_move (array [index + 1], array [index + 2],
 			            array [index + 3], array [index + 4],
 			            array [index + 5]);
