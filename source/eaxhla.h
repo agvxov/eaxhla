@@ -1,6 +1,6 @@
 #ifndef EAXHLA_H
 
-#include <tommyds/tommyhashtbl.h>
+#include <tommyds/tommyds/tommyhashtbl.h>
 
 #define WORD_SIZE_IN_BYTES (64/8)
 

@@ -9,6 +9,7 @@ eaxcc
 library/tommyds/
 tmp-*
 .cmdtest-filter
+*.pluglock
 
 # temp
 test_me_please

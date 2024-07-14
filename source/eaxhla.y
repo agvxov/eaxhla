@@ -37,6 +37,9 @@
 %token REPEAT END_REPEAT
 %token IF THEN ELSE END_IF
 %token MACHINE END_MACHINE
+%token LIBRARY END_LIBRARY
+
+%token UNTIL
 
 %token<strval> IDENTIFIER LABEL
 
@@ -90,11 +93,13 @@
 %%
 
 hla: %empty            // { issue_warning("empty file, noting to be done."); }
+    // | library  hla
+    | declaration hla // tmp
     | program  hla
     | function hla
     ;
 
-program: program_head declaration_section MYBEGIN code END_PROGRAM
+program: program_head declaration_section MYBEGIN code END_PROGRAM { scope = NULL; }
     ;
 
 program_head: program_specifier PROGRAM IDENTIFIER {
@@ -114,7 +119,8 @@ system_specifier: UNIX { system_type = UNIX; }
     | WIN64 { system_type = WIN64; }
     ;
 
-function: function_head declaration_section MYBEGIN code END_PROCEDURE
+    // XXX: end procedure thing
+function: function_head declaration_section MYBEGIN code END_PROCEDURE { scope = NULL; }
     ;
 
 function_head: function_specifier PROCEDURE IDENTIFIER { scope = $3; }
@@ -194,11 +200,11 @@ value: artimetric_block
     ;
 
 code: %empty
-    | error   code { yyerrok; }
+    | error   code { /*yyerrok;*/ }
     | repeat  code
     | if      code
     | call    code
-    | LABEL   code { free($1); }
+    | LABEL   code { /* XXX */ free($1); }
     | machine code
     | BREAK   code
     | exit    code
@@ -206,6 +212,7 @@ code: %empty
     ;
 
 repeat: REPEAT code END_REPEAT
+    | UNTIL logic REPEAT code END_REPEAT
     ;
 
 if: IF logic THEN code END_IF
@@ -224,6 +231,7 @@ logic: logical_operand ITAND logical_operand
 logical_operand: sublogic
     | register
     | artimetric_block
+    | dereference
     | LITERAL
     | IDENTIFIER
     ;
@@ -319,6 +327,13 @@ artimetric_operand: LITERAL
     ;
 
 exit: EXIT value
+    ;
+
+library: LIBRARY declaration_section MYBEGIN library_code END_LIBRARY
+    ;
+
+library_code: %empty
+    | function library_code
     ;
 
 instruction: INOP { append_instruction_t1(NOP); }

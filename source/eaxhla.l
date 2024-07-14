@@ -5,6 +5,13 @@
     char * string_literal_buffer;
     int string_litral_buffer_size     = 0;
     int string_litral_buffer_capacity = 128;
+    void string_literal_ensure_surplus(int s) {
+        if (string_litral_buffer_size + s > string_litral_buffer_capacity) {
+            string_litral_buffer_capacity *= 2;
+            void * ignore = realloc(string_literal_buffer, string_litral_buffer_capacity);
+            (void)ignore;
+        }
+    }
 
     #define YY_USER_INIT \
         string_literal_buffer = malloc(128);
@@ -37,8 +44,10 @@ repeat                     { return REPEAT; }
 if                         { return IF; }
 then                       { return THEN; }
 machine                    { return MACHINE; }
+library                    { return LIBRARY; }
 
 break                      { return BREAK; }
+UNTIL                      { return UNTIL; }
 exit                       { return EXIT;  }
 
 end { BEGIN IN_END; }
@@ -157,6 +166,7 @@ procedure      { BEGIN INITIAL; free(scope); scope = NULL; return END_PROCEDURE;
 repeat         { BEGIN INITIAL; return END_REPEAT; }
 if             { BEGIN INITIAL; return END_IF; }
 machine        { BEGIN INITIAL; return END_MACHINE; }
+library        { BEGIN INITIAL; return END_LIBRARY; }
 {wsnl}         { ; }
 .              { yyless(0); BEGIN IN_UNKNOWN_END; }
 }
@@ -167,22 +177,22 @@ machine        { BEGIN INITIAL; return END_MACHINE; }
 
 <IN_STRING>{
     /* XXX: escapes; multiline strings will die */
+    /* XXX: the first WORD_SIZE_IN_BYTES bytes should be 0'd */
 \"  {
         BEGIN INITIAL;
-        if (yyleng <= WORD_SIZE_IN_BYTES) {
+        if (string_litral_buffer_size <= WORD_SIZE_IN_BYTES) {
             memcpy(&yylval.intval, yytext, WORD_SIZE_IN_BYTES);
             return LITERAL;
         }
 
+        string_literal_ensure_surplus(1);
+        string_literal_buffer[string_litral_buffer_size+1] = '\0';
         yylval.strval = strdup(string_literal_buffer);
+        string_litral_buffer_size = 0;
         return ARRAY_LITERAL;
 }
 .   {
-        if (string_litral_buffer_size + yyleng > string_litral_buffer_capacity) {
-            string_litral_buffer_capacity *= 2;
-            void * ignore = realloc(string_literal_buffer, string_litral_buffer_capacity);
-            (void)ignore;
-        }
+        string_literal_ensure_surplus(yyleng);
         memcpy(string_literal_buffer + string_litral_buffer_size, yytext, yyleng);
         string_litral_buffer_size += yyleng;
     }

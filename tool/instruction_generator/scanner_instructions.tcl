@@ -1,4 +1,4 @@
-source debug/instructions.tcl
+source tool/instruction_generator/instructions.tcl
 
 proc make_scanner_instructions {is} {
     proc make_scanner_instruction {i} {
