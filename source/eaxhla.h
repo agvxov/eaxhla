@@ -69,12 +69,12 @@ XXX_BBB: dd 0 -- NOW WE DEFINE THOSE ARGUMENTS
 
 ----------------------------------------
 
-ASMDIRREL [?] -- IDENTIFIER FOR XXX
-{ IMPL }      -- USAGE OF OTHER 'append_<>' FUNCTIONS...
+ASMDIRMEM [?]                 -- IDENTIFIER FOR XXX
+{ IMPL }                      -- USAGE OF OTHER 'append_<>' FUNCTIONS...
 RETN
-...
-ASMDIRREL [?] ASMDIRIMM D32 0 -- IDENTIFIER FOR XXX_AAA
-ASMDIRREL [?] ASMDIRIMM D32 0 -- IDENTIFIER FOR XXX_BBB
+...                           -- OTHER CODE
+ASMDIRMEM [?] ASMDIRIMM D32 0 -- IDENTIFIER FOR XXX_AAA
+ASMDIRMEM [?] ASMDIRIMM D32 0 -- IDENTIFIER FOR XXX_BBB
 
 --------------------------------------------------------------------------------
 
@@ -103,8 +103,11 @@ fastcall XXX A B
 --------------------------------------------------------------------------------
 */
 
-extern void append_fastcall           (void); // TODO
-extern void append_fastcall_arguments (void); // TODO
+extern void append_label (int rel);
+
+extern void append_fastcall_begin     (int rel);
+extern void append_fastcall_end       (void);
+extern void append_fastcall_arguments (int rel, int wid, int imm);
 
 extern void issue_warning(const char * format, ...);
 extern void issue_error(const char * format, ...);
