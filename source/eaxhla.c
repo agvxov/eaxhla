@@ -85,15 +85,20 @@ int can_fit(int type, long long value) {
 }
 
 char * make_scoped_name(const char * const scope, char * name) {
+    if (!scope) {
+        return name;
+    }
+
     char * r;
     const long scl = strlen(scope);
     const long nml = strlen(name);
     r = malloc(2 + scl + 1 + nml + 1);
     r[0] = '_';
     r[1] = '_';
-    strcat(r + 2, scope);
+    memcpy(r + 2, scope, scl);
     r[2 + scl] = '_';
-    strcat(r + 2 + scl + 1, name);
+    memcpy(r + 2 + scl + 1, name, nml);
+    r[2 + scl + 1 + nml] = '\0';
     free(name);
     return r;
 }
