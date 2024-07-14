@@ -3,13 +3,17 @@
 
 #if DEBUG == 1
 #include <stdio.h>
+#include <stdarg.h>
+#include "eaxhla.h"
+
+extern tommy_hashtable variable_table;
 
 # define debug_puts(msg) do { puts(msg); } while (0)
 
 static  // this is less horid than macro varargs
 void debug_printf(const char * const fmt, ...) {
     va_list args;
-    va_start(args, count);
+    va_start(args, fmt);
     vprintf(fmt, args);
     va_end(args);
 }
@@ -17,11 +21,19 @@ void debug_printf(const char * const fmt, ...) {
 static
 void dump_variable(void * data) {
     variable_t * variable = (variable_t*)data;
-    printf("{ .name = '%s', .value = '%ld', .elements = %d }\n",
-            variable->name,
-            variable->value,
-            variable->elements
-    );
+    if (variable->elements == 1) {
+        printf("{ .name = '%s', .value = '%ld' }\n",
+                variable->name,
+                variable->value
+        );
+    } else {
+        printf("{ .name = '%s', .elements = '%d', .array_value = \"%.*s\" }\n",
+                variable->name,
+                variable->elements,
+                variable->elements,
+                (char*)variable->array_value
+        );
+    }
 }
 
 static

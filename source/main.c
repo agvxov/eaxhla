@@ -11,6 +11,7 @@ static void dump (const char * file_name);
 #include "eaxhla.tab.h"
 #include "assembler.h"
 #include "unix.h"
+#include "debug.h"
 
 extern void yyfree_leftovers(void);
 
@@ -42,7 +43,8 @@ signed main(int argc, char * argv[]) {
 
     if (!has_encountered_error) {
         assemble (t_count, t_array);
-        dump ("test_me_please");
+        debug_puts("Dumping output...");
+        dump ("a.out");
     }
 
     if (was_instruction_array_empty) {
