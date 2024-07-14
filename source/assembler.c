@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "debug.h"
-
 #define REGULAR_BEGIN   (ADD)
 #define REGULAR_END     (CMP)
 #define IRREGULAR_BEGIN (INC)
@@ -55,14 +53,21 @@ static void print (form       when,
 
 static void asmdirrel (form when,
                        next data) {
+	/* */
+	if (empty_holes >= TESTING_FOR_NOW) exit (69);
+
 	empty_array [empty_holes] = text_sector_size;
 	empty_imbue [empty_holes] = data;
 
 	empty_holes += (next) when;
 }
 
-static void asmdirmem (form when) {
-	empty_store [empty_count] = text_sector_size;
+static void asmdirmem (form when,
+                       next code) {
+	/* */
+	if (code >= TESTING_FOR_NOW) exit (69);
+
+	empty_store [code] = text_sector_size;
 
 	empty_count += (next) when;
 }
@@ -349,12 +354,9 @@ void assemble (next   count,
 		if (array [index] == ASMDIRREL) {
 			asmdirrel (1, array [index + 1]);
 			index += 1;
-			debug_printf ("array <%u> %08x\n", empty_holes - 1, empty_array [empty_holes - 1]);
-			debug_printf ("imbue <%u> %08x\n", empty_holes - 1, empty_imbue [empty_holes - 1]);
 		} else if (array [index] == ASMDIRMEM) {
-			asmdirmem (1);
+			asmdirmem (1, array [index + 1]);
 			index += 1;
-			debug_printf ("store <%u> %08x\n", empty_count - 1, empty_store [empty_count - 1]);
 		} else if (array [index] == ASMDIRIMM) {
 			asmdirimm (1, array [index + 1], array [index + 2]);
 			index += 2;
@@ -376,7 +378,6 @@ void assemble (next   count,
 			index += 0;
 		} else if ((array [index] >= SPECIAL_2_BEGIN)
 		       &&  (array [index] <= SPECIAL_2_END)) {
-			debug_printf ("spc\n");
 			build_special_2 (array [index + 0]);
 			index += 0;
 		} else if ((array [index] >= JUMP_IF_BEGIN)
@@ -395,7 +396,6 @@ void assemble (next   count,
 			            array [index + 3]);
 			index += 3;
 		} else if (array [index] == MOV) {
-			debug_printf ("mov\n");
 			build_move (array [index + 1], array [index + 2],
 			            array [index + 3], array [index + 4],
 			            array [index + 5]);
@@ -410,9 +410,5 @@ void assemble (next   count,
 		memcpy (& set, & text_sector_byte [get], sizeof (set));
 		set += empty_store [empty_imbue [index]];
 		memcpy (& text_sector_byte [get], & set, sizeof (set));
-		//~text_sector_byte [get + 3] += (byte) ((empty_store [empty_imbue [index]] >>  0) & 0xff);
-		//~text_sector_byte [get + 2] += (byte) ((empty_store [empty_imbue [index]] >>  8) & 0xff);
-		//~text_sector_byte [get + 1] += (byte) ((empty_store [empty_imbue [index]] >> 16) & 0xff);
-		//~text_sector_byte [get + 0] += (byte) ((empty_store [empty_imbue [index]] >> 24) & 0xff);
 	}
 }

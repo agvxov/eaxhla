@@ -12,6 +12,7 @@
 
 #include "debug.h"
 #include "eaxhla.tab.h"
+#include "assembler.h"
 
 tommy_hashtable variable_table;
 
@@ -200,7 +201,40 @@ void append_instruction_t6 (int t6, int w, int d, int r, int s, int i) {
 	append_token (i);  // immediate
 }
 
-int system_type = 
+// my_label:
+void append_label (int rel) {
+	append_instruction_t1 (ASMDIRMEM);
+	append_instruction_t1 (rel);
+}
+
+// procedure my_procedure ... <argv> ... begin
+// rel = my_procedure (some unique index)
+// best if it's count of defined procedures!
+// it must not be address of it, or huge number!
+// optimally, it should be number 0 ... 140.
+// for now, 140 procedures is enough, will expand later!
+void append_fastcall_begin (int rel) {
+	append_label (rel);
+}
+
+// end procedure
+void append_fastcall_end (void) {
+	append_instruction_t1 (RETN);
+}
+
+// append these at the end, postpone it!
+// this function needs to be called after ALL instructions are parsed.
+// it has to do with structure of every binary executable file!
+// we can add it later, it's "triggered" on 'in'.
+void append_fastcall_arguments (int rel, int wid, int imm) { // TODO
+	append_instruction_t1 (ASMDIRMEM);
+	append_instruction_t1 (rel);
+	append_instruction_t1 (ASMDIRIMM);
+	append_instruction_t1 (wid);
+	append_instruction_t1 (imm);
+}
+
+int system_type =
   #if defined(__unix__)
     UNIX
   #elif defined(_WIN64)
