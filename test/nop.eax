@@ -1,0 +1,145 @@
+////////////////////////////////////////////////////////////////////////////////
+// nop
+////////////////////////////////////////////////////////////////////////////////
+
+u32 system_call_read  = 0
+u32 system_call_write = 1
+u32 system_call_open  = 2
+u32 system_call_close = 3
+
+u32 standard_input  = 0
+u32 standard_output = 1
+
+////////////////////////////////////////////////////////////////////////////////
+
+procedure print
+	in u64 message
+begin
+	repeat until u8 [message] = 0 // Not sure about casting...
+		call write standard_output message 1
+		inc message
+	end repeat
+end procedure
+
+////////////////////////////////////////////////////////////////////////////////
+
+procedure fatal
+	in u64 message
+begin
+	call print message
+	exit 1
+end procedure
+
+////////////////////////////////////////////////////////////////////////////////
+
+procedure read
+	in s32 file
+	in u64 data
+	in u64 size
+begin
+	mov eax system_call_read
+	mov edi file
+	mov rsi data
+	mov rdx size
+	syscall
+
+	if eax = -1 then
+		call fatal "> failed to read from the file!\n\0"
+	end if
+end procedure
+
+////////////////////////////////////////////////////////////////////////////////
+
+procedure write
+	in s32 file
+	in u64 data
+	in u64 size
+begin
+	mov eax system_call_write
+	mov edi file
+	mov rsi data
+	mov rdx size
+	syscall
+
+	if eax = -1 then
+		call fatal "> failed to write to the file!\n\0"
+	end if
+end procedure
+
+////////////////////////////////////////////////////////////////////////////////
+
+procedure open
+	in u64   name
+	in s32   mode
+	in s32 * file
+begin
+	mov eax system_call_open
+	mov rdi name
+	mov esi mode
+	syscall
+
+	if eax = -1 then
+		call fatal "> failed to open the file!\n\0"
+	end if
+
+	mov [file] eax
+end procedure
+
+////////////////////////////////////////////////////////////////////////////////
+
+procedure close
+	in s32 file
+begin
+	mov eax system_call_close
+	mov edi file
+	syscall
+
+	if eax = -1 then
+		call fatal "> failed to close the file!\n\0"
+	end if
+end procedure
+
+////////////////////////////////////////////////////////////////////////////////
+
+unix program main
+	s32 file = 0
+	u8  byte = 0
+
+	s8 [] digits   = '0123456789abcdef\0'
+	s8    space    = 32
+	s8    new_line = 10
+begin
+	if argc = 2 then
+		call fatal "> argument count must be 2!\n\0"
+	end if
+
+	call open argv [1] 0 file
+
+	repeat until r10 = 0
+		call read standard_input byte 1
+		// When EOF is reached 'rax', then 'r10' is 0.
+		mov r10, rax
+
+		if u8 [byte] = 0x90 then
+			call print "\n\0"
+		end if
+
+		mov r12 standard_output
+		mov r13 digits
+		sar r15 4
+		add r13 r15
+		call write r12 r13 1
+
+		mov r12 standard_output
+		mov r13 digits
+		mov r15b [byte]
+		and r15 15
+		add r13 r15
+		call write r12 r13 1
+
+		call print " \0"
+	end repeat
+
+	call print "\n\0"
+	call close file
+end program
