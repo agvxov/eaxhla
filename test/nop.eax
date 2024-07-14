@@ -12,26 +12,30 @@ u32 standard_output = 1
 
 ////////////////////////////////////////////////////////////////////////////////
 
+fast
 procedure print
 	in u64 message
 begin
-	repeat until u8 [message] = 0 // Not sure about casting...
-		call write standard_output message 1
+    // Not sure about casting...
+	until [message] = 0 repeat
+		fastcall write standard_output message 1
 		inc message
 	end repeat
 end procedure
 
 ////////////////////////////////////////////////////////////////////////////////
 
+fast
 procedure fatal
 	in u64 message
 begin
-	call print message
+	fastcall print message
 	exit 1
 end procedure
 
 ////////////////////////////////////////////////////////////////////////////////
 
+fast
 procedure read
 	in s32 file
 	in u64 data
@@ -44,12 +48,13 @@ begin
 	syscall
 
 	if eax = -1 then
-		call fatal "> failed to read from the file!\n\0"
+		fastcall fatal "> failed to read from the file!\n\0"
 	end if
 end procedure
 
 ////////////////////////////////////////////////////////////////////////////////
 
+fast
 procedure write
 	in s32 file
 	in u64 data
@@ -62,12 +67,13 @@ begin
 	syscall
 
 	if eax = -1 then
-		call fatal "> failed to write to the file!\n\0"
+		fastcall fatal "> failed to write to the file!\n\0"
 	end if
 end procedure
 
 ////////////////////////////////////////////////////////////////////////////////
 
+fast
 procedure open
 	in u64   name
 	in s32   mode
@@ -79,7 +85,7 @@ begin
 	syscall
 
 	if eax = -1 then
-		call fatal "> failed to open the file!\n\0"
+		fastcall fatal "> failed to open the file!\n\0"
 	end if
 
 	mov [file] eax
@@ -87,6 +93,7 @@ end procedure
 
 ////////////////////////////////////////////////////////////////////////////////
 
+fast
 procedure close
 	in s32 file
 begin
@@ -95,7 +102,7 @@ begin
 	syscall
 
 	if eax = -1 then
-		call fatal "> failed to close the file!\n\0"
+		fastcall fatal "> failed to close the file!\n\0"
 	end if
 end procedure
 
@@ -110,36 +117,36 @@ unix program main
 	s8    new_line = 10
 begin
 	if argc = 2 then
-		call fatal "> argument count must be 2!\n\0"
+		fastcall fatal "> argument count must be 2!\n\0"
 	end if
 
-	call open argv [1] 0 file
+	fastcall open argv [1] 0 file
 
-	repeat until r10 = 0
-		call read standard_input byte 1
+	until r10 = 0 repeat 
+		fastcall read standard_input byte 1
 		// When EOF is reached 'rax', then 'r10' is 0.
 		mov r10, rax
 
 		if u8 [byte] = 0x90 then
-			call print "\n\0"
+			fastcall print "\n\0"
 		end if
 
 		mov r12 standard_output
 		mov r13 digits
 		sar r15 4
 		add r13 r15
-		call write r12 r13 1
+		fastcall write r12 r13 1
 
 		mov r12 standard_output
 		mov r13 digits
 		mov r15b [byte]
 		and r15 15
 		add r13 r15
-		call write r12 r13 1
+		fastcall write r12 r13 1
 
-		call print " \0"
+		fastcall print " \0"
 	end repeat
 
-	call print "\n\0"
-	call close file
+	fastcall print "\n\0"
+	fastcall close file
 end program
