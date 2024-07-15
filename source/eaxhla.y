@@ -203,8 +203,9 @@ memory: artimetric_block
     | IDENTIFIER
     ;
 
-dereference: '[' IDENTIFIER '+' value  ']' { $$ = 0; /* XXX: how the fuck do i dereference? */ }
-    | '[' IDENTIFIER '-' value  ']' { $$ = 0; /* XXX: how the fuck do i dereference? */ }
+dereference: '[' IDENTIFIER ']' { $$ = 0; /* XXX: how the fuck do i dereference? */ }
+    | '[' IDENTIFIER '+' value ']' { $$ = 0; /* XXX: how the fuck do i dereference? */ }
+    | '[' IDENTIFIER '-' value ']' { $$ = 0; /* XXX: how the fuck do i dereference? */ }
     ;
 
 value: artimetric_block
