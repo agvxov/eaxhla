@@ -14,10 +14,10 @@ set register64s {
     rcx 
     rdx 
     rbx 
+    rsp 
+    rbp 
     rsi 
     rdi 
-    rbp 
-    rsp 
     rg8 
     rg9 
     rg10
@@ -33,10 +33,10 @@ set register32s {
     ecx  
     edx  
     ebx  
+    esp  
+    ebp  
     esi  
     edi  
-    ebp  
-    esp  
     rg8d 
     rg9d 
     rg10d
@@ -52,10 +52,10 @@ set register16s {
     cx
     dx
     bx
+    sp
+    bp
     si
     di
-    bp
-    sp
     r8w
     r9w
     r10w
@@ -71,10 +71,10 @@ set register8ls {
     cl
     dl
     bl
+    spl
+    bpl
     sil
     dil
-    bpl
-    spl
     r8b
     r9b
     r10b

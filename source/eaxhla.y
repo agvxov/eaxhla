@@ -76,10 +76,10 @@
 %type<regval> register register64s register32s register16s register8s
 
 // #placeholder<register_token_list> BEGIN
-%token RAX RCX RDX RBX RSI RDI RBP RSP RG8 RG9 RG10 RG11 RG12 RG13 RG14 RG15
-%token EAX ECX EDX EBX ESI EDI EBP ESP RG8D RG9D RG10D RG11D RG12D RG13D RG14D RG15D
-%token AX CX DX BX SI DI BP SP R8W R9W R10W R11W R12W R13W R14W R15W
-%token AL CL DL BL SIL DIL BPL SPL R8B R9B R10B R11B R12B R13B R14B R15B
+%token RAX RCX RDX RBX RSP RBP RSI RDI RG8 RG9 RG10 RG11 RG12 RG13 RG14 RG15
+%token EAX ECX EDX EBX ESP EBP ESI EDI RG8D RG9D RG10D RG11D RG12D RG13D RG14D RG15D
+%token AX CX DX BX SP BP SI DI R8W R9W R10W R11W R12W R13W R14W R15W
+%token AL CL DL BL SPL BPL SIL DIL R8B R9B R10B R11B R12B R13B R14B R15B
 
 // #placeholder<register_token_list> END
 
@@ -301,10 +301,10 @@ register64s: RAX { $$.number = R0; }
     | RCX   { $$.number = R1; }
     | RDX   { $$.number = R2; }
     | RBX   { $$.number = R3; }
-    | RSI   { $$.number = R4; }
-    | RDI   { $$.number = R5; }
-    | RBP   { $$.number = R6; }
-    | RSP   { $$.number = R7; }
+    | RSP   { $$.number = R4; }
+    | RBP   { $$.number = R5; }
+    | RSI   { $$.number = R6; }
+    | RDI   { $$.number = R7; }
     | RG8   { $$.number = R8; }
     | RG9   { $$.number = R9; }
     | RG10  { $$.number = R10; }
@@ -319,10 +319,10 @@ register32s: EAX { $$.number = R0; }
     | ECX   { $$.number = R1; }
     | EDX   { $$.number = R2; }
     | EBX   { $$.number = R3; }
-    | ESI   { $$.number = R4; }
-    | EDI   { $$.number = R5; }
-    | EBP   { $$.number = R6; }
-    | ESP   { $$.number = R7; }
+    | ESP   { $$.number = R4; }
+    | EBP   { $$.number = R5; }
+    | ESI   { $$.number = R6; }
+    | EDI   { $$.number = R7; }
     | RG8D  { $$.number = R8; }
     | RG9D  { $$.number = R9; }
     | RG10D { $$.number = R10; }
@@ -337,10 +337,10 @@ register16s: AX { $$.number = R0; }
     | CX    { $$.number = R1; }
     | DX    { $$.number = R2; }
     | BX    { $$.number = R3; }
-    | SI    { $$.number = R4; }
-    | DI    { $$.number = R5; }
-    | BP    { $$.number = R6; }
-    | SP    { $$.number = R7; }
+    | SP    { $$.number = R4; }
+    | BP    { $$.number = R5; }
+    | SI    { $$.number = R6; }
+    | DI    { $$.number = R7; }
     | R8W   { $$.number = R8; }
     | R9W   { $$.number = R9; }
     | R10W  { $$.number = R10; }
@@ -355,10 +355,10 @@ register8s: AL { $$.number = R0; }
     | CL    { $$.number = R1; }
     | DL    { $$.number = R2; }
     | BL    { $$.number = R3; }
-    | SIL   { $$.number = R4; }
-    | DIL   { $$.number = R5; }
-    | BPL   { $$.number = R6; }
-    | SPL   { $$.number = R7; }
+    | SPL   { $$.number = R4; }
+    | BPL   { $$.number = R5; }
+    | SIL   { $$.number = R6; }
+    | DIL   { $$.number = R7; }
     | R8B   { $$.number = R8; }
     | R9B   { $$.number = R9; }
     | R10B  { $$.number = R10; }
