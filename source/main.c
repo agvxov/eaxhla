@@ -67,8 +67,8 @@ signed main(int argc, char * argv[]) {
 
 void dump (const char * file_name) {
 	elf_main_header (1, 1, 1, 0);
-	elf_text_sector (34);
-	elf_data_sector (34, 12);
+	elf_text_sector (text_sector_size);
+	elf_data_sector (text_sector_size, 12);
 
 	char meme [1024] = "";
 	FILE * file = fopen (file_name, "w");
