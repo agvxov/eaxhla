@@ -4,11 +4,12 @@ typedef signed   int  form;
 typedef unsigned int  next;
 typedef unsigned char byte;
 
+// XXX: we could be using binary literals IF SOMEONE WERE WILLING TO UPGRADE HIS GRANNY SYSTEM
 typedef enum {
-	D8  = 0b00,
-	D16 = 0b01,
-	D32 = 0b10,
-	D64 = 0b11,
+	D8  = 0,
+	D16 = 1,
+	D32 = 2,
+	D64 = 3,
 } size_index;
 
 typedef enum {

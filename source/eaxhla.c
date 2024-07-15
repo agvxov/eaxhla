@@ -1,5 +1,3 @@
-#define _GNU_SOURCE
-
 #include "eaxhla.h"
 
 /* This source file is responsible for holding data
