@@ -399,6 +399,10 @@ void assemble (next   count,
 			build_move (array [index + 1], array [index + 2],
 			            array [index + 3], array [index + 4],
 			            array [index + 5]);
+			printf ("MOV %i %i %i %i %i\n",
+			        array [index + 1], array [index + 2],
+			        array [index + 3], array [index + 4],
+			        array [index + 5]);
 			index += 5;
 		} else {
 			//~exit (array [index]); // For debugging only!

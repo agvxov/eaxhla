@@ -11,8 +11,8 @@ XX   XX   OOOOO   LLLLLLL  AA   AA     TT     II  LLLLLLL  EEEEEEE
 #include <unistd.h>
 #include <ctype.h>
 
-#include "assembler.c"
-#include "unix.c"
+#include "../source/assembler.c"
+#include "../source/unix.c"
 
 enum {
 	token_add,          token_or,           token_adc,          token_sbb,          token_and,          token_sub,          token_xor,          token_cmp,
