@@ -1,4 +1,4 @@
-source tool/instruction_generator/instructions.tcl
+source tool/generators/instructions.tcl
 
 proc make_parser_rules {is} {
     proc init_iarg {a n} {

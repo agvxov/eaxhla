@@ -1,4 +1,4 @@
-source tool/instruction_generator/instructions.tcl
+source tool/generators/instructions.tcl
 
 proc make_token_list {is} {
     proc uniq_instl {is} {

@@ -14,6 +14,8 @@
 #include "eaxhla.tab.h"
 #include "assembler.h"
 
+unsigned long long anon_variable_counter = 0;
+
 tommy_hashtable variable_table;
 
 int has_encountered_error = 0;
@@ -83,6 +85,14 @@ int can_fit(int type, long long value) {
         } break;
     }
     return value > 0 ? (unsigned long long)value <= max : value >= min;
+}
+
+int validate_array_size(int size) {
+    if (size < 1) {
+        issue_error("cannot create an array of size '%d', because its less than 1", size);
+        return 1;
+    }
+    return 0;
 }
 
 char * make_scoped_name(const char * const scope, char * name) {

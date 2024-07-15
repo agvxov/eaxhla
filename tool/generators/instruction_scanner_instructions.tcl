@@ -1,8 +1,8 @@
-source tool/instruction_generator/instructions.tcl
+source tool/generators/instructions.tcl
 
 proc make_scanner_instructions {is} {
     proc make_scanner_instruction {i} {
-        puts [format "%s    { return IT%s; }" \
+        puts [format "%-12s    { return IT%s; }" \
                     [lindex $i 0] \
                     [string toupper [lindex $i 0]]
             ]

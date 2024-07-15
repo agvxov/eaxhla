@@ -40,6 +40,7 @@ procedure read
 	in s32 file
 	in u64 data
 	in u64 size
+    u8 <> fatal_message = "> failed to read from the file!\n\0"
 begin
 	mov eax system_call_read
 	mov edi file
@@ -48,7 +49,7 @@ begin
 	syscall
 
 	if eax = -1 then
-		fastcall fatal "> failed to read from the file!\n\0"
+		fastcall fatal fatal_message
 	end if
 end procedure
 
@@ -59,6 +60,7 @@ procedure write
 	in s32 file
 	in u64 data
 	in u64 size
+    u8 <> fatal_message = "> failed to write to the file!\n\0"
 begin
 	mov eax system_call_write
 	mov edi file
@@ -67,7 +69,7 @@ begin
 	syscall
 
 	if eax = -1 then
-		fastcall fatal "> failed to write to the file!\n\0"
+		fastcall fatal fatal_message
 	end if
 end procedure
 
@@ -75,9 +77,9 @@ end procedure
 
 fast
 procedure open
-	in u64   name
-	in s32   mode
-	in s32 * file
+	in u64 name
+	in s32 mode
+	in s32 file
 begin
 	mov eax system_call_open
 	mov rdi name
@@ -112,7 +114,7 @@ unix program main
 	s32 file = 0
 	u8  byte = 0
 
-	s8 [] digits   = '0123456789abcdef\0'
+	s8 <> digits   = "0123456789abcdef\0"
 	s8    space    = 32
 	s8    new_line = 10
 begin
@@ -120,12 +122,12 @@ begin
 		fastcall fatal "> argument count must be 2!\n\0"
 	end if
 
-	fastcall open argv [1] 0 file
+	fastcall open argv 1 0 file
 
 	until r10 = 0 repeat 
 		fastcall read standard_input byte 1
 		// When EOF is reached 'rax', then 'r10' is 0.
-		mov r10, rax
+		mov r10 rax
 
 		if u8 [byte] = 0x90 then
 			fastcall print "\n\0"

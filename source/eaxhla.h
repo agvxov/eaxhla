@@ -9,11 +9,13 @@ typedef struct {
       long   value;
       void * array_value;
   };
-  int        elements;
+  unsigned long long elements;
   char *     name;
   unsigned   _hash;
   tommy_node _node;
 } variable_t;
+
+extern unsigned long long anon_variable_counter;
 
 #define REGISTER64_MASK 0x00;
 #define REGISTER32_MASK 0x01;
@@ -35,6 +37,7 @@ extern int eaxhla_destroy(void);
 
 extern char * make_scoped_name(const char * const scope, char * name);
 extern int can_fit(int type, long long value);
+extern int validate_array_size(int size);
 
 extern void add_variable(variable_t variable);
 extern variable_t * get_variable(const char * const name);

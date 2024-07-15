@@ -13,7 +13,16 @@ static void dump (const char * file_name);
 #include "unix.h"
 #include "debug.h"
 
-extern void yyfree_leftovers(void);
+void free_n(void) {
+    extern void yyfree_leftovers(void);
+
+    yyfree_leftovers();
+
+    eaxhla_destroy();
+
+	free (text_sector_byte);
+	free (t_array);
+}
 
 char * yyfilename;
 
@@ -51,12 +60,7 @@ signed main(int argc, char * argv[]) {
         issue_warning("the input did not contain any instructions");
     }
 
-    yyfree_leftovers();
-
-    eaxhla_destroy();
-
-	free (text_sector_byte);
-	free (t_array);
+    free_n();
 
     return has_encountered_error;
 }

@@ -15,7 +15,7 @@ LIBS      := $(addprefix ${OBJECT.d}/,${LIBS.source})
 GENSOURCE := eaxhla.yy.c eaxhla.tab.c
 GENSOURCE := $(addprefix ${OBJECT.d}/,${GENSOURCE})
 GENOBJECT := $(subst .c,.o,${GENSOURCE})
-PLUGLOCK  := token_list.pluglock scanner_instructions.pluglock parser_rules.pluglock
+PLUGLOCK  := instruction_token_list.pluglock instruction_scanner_instructions.pluglock instruction_parser_rules.pluglock register_token_list.pluglock register_scanner_instructions.pluglock register_parser_rules.pluglock
 PLUGLOCK  := $(addprefix ${OBJECT.d}/,${PLUGLOCK})
 PLUGFILES := ${SOURCE.d}/eaxhla.y ${SOURCE.d}/eaxhla.l
 
@@ -64,16 +64,12 @@ ${OBJECT.d}/%.tab.o: ${OBJECT.d}/%.tab.c
 ${OBJECT.d}/%.o: ${SOURCE.d}/%.c
 	${COMPILE.c} -o $@ $<
 
-${OBJECT.d}/%.pp: tool/instruction_generator/%.tcl tool/instruction_generator/instructions.tcl
+${OBJECT.d}/%.pp: tool/generators/%.tcl tool/generators/instructions.tcl tool/generators/registers.tcl
 	tclsh $< > $@
 
 unplug:
 	-rm ${PLUGLOCK}
-	${PLUG} -u -d token_list '' -d scanner_instructions '' -d parser_rules '' source/eaxhla.l source/eaxhla.y
-
-#plug: ${PLUGDEF}
-#	${PLUG} -g -e token_list           ${OBJECT.d}/token_list.pp           source/eaxhla.y
-#	${PLUG} -g -e scanner_instructions ${OBJECT.d}/scanner_instructions.pp source/eaxhla.l
+	${PLUG} -u -a source/eaxhla.l source/eaxhla.y
 
 ${OBJECT.d}/%.pluglock: ${OBJECT.d}/%.pp
 	${PLUG} -g -e $* $< ${PLUGFILES}
@@ -86,7 +82,9 @@ test: ${OUT}
 bootstrap:
 	./library/bootstrap.sh
 
-clean: unplug
+deepclean: unplug clean
+
+clean:
 	-rm ${OUT} ${OBJECT} ${GENOBJECT} ${GENSOURCE}
 
 ${OUT}: ${PLUGLOCK} ${GENSOURCE} ${GENOBJECT} ${OBJECT} ${LIB}

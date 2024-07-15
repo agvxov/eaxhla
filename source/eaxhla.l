@@ -47,7 +47,7 @@ machine                    { return MACHINE; }
 library                    { return LIBRARY; }
 
 break                      { return BREAK; }
-UNTIL                      { return UNTIL; }
+until                      { return UNTIL; }
 exit                       { return EXIT;  }
 
 end { BEGIN IN_END; }
@@ -55,48 +55,8 @@ end { BEGIN IN_END; }
 fast           { return FAST; }
 unix           { return UNIX; }
 
-rax          { return RAX;    }
-rbx          { return RBX;    }
-rcx          { return RCX;    }
-rdx          { return RDX;    }
-rbp          { return RBP;    }
-rsp          { return RSP;    }
-rip          { return RIP;    }
-rsi          { return RSI;    }
-rdi          { return RDI;    }
-r8           { return RG8;    }
-r9           { return RG9;    }
-r10          { return RG10;   }
-r11          { return RG11;   }
-r12          { return RG12;   }
-r13          { return RG13;   }
-r14          { return RG14;   }
-
-xmm0         { return RGXMM0; }
-xmm1         { return RGXMM1; }
-xmm2         { return RGXMM2; }
-xmm3         { return RGXMM3; }
-xmm4         { return RGXMM4; }
-xmm5         { return RGXMM5; }
-xmm6         { return RGXMM6; }
-xmm7         { return RGXMM7; }
-
-eax          { return EAX;    }
-ebx          { return EBX;    }
-ecx          { return ECX;    }
-edx          { return EDX;    }
-ebp          { return EBP;    }
-esp          { return ESP;    }
-eip          { return EIP;    }
-esi          { return ESI;    }
-edi          { return EDI;    }
-r8d          { return RG8D;   }
-r9d          { return RG9D;   }
-r10d         { return RG10D;  }
-r11d         { return RG11D;  }
-r12d         { return RG12D;  }
-r13d         { return RG13D;  }
-r14d         { return RG14D;  }
+    /* #placeholder<register_scanner_instructions> END
+    */
 
 in         { return TIN; }
 \=         { return '='; }
@@ -124,39 +84,112 @@ u64        { return U64; }
 
 fastcall { return FASTCALL; }
 
+    /* --- Registers begin here --- */
+    /* #placeholder<register_scanner_instructions> BEGIN
+    */
+rax       { return RAX; }
+rbx       { return RBX; }
+rcx       { return RCX; }
+rdx       { return RDX; }
+rsi       { return RSI; }
+rdi       { return RDI; }
+rbp       { return RBP; }
+rsp       { return RSP; }
+rg8       { return RG8; }
+rg9       { return RG9; }
+rg10      { return RG10; }
+rg11      { return RG11; }
+rg12      { return RG12; }
+rg13      { return RG13; }
+rg14      { return RG14; }
+rg15      { return RG15; }
+eax       { return EAX; }
+ebx       { return EBX; }
+ecx       { return ECX; }
+edx       { return EDX; }
+esi       { return ESI; }
+edi       { return EDI; }
+ebp       { return EBP; }
+esp       { return ESP; }
+rg8d      { return RG8D; }
+rg9d      { return RG9D; }
+rg10d     { return RG10D; }
+rg11d     { return RG11D; }
+rg12d     { return RG12D; }
+rg13d     { return RG13D; }
+rg14d     { return RG14D; }
+rg15d     { return RG15D; }
+ax        { return AX; }
+bx        { return BX; }
+cx        { return CX; }
+dx        { return DX; }
+si        { return SI; }
+di        { return DI; }
+bp        { return BP; }
+sp        { return SP; }
+r8w       { return R8W; }
+r9w       { return R9W; }
+r10w      { return R10W; }
+r11w      { return R11W; }
+r12w      { return R12W; }
+r13w      { return R13W; }
+r14w      { return R14W; }
+r15w      { return R15W; }
+al        { return AL; }
+bl        { return BL; }
+cl        { return CL; }
+dl        { return DL; }
+sil       { return SIL; }
+dil       { return DIL; }
+bpl       { return BPL; }
+spl       { return SPL; }
+r8b       { return R8B; }
+r9b       { return R9B; }
+r10b      { return R10B; }
+r11b      { return R11B; }
+r12b      { return R12B; }
+r13b      { return R13B; }
+r14b      { return R14B; }
+r15b      { return R15B; }
+
+    /* #placeholder<register_scanner_instructions> END
+    */
+    /* --- Registers end here --- */
+
     /* --- Instrunctions begin here --- */
 nop    { return INOP; }
-    /* #placeholder<scanner_instructions> BEGIN
+    /* #placeholder<instruction_scanner_instructions> BEGIN
     */
-adc    { return ITADC; }
-add    { return ITADD; }
-and    { return ITAND; }
-cmp    { return ITCMP; }
-dec    { return ITDEC; }
-div    { return ITDIV; }
-hlt    { return ITHLT; }
-idiv    { return ITIDIV; }
-imul    { return ITIMUL; }
-inc    { return ITINC; }
-leave    { return ITLEAVE; }
-lock    { return ITLOCK; }
-mov    { return ITMOV; }
-mul    { return ITMUL; }
-neg    { return ITNEG; }
-not    { return ITNOT; }
-or    { return ITOR; }
-pause    { return ITPAUSE; }
-retf    { return ITRETF; }
-retn    { return ITRETN; }
-sbb    { return ITSBB; }
-sub    { return ITSUB; }
-syscall    { return ITSYSCALL; }
-sysenter    { return ITSYSENTER; }
-sysexit    { return ITSYSEXIT; }
-sysret    { return ITSYSRET; }
-xor    { return ITXOR; }
+adc             { return ITADC; }
+add             { return ITADD; }
+and             { return ITAND; }
+cmp             { return ITCMP; }
+dec             { return ITDEC; }
+div             { return ITDIV; }
+hlt             { return ITHLT; }
+idiv            { return ITIDIV; }
+imul            { return ITIMUL; }
+inc             { return ITINC; }
+leave           { return ITLEAVE; }
+lock            { return ITLOCK; }
+mov             { return ITMOV; }
+mul             { return ITMUL; }
+neg             { return ITNEG; }
+not             { return ITNOT; }
+or              { return ITOR; }
+pause           { return ITPAUSE; }
+retf            { return ITRETF; }
+retn            { return ITRETN; }
+sar             { return ITSAR; }
+sbb             { return ITSBB; }
+sub             { return ITSUB; }
+syscall         { return ITSYSCALL; }
+sysenter        { return ITSYSENTER; }
+sysexit         { return ITSYSEXIT; }
+sysret          { return ITSYSRET; }
+xor             { return ITXOR; }
 
-    /* #placeholder<scanner_instructions> END
+    /* #placeholder<instruction_scanner_instructions> END
     */
     /* --- Instrunctions end here --- */
 
@@ -185,9 +218,9 @@ library        { BEGIN INITIAL; return END_LIBRARY; }
             return LITERAL;
         }
 
-        string_literal_ensure_surplus(1);
-        string_literal_buffer[string_litral_buffer_size+1] = '\0';
-        yylval.strval = strdup(string_literal_buffer);
+        yylval.blobval.data = malloc(string_litral_buffer_size);
+        memcpy(yylval.blobval.data, string_literal_buffer, string_litral_buffer_size);
+        yylval.blobval.len = string_litral_buffer_size;
         string_litral_buffer_size = 0;
         return ARRAY_LITERAL;
 }

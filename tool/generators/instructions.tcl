@@ -33,6 +33,8 @@ set instructions {
     {sub register register}
     {xor register register}
     {cmp register register}
+    {sar register immediate}
+    {mov register register}
     {mov register immediate}
 }
     

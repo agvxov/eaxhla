@@ -27,10 +27,10 @@ void dump_variable(void * data) {
                 variable->value
         );
     } else {
-        printf("{ .name = '%s', .elements = '%d', .array_value = \"%.*s\" }\n",
+        printf("{ .name = '%s', .elements = '%llu', .array_value = \"%.*s\" }\n",
                 variable->name,
                 variable->elements,
-                variable->elements,
+                (int)variable->elements,
                 (char*)variable->array_value
         );
     }
