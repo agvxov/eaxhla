@@ -164,9 +164,9 @@ declaration:
         if (validate_array_size($4)) {
             break;
         }
-        if ($4 < $8.len) {
-            issue_warning("you are a nigger");
-        }
+        if ((unsigned long long)$4 < $8.len) {
+            issue_warning("declared array size is smaller than assigned literal, this will cause truncation");
+        } // XXX actual truncation
         $$.name = make_scoped_name(scope, $6);
         $$.elements = $4;
         $$.array_value = $8.data;
