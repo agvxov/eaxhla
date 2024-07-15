@@ -78,10 +78,10 @@
 %type<regval> register register64s register32s register16s register8s
 
 // #placeholder<register_token_list> BEGIN
-%token RAX RBX RCX RDX RSI RDI RBP RSP RG8 RG9 RG10 RG11 RG12 RG13 RG14 RG15
-%token EAX EBX ECX EDX ESI EDI EBP ESP RG8D RG9D RG10D RG11D RG12D RG13D RG14D RG15D
-%token AX BX CX DX SI DI BP SP R8W R9W R10W R11W R12W R13W R14W R15W
-%token AL BL CL DL SIL DIL BPL SPL R8B R9B R10B R11B R12B R13B R14B R15B
+%token RAX RCX RDX RBX RSI RDI RBP RSP RG8 RG9 RG10 RG11 RG12 RG13 RG14 RG15
+%token EAX ECX EDX EBX ESI EDI EBP ESP RG8D RG9D RG10D RG11D RG12D RG13D RG14D RG15D
+%token AX CX DX BX SI DI BP SP R8W R9W R10W R11W R12W R13W R14W R15W
+%token AL CL DL BL SIL DIL BPL SPL R8B R9B R10B R11B R12B R13B R14B R15B
 
 // #placeholder<register_token_list> END
 
@@ -300,9 +300,9 @@ register: register64s { $$ = $1; $$.size = D64; }
 
     // #placeholder<register_parser_rules> BEGIN
 register64s: RAX { $$.number = R0; }
-    | RBX   { $$.number = R1; }
-    | RCX   { $$.number = R2; }
-    | RDX   { $$.number = R3; }
+    | RCX   { $$.number = R1; }
+    | RDX   { $$.number = R2; }
+    | RBX   { $$.number = R3; }
     | RSI   { $$.number = R4; }
     | RDI   { $$.number = R5; }
     | RBP   { $$.number = R6; }
@@ -318,9 +318,9 @@ register64s: RAX { $$.number = R0; }
     ;
 
 register32s: EAX { $$.number = R0; }
-    | EBX   { $$.number = R1; }
-    | ECX   { $$.number = R2; }
-    | EDX   { $$.number = R3; }
+    | ECX   { $$.number = R1; }
+    | EDX   { $$.number = R2; }
+    | EBX   { $$.number = R3; }
     | ESI   { $$.number = R4; }
     | EDI   { $$.number = R5; }
     | EBP   { $$.number = R6; }
@@ -336,9 +336,9 @@ register32s: EAX { $$.number = R0; }
     ;
 
 register16s: AX { $$.number = R0; }
-    | BX    { $$.number = R1; }
-    | CX    { $$.number = R2; }
-    | DX    { $$.number = R3; }
+    | CX    { $$.number = R1; }
+    | DX    { $$.number = R2; }
+    | BX    { $$.number = R3; }
     | SI    { $$.number = R4; }
     | DI    { $$.number = R5; }
     | BP    { $$.number = R6; }
@@ -354,9 +354,9 @@ register16s: AX { $$.number = R0; }
     ;
 
 register8s: AL { $$.number = R0; }
-    | BL    { $$.number = R1; }
-    | CL    { $$.number = R2; }
-    | DL    { $$.number = R3; }
+    | CL    { $$.number = R1; }
+    | DL    { $$.number = R2; }
+    | BL    { $$.number = R3; }
     | SIL   { $$.number = R4; }
     | DIL   { $$.number = R5; }
     | BPL   { $$.number = R6; }

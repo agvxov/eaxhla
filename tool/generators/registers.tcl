@@ -11,9 +11,9 @@
 
 set register64s {
     rax 
-    rbx 
     rcx 
     rdx 
+    rbx 
     rsi 
     rdi 
     rbp 
@@ -30,9 +30,9 @@ set register64s {
 
 set register32s {
     eax  
-    ebx  
     ecx  
     edx  
+    ebx  
     esi  
     edi  
     ebp  
@@ -49,9 +49,9 @@ set register32s {
 
 set register16s {
     ax
-    bx
     cx
     dx
+    bx
     si
     di
     bp
@@ -68,9 +68,9 @@ set register16s {
 
 set register8ls {
     al
-    bl
     cl
     dl
+    bl
     sil
     dil
     bpl

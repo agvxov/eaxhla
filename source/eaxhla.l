@@ -88,9 +88,9 @@ fastcall { return FASTCALL; }
     /* #placeholder<register_scanner_instructions> BEGIN
     */
 rax       { return RAX; }
-rbx       { return RBX; }
 rcx       { return RCX; }
 rdx       { return RDX; }
+rbx       { return RBX; }
 rsi       { return RSI; }
 rdi       { return RDI; }
 rbp       { return RBP; }
@@ -104,9 +104,9 @@ rg13      { return RG13; }
 rg14      { return RG14; }
 rg15      { return RG15; }
 eax       { return EAX; }
-ebx       { return EBX; }
 ecx       { return ECX; }
 edx       { return EDX; }
+ebx       { return EBX; }
 esi       { return ESI; }
 edi       { return EDI; }
 ebp       { return EBP; }
@@ -120,9 +120,9 @@ rg13d     { return RG13D; }
 rg14d     { return RG14D; }
 rg15d     { return RG15D; }
 ax        { return AX; }
-bx        { return BX; }
 cx        { return CX; }
 dx        { return DX; }
+bx        { return BX; }
 si        { return SI; }
 di        { return DI; }
 bp        { return BP; }
@@ -136,9 +136,9 @@ r13w      { return R13W; }
 r14w      { return R14W; }
 r15w      { return R15W; }
 al        { return AL; }
-bl        { return BL; }
 cl        { return CL; }
 dl        { return DL; }
+bl        { return BL; }
 sil       { return SIL; }
 dil       { return DIL; }
 bpl       { return BPL; }
