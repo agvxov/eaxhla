@@ -13,7 +13,7 @@ static void dump (const char * file_name);
 #include "unix.h"
 #include "debug.h"
 
-void free_n(void) {
+void deinit(void) {
     extern void yyfree_leftovers(void);
 
     yyfree_leftovers();
@@ -60,7 +60,7 @@ signed main(int argc, char * argv[]) {
         issue_warning("the input did not contain any instructions");
     }
 
-    free_n();
+    deinit();
 
     return has_encountered_error;
 }
