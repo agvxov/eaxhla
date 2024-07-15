@@ -391,13 +391,14 @@ artimetric_operand: LITERAL
 exit: EXIT value
     ;
 
-    /* XXX */
+    /* XXX
 library: LIBRARY declaration_section MYBEGIN library_code END_LIBRARY
     ;
 
 library_code: %empty
     | function library_code
     ;
+    */
 
 instruction: INOP { append_instruction_t1(NOP); }
     // #placeholder<instruction_parser_rules> BEGIN
