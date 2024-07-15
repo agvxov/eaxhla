@@ -40,7 +40,7 @@ else
   WRAP := valgrind --show-error-list=yes --track-origins=yes --leak-check=full --show-leak-kinds=all
 endif
 
-CFLAGS   += -Wall -Wextra -Wpedantic
+CFLAGS   += -Wall -Wextra -Wpedantic --std=c2x
 CPPFLAGS += -Ilibrary/ -I${OBJECT.d} -I${SOURCE.d}
 LDLIBS := -lm
 

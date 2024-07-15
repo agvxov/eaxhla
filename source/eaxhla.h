@@ -21,8 +21,8 @@ extern unsigned long long anon_variable_counter;
 #define REGISTER32_MASK 0x01;
 
 typedef struct {
-    int number : 6;
-    int size   : 2;
+    unsigned number : 6;
+    unsigned size   : 2;
 } cpuregister_t;
 
 extern int system_type;
