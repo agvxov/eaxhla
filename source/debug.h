@@ -41,6 +41,15 @@ void debug_dump_variables(void) {
     tommy_hashtable_foreach(&variable_table, dump_variable);
 }
 
+static
+void debug_token_dump(void) {
+    extern unsigned int * t_array;
+    extern unsigned int   t_count;
+    FILE * o = fopen("token_dump", "wb");
+    fwrite(t_array, sizeof(int), t_count, o);
+    fclose(o);
+}
+
 #else
 
 # define debug_puts(msg)

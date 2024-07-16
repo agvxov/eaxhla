@@ -5,6 +5,7 @@
 eaxhla
 eaxcc
 .gdb_history
+gdb.txt
 *.pp
 library/tommyds/
 tmp-*

@@ -337,6 +337,7 @@ int was_instruction_array_empty = 0;
 
 void assemble (next   count,
                next * array) {
+    debug_token_dump();
 	/* */
 	next index;
 
