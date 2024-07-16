@@ -27,7 +27,10 @@ int compile_deinit(void) {
 
 static
 void dump_variable_to_assembler(void * data) {
-    variable_t * variable = (variable_t*)data;
+    symbol_t * variable = (symbol_t*)data;
+    if (variable->symbol_type != VARIABLE) {
+        return;
+    }
 
     append_instructions(ASMDIRMEM, variable->_id, ASMDIRIMM, type2size(variable->type));
 
@@ -44,7 +47,7 @@ void dump_variable_to_assembler(void * data) {
 
 static
 void dump_variables_to_assembler(void) {
-    tommy_hashtable_foreach(&variable_table, dump_variable_to_assembler);
+    tommy_hashtable_foreach(&symbol_table, dump_variable_to_assembler);
 }
 
 static

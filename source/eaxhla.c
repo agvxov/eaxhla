@@ -18,7 +18,8 @@
 
 unsigned long long anon_variable_counter = 0;
 
-tommy_hashtable variable_table;
+static unsigned symbol_id = 0;
+tommy_hashtable symbol_table;
 
 int has_encountered_error = 0;
 int is_program_found      = 0;
@@ -29,20 +30,20 @@ char * yyfilename = "";
 
 
 int eaxhla_init(void) {
-    tommy_hashtable_init(&variable_table, 256);
+    tommy_hashtable_init(&symbol_table, 256);
     return 0;
 }
 
 static
 void free_variable(void * data) {
-    variable_t * variable = (variable_t*)data;
+    symbol_t * variable = (symbol_t*)data;
     free(variable->name);
     free(variable);
 }
 
 int eaxhla_deinit(void) {
-    tommy_hashtable_foreach(&variable_table, free_variable);
-    tommy_hashtable_done(&variable_table);
+    tommy_hashtable_foreach(&symbol_table, free_variable);
+    tommy_hashtable_done(&symbol_table);
     return 0;
 }
 
@@ -50,29 +51,44 @@ int eaxhla_deinit(void) {
 
 static
 int table_compare_unsigned(const void * arg, const void * obj) {
-  return *(const unsigned *) arg != ((const variable_t*)obj)->_hash;
+  return *(const unsigned *) arg != ((const symbol_t*)obj)->_hash;
 }
 
-void add_variable(variable_t variable) {
-    static unsigned vid = 0;
+void add_variable(symbol_t variable) {
     if (get_variable(variable.name)) {
         // XXX: this should say the varname, but this function does not know it
         //       in fact this source file should not be reporting errors,
         //       it should be returning an error and the parser should check.
-        issue_error("variable declared twice");
+        issue_error("symbol '%s' declared twice", variable.name);
         return;
     }
-    variable._id = vid++;
+    variable._id = symbol_id++;
     // XXX this is cursed
-    variable_t * heap_variable = malloc(sizeof(variable));
+    symbol_t * heap_variable = malloc(sizeof(variable));
     memcpy(heap_variable, &variable, sizeof(variable));
     // */
     heap_variable->_hash = tommy_strhash_u32(0, heap_variable->name);
-    tommy_hashtable_insert(&variable_table,
+    tommy_hashtable_insert(&symbol_table,
                             &heap_variable->_node,
                             heap_variable,
                             heap_variable->_hash
                         );
+}
+
+void add_procedure(symbol_t procedure) {
+    procedure._id = symbol_id++;
+    // XXX this is cursed
+    symbol_t * heap_procedure = malloc(sizeof(procedure));
+    memcpy(heap_procedure, &procedure, sizeof(procedure));
+    // */
+    heap_procedure->_hash = tommy_strhash_u32(0, heap_procedure->name);
+    tommy_hashtable_insert(&symbol_table,
+                            &heap_procedure->_node,
+                            heap_procedure,
+                            heap_procedure->_hash
+                        );
+    //
+    append_instructions(ASMDIRMEM, procedure._id);
 }
 
 /* Are these literals ugly? yes.
@@ -161,16 +177,36 @@ char * make_scoped_name(const char * const scope, char * name) {
     return r;
 }
 
-variable_t * get_variable(const char * const name) {
+static
+void * symbol_lookup(const char * const name) {
     unsigned lookup_hash = tommy_strhash_u32(0, name);
-    variable_t * r = tommy_hashtable_search(&variable_table,
-                                            table_compare_unsigned,
-                                            &lookup_hash,
-                                            lookup_hash
-                                        );
+    void * r = tommy_hashtable_search(&symbol_table,
+                                      table_compare_unsigned,
+                                      &lookup_hash,
+                                      lookup_hash
+                                    );
     return r;
 }
 
+symbol_t * get_variable(const char * const name) {
+    symbol_t *r = symbol_lookup(name);
+    if (r
+    &&  r->symbol_type != VARIABLE) {
+        issue_error("the symbol '%s' is not a variable", name);
+        return NULL;
+    }
+    return r;
+}
+
+symbol_t * get_function(const char * const name) {
+    symbol_t * r = symbol_lookup(name);
+    if (r
+    &&  r->symbol_type != FUNCTION) {
+        issue_error("the symbol '%s' is not a function", name);
+        return NULL;
+    }
+    return r;
+}
 
 
 void issue_warning(const char * const format, ...) {

@@ -13,10 +13,6 @@ extern int compile(void);
 
 extern void append_label (int rel);
 
-extern void append_fastcall_begin     (int rel);
-extern void append_fastcall_end       (void);
-extern void append_fastcall_arguments (int rel, int wid, int imm);
-
 /* --- Token appending
  * The core problem is that we want an interface where we can append {instructoin}
  *  tokens without modifying the counter as that gets old fast and error prone

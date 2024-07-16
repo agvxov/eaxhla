@@ -29,7 +29,7 @@
         unsigned long long len;
         void * data;
     } blobval;
-    variable_t varval;
+    symbol_t varval;
     cpuregister_t regval;
 }
 
@@ -127,10 +127,17 @@ system_specifier: UNIX { system_type = UNIX; }
     ;
 
     // XXX: end procedure thing
-function: function_head declaration_section MYBEGIN code END_PROCEDURE { scope = NULL; }
+function: function_head declaration_section MYBEGIN code END_PROCEDURE {
+        scope = NULL;
+        append_instructions(RETN);
+    }
     ;
 
-function_head: function_specifier PROCEDURE IDENTIFIER { scope = $3; }
+function_head: function_specifier PROCEDURE IDENTIFIER {
+        scope = $3;
+        symbol_t procedure;
+        add_procedure(procedure);
+    }
     ;
 
 function_specifier: %empty
@@ -207,7 +214,7 @@ type: S8    { $$ =  S8; }
 immediate: LITERAL { $$.type = IMM; $$.value = $1; }
     | IDENTIFIER   {
         char * varname = make_scoped_name(scope, $1);
-        variable_t * variable = get_variable(varname);
+        symbol_t * variable = get_variable(varname);
         $$.type = REL;
         $$.value = variable->_id;
         free(varname);
@@ -227,7 +234,7 @@ value: artimetric_block
     | LITERAL
     | IDENTIFIER        {
         char * varname = make_scoped_name(scope, $1);
-        variable_t * var = get_variable(varname);
+        symbol_t * var = get_variable(varname);
         $$ = var->value;
         free(var);
     }
@@ -292,9 +299,9 @@ machine_code: %empty
     ;
 
 call: FASTCALL IDENTIFIER arguments {
-        //append_fastcall_begin(/**/);
-        //append_fastcall_arguments();
-        append_fastcall_end();
+        // XXX
+        symbol_t * function = get_function($2);
+        append_instructions(CALL, REL, function->_id);
         free($2);
     }
     ;

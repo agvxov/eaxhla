@@ -18,7 +18,7 @@ void debug_printf(const char * const fmt, ...) {
 
 static
 void dump_variable(void * data) {
-    variable_t * variable = (variable_t*)data;
+    symbol_t * variable = (symbol_t*)data;
     if (variable->elements == 1) {
         printf("{ .name = '%s', .value = '%ld' }\n",
                 variable->name,
@@ -36,7 +36,7 @@ void dump_variable(void * data) {
 
 static
 void debug_dump_variables(void) {
-    tommy_hashtable_foreach(&variable_table, dump_variable);
+    tommy_hashtable_foreach(&symbol_table, dump_variable);
 }
 
 static

@@ -4,21 +4,35 @@
 
 #define WORD_SIZE_IN_BYTES (64/8)
 
+typedef enum {
+    VARIABLE,
+    FUNCTION,
+} symbol_type_t;
+
 typedef struct {
-  union {
-      long   value;
-      void * array_value;
-  };
-  unsigned long long elements;
-  char *     name;
-  int        type;
-  unsigned   _id;
-  unsigned   _hash;
-  tommy_node _node;
-} variable_t;
+    symbol_type_t symbol_type;
+    union {
+        struct { // VARIABLE
+            int type;
+            unsigned long long elements;
+            union {
+                long   value;
+                void * array_value;
+            };
+        };
+        struct { // FUNCTION
+            void * unused;
+        };
+    };
+    char *     name;
+    unsigned   _id;
+    unsigned   _hash;
+    tommy_node _node;
+} symbol_t;
 
-extern tommy_hashtable variable_table;
+extern tommy_hashtable symbol_table;
 
+// Used for naming variables constructed from literals
 extern unsigned long long anon_variable_counter;
 
 typedef struct {
@@ -43,8 +57,12 @@ extern char * make_scoped_name(const char * const scope, char * name);
 extern int can_fit(int type, long long value);
 extern int validate_array_size(int size);
 
-extern void add_variable(variable_t variable);
-extern variable_t * get_variable(const char * const name);
+extern void add_variable(symbol_t variable);
+extern symbol_t * get_variable(const char * const name);
+
+//extern void add_function(symbol_t function);
+extern symbol_t * get_function(const char * const name);
+extern void add_procedure(symbol_t procedure);
 
 extern int type2size(int type);
 
