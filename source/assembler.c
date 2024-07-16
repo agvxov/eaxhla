@@ -347,7 +347,8 @@ static void assemble_clean_up (void) {
 next   text_sector_size = 0;
 byte * text_sector_byte = NULL;
 
-int was_instruction_array_empty = 0;
+         int was_instruction_array_empty = 0;
+unsigned int text_entry_point            = 0;
 
 void assemble (next   count,
                next * array) {
@@ -432,6 +433,8 @@ void assemble (next   count,
 			return;
 		}
 	}
+
+	text_entry_point = empty_store [0];
 
 	for (index = 0; index < empty_holes; ++index) {
 		next set = 0, get = empty_array [index];
