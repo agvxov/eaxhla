@@ -206,6 +206,7 @@ static
 void dump_variable_to_assembler(void * data) {
     variable_t * variable = (variable_t*)data;
     append_instruction_t4(ASMDIRMEM, variable->_id, ASMDIRIMM, type2size(variable->type));
+    append_instruction_t1(variable->elements);
     if (variable->elements == 1) {
         append_instruction_t1(variable->value);
     } else {

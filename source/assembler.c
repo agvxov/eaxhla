@@ -348,12 +348,14 @@ void assemble (next   count,
 	for (index = 0; index < count; ++index) {
 		if (array [index] == ASMDIRREL) {
 			asmdirrel (1, array [index + 1]);
+			debug_printf ("ASMDIRREL %u\n", array [index + 1]);
 			index += 1;
 		} else if (array [index] == ASMDIRMEM) {
 			asmdirmem (1, array [index + 1]);
-			printf ("ASMDIRMEM %u\n", array [index + 1]);
+			debug_printf ("ASMDIRMEM %u\n", array [index + 1]);
 			index += 1;
 		} else if (array [index] == ASMDIRIMM) {
+			debug_printf ("ASMDIRIMM\n");
 			next repeat;
 			for (repeat = 0; repeat < array [index + 2]; ++repeat) {
 				asmdirimm (1, array [index + 1],
