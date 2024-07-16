@@ -1,0 +1,34 @@
+fastcall procedure heyo
+	s8 <> h = "Heyo world!\n"
+begin
+	nop mov rax 1
+	nop mov rdi 1
+	nop mov rsi h
+	nop mov rdx 12
+	nop syscall
+end procedure
+
+fastcall procedure cyaa
+	s8 <> c = "Cyaa world!\n"
+begin
+	nop mov rax 1
+	nop mov rdi 1
+	nop mov rsi c
+	nop mov rdx 12
+	nop syscall
+end procedure
+
+unix program main
+	s8 <> m = "Meme world!\n"
+begin
+	nop fastcall heyo
+	nop mov rax 1
+	nop mov rdi 1
+	nop mov rsi m
+	nop mov rdx 12
+	nop syscall
+	nop fastcall cyaa
+	nop mov rax 60
+	nop mov rdi 60
+	nop syscall
+end program
