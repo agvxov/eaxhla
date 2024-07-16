@@ -26,13 +26,13 @@ proc make_parser_rules {is} {
     }
     proc make_parser_rule {i} {
         if {[llength $i] == 1} {
-            set rule [format "    | IT%s { append_instruction_t1(%s); }" \
+            set rule [format "    | IT%s { append_instructions(%s); }" \
                 [string toupper [lindex $i 0]] \
                 [string toupper [lindex $i 0]] \
             ]
         } elseif {[llength $i] == 2} {
             set arg [init_iarg [lindex $i 1] 2]
-            set rule [format "    | IT%s %s \{ append_instruction_t4(\
+            set rule [format "    | IT%s %s \{ append_instructions(\
                                                     %s,\
                                                     %s,\
                                                     %s,\
@@ -49,7 +49,7 @@ proc make_parser_rules {is} {
         } elseif {[llength $i] == 3} {
             set arg1 [init_iarg [lindex $i 1] 2]
             set arg2 [init_iarg [lindex $i 2] 3]
-            set rule [format "    | IT%s %s %s \{ append_instruction_t6(\
+            set rule [format "    | IT%s %s %s \{ append_instructions(\
                                                     %s,\
                                                     %s,\
                                                     %s,\

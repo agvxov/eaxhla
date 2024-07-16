@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <sys/stat.h>
 
 #include "eaxhla.h"
@@ -14,16 +15,26 @@ unsigned int   token_count = 0;
 
 char * output_file_name = "a.out";
 
+int compile_init(void) {
+	token_array = calloc (1440UL, sizeof (* token_array));
+    return 0;
+}
+
+int compile_deinit(void) {
+	free(token_array);
+    return 0;
+}
+
 static
 void dump_variable_to_assembler(void * data) {
     variable_t * variable = (variable_t*)data;
-    append_instruction_t4(ASMDIRMEM, variable->_id, ASMDIRIMM, type2size(variable->type));
-    append_instruction_t1(variable->elements);
+    append_instructions(ASMDIRMEM, variable->_id, ASMDIRIMM, type2size(variable->type));
+    append_instructions(variable->elements);
     if (variable->elements == 1) {
-        append_instruction_t1(variable->value);
+        append_instructions(variable->value);
     } else {
         for (unsigned long long i = 0; i < variable->elements; i++) {
-            append_instruction_t1((int)*((char*)(variable->array_value + i)));
+            append_instructions((int)*((char*)(variable->array_value + i)));
         }
     }
 }
@@ -75,37 +86,21 @@ int compile(void) {
     return 0;
 }
 
-static
-void append_token (int t) {
-    // XXX rewrite this and use memcpy
-	token_array [token_count] = t;
-	token_count += 1;
-}
+void _append_instructions(unsigned argc, ...) {
+    va_list ap;
+    va_start(ap, argc);
 
-void append_instruction_t1 (int t1) {
-	append_token (t1); // operation
-}
+    for (unsigned i = 0; i < argc; i++) {
+        token_array [token_count] = va_arg(ap, int);
+        token_count += 1;
+    }
 
-void append_instruction_t4 (int t4, int w, int d, int r) {
-	append_token (t4); // operation
-	append_token (w);  // width
-	append_token (d);  // destination
-	append_token (r);  // register
-}
-
-void append_instruction_t6 (int t6, int w, int d, int r, int s, int i) {
-	append_token (t6); // operation
-	append_token (w);  // width
-	append_token (d);  // destination
-	append_token (r);  // register
-	append_token (s);  // source
-	append_token (i);  // immediate
+    va_end(ap);
 }
 
 // my_label:
 void append_label (int rel) {
-	append_instruction_t1 (ASMDIRMEM);
-	append_instruction_t1 (rel);
+    append_instructions(ASMDIRMEM, rel);
 }
 
 // procedure my_procedure ... <argv> ... begin
@@ -115,12 +110,12 @@ void append_label (int rel) {
 // optimally, it should be number 0 ... 140.
 // for now, 140 procedures is enough, will expand later!
 void append_fastcall_begin (int rel) {
-	append_label (rel);
+	append_label(rel);
 }
 
 // end procedure
 void append_fastcall_end (void) {
-	append_instruction_t1 (RETN);
+	append_instructions(RETN);
 }
 
 // append these at the end, postpone it!
@@ -128,9 +123,5 @@ void append_fastcall_end (void) {
 // it has to do with structure of every binary executable file!
 // we can add it later, it's "triggered" on 'in'.
 void append_fastcall_arguments (int rel, int wid, int imm) { // TODO
-	append_instruction_t1 (ASMDIRMEM);
-	append_instruction_t1 (rel);
-	append_instruction_t1 (ASMDIRIMM);
-	append_instruction_t1 (wid);
-	append_instruction_t1 (imm);
+	append_instructions(ASMDIRMEM, rel, ASMDIRIMM, wid, imm);
 }

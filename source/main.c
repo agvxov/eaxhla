@@ -8,14 +8,19 @@
 #include "assembler.h"
 #include "debug.h"
 
+int init(void) {
+    eaxhla_init();
+    compile_init();
+    return 0;
+}
+
 void deinit(void) {
     extern void yyfree_leftovers(void);
 
     yyfree_leftovers();
 
-    eaxhla_destroy();
-
-	free (token_array);
+    eaxhla_deinit();
+    compile_deinit();
 }
 
 signed main(int argc, char * argv[]) {
@@ -23,8 +28,6 @@ signed main(int argc, char * argv[]) {
         printf("%s: <file>\n", argv[0]);
         return 1;
     }
-
-	token_array = calloc (1440UL, sizeof (* token_array));
 
     #if DEBUG == 1
         yydebug = 1;
@@ -34,7 +37,7 @@ signed main(int argc, char * argv[]) {
 
     yyin = fopen(yyfilename, "r");
 
-    if (eaxhla_init()) {
+    if (init()) {
         puts("Initialization failed");
         return 1;
     }
