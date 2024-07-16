@@ -76,14 +76,15 @@ static void asmdirimm (form       when,
 
 static void input_at (form       when,
                       size_index size,
-                      next       data) {
+                      next       data,
+                      next       base) {
 	// Input relative memory address to text sector.
 	asmdirrel (when, data);
 
-	input ((when != 0) && (size >= D8),  (byte) 0xb0);
-	input ((when != 0) && (size >= D16), (byte) 0x10);
-	input ((when != 0) && (size >= D32), (byte) 0x40);
-	input ((when != 0) && (size >= D32), (byte) 0x00);
+	input ((when != 0) && (size >= D8),  (byte) ((base >>  0) & 0xff));
+	input ((when != 0) && (size >= D16), (byte) ((base >>  8) & 0xff));
+	input ((when != 0) && (size >= D32), (byte) ((base >> 16) & 0xff));
+	input ((when != 0) && (size >= D32), (byte) ((base >> 24) & 0xff));
 	// NO DEREFERENCING
 	// 64-BIT SUPPORT
 }
@@ -316,19 +317,20 @@ static void build_move (size_index size,
 	input ((to == MEM) && (from == IMM), (byte) (0xc6 + (size != D8)));
 	input ((to == MEM) && (from == IMM), (byte) (0x05));
 
-	input_at ((to == REG) && (from == MEM), D32,  source);
+	input_at ((to == REG) && (from == MEM), D32,  source, 0);
 	input_by ((to == REG) && (from == IMM), size, source);
-	input_at ((to == MEM) && (from == REG), D32,  (next) ~0);
-	input_at ((to == MEM) && (from == IMM), D32,  (next) ~0);
+	input_at ((to == MEM) && (from == REG), D32,  (next) ~0, (next) ~0);
+	input_at ((to == MEM) && (from == IMM), D32,  (next) ~0, (next) ~0);
 	input_by ((to == MEM) && (from == IMM), size, source);
-	input_at ((to == REG) && (from == REL), D32,  source);
+	input_at ((to == REG) && (from == REL), D32,  source, 0x4010b0);
 }
 
 static void build_call (type_index from,
                         next       source) {
 	// call
-	(void) from;
-	(void) source;
+	input (from == REL, (byte) 0xe8);
+
+	input_at (from == REL, D32, source, (next) -(text_sector_size + 4));
 }
 
 static void assemble_clean_up (void) {

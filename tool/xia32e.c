@@ -162,6 +162,7 @@ int main (void) {
 			scope_label = 1;
 		} else if ((index >= token_add) && (index <= token_fldz)) {
 			tokenize (index + ADD);
+			if (index == token_call) tokenize (REL);
 			scope_instruction = 1;
 		} else if ((index >= token_al) && (index <= token_r15)) {
 			if (scope_instruction) {
