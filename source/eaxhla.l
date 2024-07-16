@@ -236,6 +236,7 @@ library        { BEGIN INITIAL; return END_LIBRARY; }
 \\r   { string_literal_buffer_append_char('\r'); }
 \\t   { string_literal_buffer_append_char('\t'); }
 \\v   { string_literal_buffer_append_char('\v'); }
+\\0   { string_literal_buffer_append_char('\0'); }
 \\\"  { string_literal_buffer_append_char('\"'); }
 \\\\  { string_literal_buffer_append_char('\\'); }
 \\x({hex}|{uhex})+  {
@@ -244,6 +245,13 @@ library        { BEGIN INITIAL; return END_LIBRARY; }
         memcpy(string_literal_buffer + string_litral_buffer_size, &v, sizeof(long));
         string_litral_buffer_size += sizeof(long);
 }
+\n    {
+        issue_error("string was never terminated");
+        yylval.blobval.data = strdup("");
+        yylval.blobval.len  = 0;
+        string_litral_buffer_size = 0;
+        return ARRAY_LITERAL;
+      }
 .     { string_literal_buffer_append_char(yytext[0]); }
 }
 

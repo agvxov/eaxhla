@@ -92,6 +92,20 @@ class CMDTEST_error_batch < Cmdtest::Testcase
     end
   end
 
+  def test_cut_string
+    create_file "input.eax", <<-HEREDOC
+      program main
+          u8 <> kek = "asd
+      begin
+      end program
+    HEREDOC
+
+    cmd "eaxhla input.eax" do
+      stderr_equal /.+\n(.|\n)+/m
+      exit_status 1
+    end
+  end
+
   def test_multi_error
     create_file "input.eax", <<-HEREDOC
       program main
@@ -128,6 +142,7 @@ class CMDTEST_warning_batch < Cmdtest::Testcase
     ignore_file $default_output_file
 
     cmd "eaxhla input.eax" do
+      created_files "a.out"
       stderr_equal /.+/
     end
   end
@@ -139,6 +154,7 @@ class CMDTEST_warning_batch < Cmdtest::Testcase
     ignore_file $default_output_file
 
     cmd "eaxhla input.eax" do
+      created_files "a.out"
       stderr_equal /.+/
     end
   end
