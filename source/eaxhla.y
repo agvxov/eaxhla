@@ -33,12 +33,6 @@
     cpuregister_t regval;
 }
 
-/* XXX NOTE: while naming, if my name collided with something in assembler.h i just
- *   added a 'T' prefix. this is obviously horrible and should be fixed,
- *   but that will require careful discussion with xolatile.
- *   for the time being its fine
- */
-
 %token MYBEGIN
 
 %token PROGRAM END_PROGRAM
@@ -99,14 +93,16 @@
 %token EXIT BREAK
 %%
 
-hla: %empty            // { issue_warning("empty file, noting to be done."); }
+hla: %empty
     // | library  hla
     | declaration hla // tmp
     | program  hla
     | function hla
     ;
 
-program: program_head declaration_section MYBEGIN code END_PROGRAM { scope = NULL; }
+program: program_head declaration_section MYBEGIN code END_PROGRAM {
+        empty_out_scope();
+    }
     ;
 
 program_head: program_specifier PROGRAM IDENTIFIER {
@@ -115,7 +111,7 @@ program_head: program_specifier PROGRAM IDENTIFIER {
             YYERROR;
         }
         is_program_found = 1;
-        scope = $3;
+        scope = $3; // XXX IF WE START USING THE REFERENCE OF $3 THIS WILL DOUBLE FREE
     };
 
 program_specifier: %empty
@@ -128,14 +124,15 @@ system_specifier: UNIX { system_type = UNIX; }
 
     // XXX: end procedure thing
 function: function_head declaration_section MYBEGIN code END_PROCEDURE {
-        scope = NULL;
         append_instructions(RETN);
+        empty_out_scope();
     }
     ;
 
 function_head: function_specifier PROCEDURE IDENTIFIER {
-        scope = $3;
+        scope = strdup($3);
         symbol_t procedure;
+        procedure.name = $3;
         add_procedure(procedure);
     }
     ;

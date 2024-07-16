@@ -46,6 +46,7 @@ extern int is_program_found;
 extern int has_encountered_error;
 
 extern char * scope;
+extern void empty_out_scope(void);
 
 // Used for error reporting
 extern char * yyfilename;

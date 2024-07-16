@@ -1,4 +1,4 @@
-fastcall procedure heyo
+fast procedure heyo
 	s8 <> h = "Heyo world!\n"
 begin
 	nop mov rax 1
@@ -8,7 +8,7 @@ begin
 	nop syscall
 end procedure
 
-fastcall procedure cyaa
+fast procedure cyaa
 	s8 <> c = "Cyaa world!\n"
 begin
 	nop mov rax 1

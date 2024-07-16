@@ -19,6 +19,8 @@ void debug_printf(const char * const fmt, ...) {
 static
 void dump_variable(void * data) {
     symbol_t * variable = (symbol_t*)data;
+    if (variable->symbol_type != VARIABLE) { return; }
+
     if (variable->elements == 1) {
         printf("{ .name = '%s', .value = '%ld' }\n",
                 variable->name,
@@ -36,7 +38,30 @@ void dump_variable(void * data) {
 
 static
 void debug_dump_variables(void) {
+    puts("# Variables:");
     tommy_hashtable_foreach(&symbol_table, dump_variable);
+}
+
+static
+void dump_function(void * data) {
+    symbol_t * function = (symbol_t*)data;
+    if (function->symbol_type != FUNCTION) { return; }
+
+    printf("{ .name = '%s' }\n",
+            function->name
+    );
+}
+
+static 
+void debug_dump_functions(void) {
+    puts("# Functions:");
+    tommy_hashtable_foreach(&symbol_table, dump_function);
+}
+
+static
+void debug_dump_symbols(void) {
+    debug_dump_variables();
+    debug_dump_functions();
 }
 
 static

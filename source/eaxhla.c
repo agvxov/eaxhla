@@ -25,6 +25,10 @@ int has_encountered_error = 0;
 int is_program_found      = 0;
 
 char * scope = NULL;
+void empty_out_scope(void) {
+    free(scope);
+    scope = NULL;
+}
 
 char * yyfilename = "";
 
@@ -35,14 +39,14 @@ int eaxhla_init(void) {
 }
 
 static
-void free_variable(void * data) {
+void free_symbol(void * data) {
     symbol_t * variable = (symbol_t*)data;
     free(variable->name);
     free(variable);
 }
 
 int eaxhla_deinit(void) {
-    tommy_hashtable_foreach(&symbol_table, free_variable);
+    tommy_hashtable_foreach(&symbol_table, free_symbol);
     tommy_hashtable_done(&symbol_table);
     return 0;
 }
@@ -63,6 +67,7 @@ void add_variable(symbol_t variable) {
         return;
     }
     variable._id = symbol_id++;
+    variable.symbol_type = VARIABLE;
     // XXX this is cursed
     symbol_t * heap_variable = malloc(sizeof(variable));
     memcpy(heap_variable, &variable, sizeof(variable));
@@ -77,6 +82,7 @@ void add_variable(symbol_t variable) {
 
 void add_procedure(symbol_t procedure) {
     procedure._id = symbol_id++;
+    procedure.symbol_type = FUNCTION;
     // XXX this is cursed
     symbol_t * heap_procedure = malloc(sizeof(procedure));
     memcpy(heap_procedure, &procedure, sizeof(procedure));

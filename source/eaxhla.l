@@ -199,8 +199,8 @@ xor             { return ITXOR; }
     /* --- Instrunctions end here --- */
 
 <IN_END>{
-program        { BEGIN INITIAL; free(scope); scope = NULL; return END_PROGRAM; }
-procedure      { BEGIN INITIAL; free(scope); scope = NULL; return END_PROCEDURE; }
+program        { BEGIN INITIAL; return END_PROGRAM; }
+procedure      { BEGIN INITIAL; return END_PROCEDURE; }
 repeat         { BEGIN INITIAL; return END_REPEAT; }
 if             { BEGIN INITIAL; return END_IF; }
 machine        { BEGIN INITIAL; return END_MACHINE; }
