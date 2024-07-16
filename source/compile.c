@@ -16,7 +16,7 @@ unsigned int   token_count = 0;
 char * output_file_name = "a.out";
 
 int compile_init(void) {
-	token_array = calloc (1440UL, sizeof (* token_array));
+	token_array = calloc(1440UL, sizeof(*token_array));
     return 0;
 }
 
@@ -28,13 +28,16 @@ int compile_deinit(void) {
 static
 void dump_variable_to_assembler(void * data) {
     variable_t * variable = (variable_t*)data;
+
     append_instructions(ASMDIRMEM, variable->_id, ASMDIRIMM, type2size(variable->type));
+
     append_instructions(variable->elements);
+
     if (variable->elements == 1) {
         append_instructions(variable->value);
     } else {
         for (unsigned long long i = 0; i < variable->elements; i++) {
-            append_instructions((int)*((char*)(variable->array_value + i)));
+            append_instructions((int)*((char*)variable->array_value + i));
         }
     }
 }
