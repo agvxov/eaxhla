@@ -61,7 +61,7 @@ extern void append_label (int rel);
          9,8,7,6,5,4,3,2,1,0
 
 
-void _append_instructions(unsigned argc, ...);
+void _append_instructions(const unsigned argc, ...);
 #define append_instructions(...) _append_instructions(PP_NARG(__VA_ARGS__), __VA_ARGS__)
 
 #endif

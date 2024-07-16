@@ -60,18 +60,16 @@ int table_compare_unsigned(const void * arg, const void * obj) {
 
 void add_variable(symbol_t variable) {
     if (get_variable(variable.name)) {
-        // XXX: this should say the varname, but this function does not know it
-        //       in fact this source file should not be reporting errors,
-        //       it should be returning an error and the parser should check.
-        issue_error("symbol '%s' declared twice", variable.name);
+        issue_error("symbol '%s' redeclared as new variable", variable.name);
         return;
     }
+
     variable._id = symbol_id++;
     variable.symbol_type = VARIABLE;
-    // XXX this is cursed
+
     symbol_t * heap_variable = malloc(sizeof(variable));
     memcpy(heap_variable, &variable, sizeof(variable));
-    // */
+
     heap_variable->_hash = tommy_strhash_u32(0, heap_variable->name);
     tommy_hashtable_insert(&symbol_table,
                             &heap_variable->_node,
@@ -81,12 +79,17 @@ void add_variable(symbol_t variable) {
 }
 
 void add_procedure(symbol_t procedure) {
+    if (get_function(procedure.name)) {
+        issue_error("symbol '%s' redeclared as new function", procedure.name);
+        return;
+    }
+
     procedure._id = symbol_id++;
     procedure.symbol_type = FUNCTION;
-    // XXX this is cursed
+
     symbol_t * heap_procedure = malloc(sizeof(procedure));
     memcpy(heap_procedure, &procedure, sizeof(procedure));
-    // */
+
     heap_procedure->_hash = tommy_strhash_u32(0, heap_procedure->name);
     tommy_hashtable_insert(&symbol_table,
                             &heap_procedure->_node,
@@ -100,7 +103,7 @@ void add_procedure(symbol_t procedure) {
 /* Are these literals ugly? yes.
  * However it would be much more painful to calculate the values inline.
  */
-int can_fit(int type, long long value) {
+int can_fit(const int type, const long long value) {
     unsigned long long max = 0;
     long long min = 0;
     switch (type) {
@@ -136,7 +139,7 @@ int can_fit(int type, long long value) {
     return value > 0 ? (unsigned long long)value <= max : value >= min;
 }
 
-int type2size(int type) {
+int type2size(const int type) {
     switch (type) {
         case U8:
         case S8:
@@ -156,7 +159,7 @@ int type2size(int type) {
     return -1;
 }
 
-int validate_array_size(int size) {
+int validate_array_size(const int size) {
     if (size < 1) {
         issue_error("cannot create an array of size '%d', because its less than 1", size);
         return 1;

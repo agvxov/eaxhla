@@ -214,7 +214,7 @@ library        { BEGIN INITIAL; return END_LIBRARY; }
 }
 
 <IN_STRING>{
-    /* XXX: escapes; multiline strings will die */
+    /* XXX: multiline strings will die */
     /* XXX: the first WORD_SIZE_IN_BYTES bytes should be 0'd */
 \"  {
         BEGIN INITIAL;

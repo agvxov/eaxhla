@@ -111,7 +111,7 @@ program_head: program_specifier PROGRAM IDENTIFIER {
             YYERROR;
         }
         is_program_found = 1;
-        scope = $3; // XXX IF WE START USING THE REFERENCE OF $3 THIS WILL DOUBLE FREE
+        scope = $3; // !!! IF WE START USING THE REFERENCE OF $3 THIS WILL DOUBLE FREE
     };
 
 program_specifier: %empty
@@ -179,7 +179,7 @@ declaration:
         }
         if ((unsigned long long)$4 < $8.len) {
             issue_warning("declared array size is smaller than assigned literal, this will cause truncation");
-        } // XXX actual truncation
+        }
         $$.name = make_scoped_name(scope, $6);
         $$.elements = $4;
         $$.array_value = $8.data;
@@ -209,10 +209,10 @@ type: S8    { $$ =  S8; }
     ;
 
 immediate: LITERAL { $$.type = IMM; $$.value = $1; }
-    | IDENTIFIER   {
+    | IDENTIFIER {
         char * varname = make_scoped_name(scope, $1);
         symbol_t * variable = get_variable(varname);
-        $$.type = REL;
+        $$.type  = REL;
         $$.value = variable->_id;
         free(varname);
     }

@@ -55,15 +55,15 @@ extern int eaxhla_init(void);
 extern int eaxhla_deinit(void);
 
 extern char * make_scoped_name(const char * const scope, char * name);
-extern int can_fit(int type, long long value);
-extern int validate_array_size(int size);
+extern int can_fit(const int type, const long long value);
+extern int validate_array_size(const int size);
 
 extern void add_variable(symbol_t variable);
 extern symbol_t * get_variable(const char * const name);
 
 //extern void add_function(symbol_t function);
-extern symbol_t * get_function(const char * const name);
 extern void add_procedure(symbol_t procedure);
+extern symbol_t * get_function(const char * const name);
 
 extern int type2size(int type);
 

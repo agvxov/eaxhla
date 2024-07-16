@@ -50,28 +50,41 @@ void dump_variables_to_assembler(void) {
     tommy_hashtable_foreach(&symbol_table, dump_variable_to_assembler);
 }
 
+// XXX Move these to somewhere more sane
+#define check(code) do { \
+    if (code) { return 1; } \
+} while (0)
+
+#define checked_fwrite(src, size, n, file) do { \
+    if(fwrite (src, size, n, file) != n) { \
+        return 1; \
+    } \
+} while (0)
+
 static
 int write_output(FILE * file) {
-    // XXX Error checking
+    // XXX Where can i move these?
 	elf_main_header (1, 1, 1, 0);
 	elf_text_sector (text_sector_size);
 	elf_data_sector (text_sector_size, 12);
 
-	fwrite (elf_main_header_byte, 1UL, ELF_MAIN_HEADER_SIZE, file);
-	fwrite (elf_text_sector_byte, 1UL, ELF_TEXT_SECTOR_SIZE, file);
-	fwrite (elf_data_sector_byte, 1UL, ELF_DATA_SECTOR_SIZE, file);
+	checked_fwrite(elf_main_header_byte, 1UL, ELF_MAIN_HEADER_SIZE, file);
+	checked_fwrite(elf_text_sector_byte, 1UL, ELF_TEXT_SECTOR_SIZE, file);
+	checked_fwrite(elf_data_sector_byte, 1UL, ELF_DATA_SECTOR_SIZE, file);
 
 	//text
-	fwrite (text_sector_byte, sizeof (* text_sector_byte),
-	        (size_t) text_sector_size, file);
+	checked_fwrite(text_sector_byte, sizeof(*text_sector_byte), (size_t)text_sector_size, file);
 
     return 0;
 }
 
 static
 int make_executable(const char * const filename) {
-    // XXX only works on *nix
-    int r = chmod(filename, 0755);
+    int r = 0;
+    
+  #if defined(__unix__)
+    r = chmod(filename, 0755);
+  #endif
 
     return r;
 }
@@ -83,8 +96,8 @@ int compile(void) {
 
     assemble(token_count, token_array);
 
-	FILE * output_file = fopen (output_file_name, "w");
-    write_output(output_file);
+	FILE * output_file = fopen(output_file_name, "w");
+    check(write_output(output_file));
 	fclose(output_file);
 
     make_executable(output_file_name);
@@ -92,7 +105,7 @@ int compile(void) {
     return 0;
 }
 
-void _append_instructions(unsigned argc, ...) {
+void _append_instructions(const unsigned argc, ...) {
     va_list ap;
     va_start(ap, argc);
 
