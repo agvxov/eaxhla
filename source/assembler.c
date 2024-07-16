@@ -89,14 +89,8 @@ static void delay (form       when,
 
 static void asmdirimm (form       when,
                        size_index size,
-                       //~next       redo,
                        next       data) {
-	/* */
-	//~next i;
-
-	//~for (i = 0; i < redo; ++i) {
-		print (when, size, data);
-	//~}
+	print (when, size, data);
 }
 
 static form front (form data) { return ((data >= 4) && (data <=  7)); }
@@ -359,8 +353,12 @@ void assemble (next   count,
 			asmdirmem (1, array [index + 1]);
 			index += 1;
 		} else if (array [index] == ASMDIRIMM) {
-			asmdirimm (1, array [index + 1], array [index + 2]);
-			index += 2;
+			next repeat;
+			for (repeat = 0; repeat < array [index + 2]; ++repeat) {
+				asmdirimm (1, array [index + 1],
+				              array [index + 3 + repeat]);
+			}
+			index += 2 + array [index + 2];
 		//~} else if (array [index] == ASMDIRREP) {
 		} else if ((array [index] >= REGULAR_BEGIN)
 		&&  (array [index] <= REGULAR_END)) {

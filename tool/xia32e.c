@@ -176,7 +176,17 @@ int main (void) {
 		} else if (index == token_count) {
 			if (isdigit (buffer [offset - size - 1]) != 0) {
 				if (scope_directive) {
-					tokenize (atoi (& buffer [offset - size - 1]));
+					scope = atoi (& buffer [offset - size - 1]);
+					tokenize (scope);
+					do {
+						leq_string (& buffer [offset], & word, & size);
+						index = 0;
+						do {
+							if (word == token_leq [index]) break;
+						} while (++index != token_count);
+						offset += size + 1;
+						tokenize (atoi (& buffer [offset - size - 1]));
+					} while (--scope != 0);
 					scope_directive = 0;
 				} else {
 					buffer [offset - 1] = '\0';

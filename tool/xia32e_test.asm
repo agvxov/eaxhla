@@ -6,5 +6,5 @@ nop syscall
 nop mov eax 60
 nop mov edi 60
 nop syscall
-nop . heyo db 72 db 69 db 89 db 79 db 10
+nop . heyo db 5 72 69 89 79 10
 end

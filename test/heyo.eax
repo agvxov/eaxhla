@@ -1,10 +1,16 @@
 unix program heyo_world
-	s8 <> heyo = "Heyo world!"
+	s8 <> heyo = "Heyo world!\n"
+	s8 <> cyaa = "Cyaa world!\n"
 begin
     /*
 	nop mov eax 1
 	nop mov edi 1
-	nop mov esi 4198610
+	nop mov esi heyo
+	nop mov edx 12
+	nop syscall
+	nop mov eax 1
+	nop mov edi 1
+	nop mov esi cyaa
 	nop mov edx 12
 	nop syscall
     */
@@ -53,27 +59,6 @@ end program
 	ASMDIRIMM, D8, 33,
 	ASMDIRIMM, D8, 10,
 	ASMDIRMEM, 1,
-	ASMDIRIMM, D8, 67,
-	ASMDIRIMM, D8, 121,
-	ASMDIRIMM, D8, 97,
-	ASMDIRIMM, D8, 97,
-	ASMDIRIMM, D8, 32,
-	ASMDIRIMM, D8, 102,
-	ASMDIRIMM, D8, 117,
-	ASMDIRIMM, D8, 99,
-	ASMDIRIMM, D8, 107,
-	ASMDIRIMM, D8, 105,
-	ASMDIRIMM, D8, 110,
-	ASMDIRIMM, D8, 103,
-	ASMDIRIMM, D8, 32,
-	ASMDIRIMM, D8, 119,
-	ASMDIRIMM, D8, 111,
-	ASMDIRIMM, D8, 114,
-	ASMDIRIMM, D8, 108,
-	ASMDIRIMM, D8, 100,
-	ASMDIRIMM, D8, 33,
-	ASMDIRIMM, D8, 10,
-	ASMDIRMEM, 2,
 	ASMDIRIMM, D8, 77,
 	ASMDIRIMM, D8, 101,
 	ASMDIRIMM, D8, 109,
