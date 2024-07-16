@@ -55,6 +55,7 @@ void debug_token_dump(void) {
 # define debug_puts(msg)
 # define debug_printf(...)
 # define debug_dump_variables() do {} while (0)
+# define debug_token_dump() do {} while (0)
 
 #endif
 

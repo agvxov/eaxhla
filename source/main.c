@@ -85,8 +85,10 @@ void dump (const char * file_name) {
 	fwrite (text_sector_byte, sizeof (* text_sector_byte),
 	        (size_t) text_sector_size, file);
 
+    /*
 	// data
 	fwrite ("heyo world!\n", 1UL, 12UL, file);
+    */
 
 	snprintf (meme, 1023UL, "chmod +x %s", file_name);
 

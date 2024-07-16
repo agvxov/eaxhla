@@ -158,7 +158,6 @@ void free_variable(void * data) {
 }
 
 int eaxhla_destroy(void) {
-    debug_dump_variables();
     tommy_hashtable_foreach(&variable_table, free_variable);
     tommy_hashtable_done(&variable_table);
     return 0;
@@ -210,8 +209,11 @@ void dump_variable_to_assembler(void * data) {
     if (variable->elements == 1) {
         append_instruction_t1(variable->value);
     } else {
-        memcpy(t_array + t_count, variable->array_value, variable->elements);
-        t_count += variable->elements;
+        for (unsigned long long i = 0; i < variable->elements; i++) {
+            debug_printf("'%d'\n", (int)*(char*)(variable->array_value + i));
+            append_instruction_t1((int)*(char*)(variable->array_value + i));
+        }
+        //memcpy(t_array + t_count, variable->array_value, variable->elements);
     }
 }
 
