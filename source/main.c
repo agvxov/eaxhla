@@ -51,6 +51,8 @@ signed main(int argc, char * argv[]) {
 
     yyparse();
 
+    debug_dump_variables();
+
     if (!has_encountered_error) {
         dump_variables_to_assembler();
         assemble (t_count, t_array);
