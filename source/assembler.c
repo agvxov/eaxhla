@@ -324,6 +324,13 @@ static void build_move (size_index size,
 	input_at ((to == REG) && (from == REL), D32,  source);
 }
 
+static void build_call (type_index from,
+                        next       source) {
+	// call
+	(void) from;
+	(void) source;
+}
+
 static void assemble_clean_up (void) {
 	if (assemble_clean_up_queued == 0) {
 		return;
@@ -418,6 +425,7 @@ void assemble (next   count,
 			index += 5;
 		} else if (array [index] == CALL) {
 			build_call (array [index + 1], array [index + 2]);
+			index += 2;
 		} else {
 			return;
 		}

@@ -6,33 +6,63 @@ segment readable executable
 
 entry main
 
-heyo:	mov eax, 1
+heyo:
+	nop
+	mov eax, 1
+	nop
 	mov edi, 1
+	nop
 	mov esi, h
+	nop
 	mov edx, 12
+	nop
 	syscall
+	nop
 	call meme
+	nop
 	ret
 
-cyaa:	mov eax, 1
+cyaa:
+	nop
+	mov eax, 1
+	nop
 	mov edi, 1
+	nop
 	mov esi, c
+	nop
 	mov edx, 12
+	nop
 	syscall
+	nop
 	ret
 
-main:	call heyo
+main:
+	nop
+	call heyo
+	nop
 	call cyaa
+	nop
 	mov eax, 60
+	nop
 	mov edi, 60
+	nop
 	syscall
 
-meme:	mov eax, 1
+meme:
+	nop
+	mov eax, 1
+	nop
 	mov edi, 1
+	nop
 	mov esi, m
+	nop
 	mov edx, 12
+	nop
 	syscall
+	nop
 	ret
+
+	nop
 
 segment readable writable
 
