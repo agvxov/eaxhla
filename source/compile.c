@@ -8,6 +8,7 @@
 #include "eaxhla.h"
 #include "assembler.h"
 #include "unix.h"
+#include "safety.h"
 #include "debug.h"
 
 unsigned int * token_array = NULL;
@@ -49,17 +50,6 @@ static
 void dump_variables_to_assembler(void) {
     tommy_hashtable_foreach(&symbol_table, dump_variable_to_assembler);
 }
-
-// XXX Move these to somewhere more sane
-#define check(code) do { \
-    if (code) { return 1; } \
-} while (0)
-
-#define checked_fwrite(src, size, n, file) do { \
-    if(fwrite (src, size, n, file) != n) { \
-        return 1; \
-    } \
-} while (0)
 
 static
 int write_output(FILE * file) {
