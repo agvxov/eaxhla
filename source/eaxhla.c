@@ -203,7 +203,7 @@ void issue_error(const char * const format, ...) {
 }
 
 static
-void dump_variable(void * data) {
+void dump_variable_to_assembler(void * data) {
     variable_t * variable = (variable_t*)data;
     append_instruction_t4(ASMDIRMEM, variable->_id, ASMDIRIMM, type2size(variable->type));
     if (variable->elements == 1) {
@@ -214,7 +214,7 @@ void dump_variable(void * data) {
     }
 }
 
-void dump_variables(void) {
+void dump_variables_to_assembler(void) {
     tommy_hashtable_foreach(&variable_table, dump_variable);
 }
 

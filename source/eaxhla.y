@@ -210,7 +210,6 @@ immediate: LITERAL { $$.type = IMM; $$.value = $1; }
         $$.type = REL;
         $$.value = variable->_id;
         free(varname);
-        free($1);
     }
     ;
 

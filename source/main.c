@@ -52,7 +52,7 @@ signed main(int argc, char * argv[]) {
     yyparse();
 
     if (!has_encountered_error) {
-        dump_variables();
+        dump_variables_to_assembler();
         assemble (t_count, t_array);
         debug_puts("Dumping output...");
         dump ("a.out");

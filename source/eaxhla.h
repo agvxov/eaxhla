@@ -119,7 +119,7 @@ extern void append_fastcall_begin     (int rel);
 extern void append_fastcall_end       (void);
 extern void append_fastcall_arguments (int rel, int wid, int imm);
 
-extern void dump_variables(void);
+extern void dump_variables_to_assembler(void);
 
 extern void issue_warning(const char * format, ...);
 extern void issue_error(const char * format, ...);
