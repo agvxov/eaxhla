@@ -11,6 +11,7 @@ library/tommyds/
 tmp-*
 .cmdtest-filter
 *.pluglock
+token_dump
 
 # temp
 test_me_please
