@@ -215,7 +215,7 @@ void dump_variable_to_assembler(void * data) {
 }
 
 void dump_variables_to_assembler(void) {
-    tommy_hashtable_foreach(&variable_table, dump_variable);
+    tommy_hashtable_foreach(&variable_table, dump_variable_to_assembler);
 }
 
 static
