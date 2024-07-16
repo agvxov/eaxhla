@@ -5,7 +5,7 @@
 SOURCE.d  := source
 OBJECT.d  := object
 
-SOURCE    := main.c assembler.c eaxhla.c unix.c
+SOURCE    := main.c assembler.c eaxhla.c compile.c unix.c
 OBJECT    := $(addprefix ${OBJECT.d}/,${SOURCE})
 OBJECT    := ${OBJECT:.c=.o}
 
@@ -85,7 +85,12 @@ bootstrap:
 deepclean: unplug clean
 
 clean:
-	-rm ${OUT} ${OBJECT} ${GENOBJECT} ${GENSOURCE}
+	-rm ${GENSOURCE}
+	-rm ${GENOBJECT}
+	-rm ${OBJECT}
+	-rm ${OUT}
+	-rm token_dump
+	-rm a.out
 
 ${OUT}: ${PLUGLOCK} ${GENSOURCE} ${GENOBJECT} ${OBJECT} ${LIB}
 	${LINK.c} -o $@ ${OBJECT} ${GENOBJECT} ${LDLIBS} library/tommyds/tommy.o

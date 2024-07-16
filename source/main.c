@@ -1,17 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-unsigned int * t_array = NULL;
-unsigned int   t_count = 0;
-
-static void dump (const char * file_name);
-void dump_variables();
-
 #include "eaxhla.h"
 #include "eaxhla.yy.h"
 #include "eaxhla.tab.h"
+#include "compile.h"
 #include "assembler.h"
-#include "unix.h"
 #include "debug.h"
 
 void deinit(void) {
@@ -22,10 +16,8 @@ void deinit(void) {
     eaxhla_destroy();
 
 	free (text_sector_byte);
-	free (t_array);
+	free (token_array);
 }
-
-char * yyfilename;
 
 signed main(int argc, char * argv[]) {
     if (argc < 2) {
@@ -34,7 +26,7 @@ signed main(int argc, char * argv[]) {
     }
 
 	text_sector_byte = calloc (1440UL, sizeof (* text_sector_byte));
-	t_array     = calloc (1440UL, sizeof (* t_array));
+	token_array      = calloc (1440UL, sizeof (* token_array));
 
     #if DEBUG == 1
         yydebug = 1;
@@ -54,10 +46,7 @@ signed main(int argc, char * argv[]) {
     debug_dump_variables();
 
     if (!has_encountered_error) {
-        dump_variables_to_assembler();
-        assemble (t_count, t_array);
-        debug_puts("Dumping output...");
-        dump ("a.out");
+        compile();
     }
 
     if (was_instruction_array_empty) {
@@ -67,32 +56,4 @@ signed main(int argc, char * argv[]) {
     deinit();
 
     return has_encountered_error;
-}
-
-void dump (const char * file_name) {
-	elf_main_header (1, 1, 1, 0);
-	elf_text_sector (text_sector_size);
-	elf_data_sector (text_sector_size, 12);
-
-	char meme [1024] = "";
-	FILE * file = fopen (file_name, "w");
-
-	fwrite (elf_main_header_byte, 1UL, ELF_MAIN_HEADER_SIZE, file);
-	fwrite (elf_text_sector_byte, 1UL, ELF_TEXT_SECTOR_SIZE, file);
-	fwrite (elf_data_sector_byte, 1UL, ELF_DATA_SECTOR_SIZE, file);
-
-	//text
-	fwrite (text_sector_byte, sizeof (* text_sector_byte),
-	        (size_t) text_sector_size, file);
-
-    /*
-	// data
-	fwrite ("heyo world!\n", 1UL, 12UL, file);
-    */
-
-	snprintf (meme, 1023UL, "chmod +x %s", file_name);
-
-	system (meme);
-
-	fclose (file);
 }

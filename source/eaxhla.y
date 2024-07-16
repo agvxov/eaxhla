@@ -7,6 +7,7 @@
 
     #include "eaxhla.yy.h"
     #include "assembler.h"
+    #include "compile.h"
     #include "eaxhla.h"
 
     extern void yyfree_leftovers(void);

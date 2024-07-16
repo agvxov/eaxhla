@@ -6,8 +6,6 @@
 #include <stdarg.h>
 #include "eaxhla.h"
 
-extern tommy_hashtable variable_table;
-
 # define debug_puts(msg) do { puts(msg); } while (0)
 
 static  // this is less horid than macro varargs
@@ -43,10 +41,10 @@ void debug_dump_variables(void) {
 
 static
 void debug_token_dump(void) {
-    extern unsigned int * t_array;
-    extern unsigned int   t_count;
+    extern unsigned int * token_array;
+    extern unsigned int   token_count;
     FILE * o = fopen("token_dump", "wb");
-    fwrite(t_array, sizeof(int), t_count, o);
+    fwrite(token_array, sizeof(int), token_count, o);
     fclose(o);
 }
 

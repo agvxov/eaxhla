@@ -10,18 +10,43 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "debug.h"
 #include "eaxhla.tab.h"
+
+#include "debug.h"
 #include "assembler.h"
+#include "compile.h"
 
 unsigned long long anon_variable_counter = 0;
 
 tommy_hashtable variable_table;
 
 int has_encountered_error = 0;
+int is_program_found      = 0;
 
 char * scope = NULL;
-int is_program_found = 0;
+
+char * yyfilename = "";
+
+
+int eaxhla_init(void) {
+    tommy_hashtable_init(&variable_table, 256);
+    return 0;
+}
+
+static
+void free_variable(void * data) {
+    variable_t * variable = (variable_t*)data;
+    free(variable->name);
+    free(variable);
+}
+
+int eaxhla_destroy(void) {
+    tommy_hashtable_foreach(&variable_table, free_variable);
+    tommy_hashtable_done(&variable_table);
+    return 0;
+}
+
+
 
 static
 int table_compare_unsigned(const void * arg, const void * obj) {
@@ -105,6 +130,7 @@ int type2size(int type) {
             return D64;
     }
 
+    issue_error("internal error");
     return -1;
 }
 
@@ -145,23 +171,7 @@ variable_t * get_variable(const char * const name) {
     return r;
 }
 
-int eaxhla_init(void) {
-    tommy_hashtable_init(&variable_table, 256);
-    return 0;
-}
 
-static
-void free_variable(void * data) {
-    variable_t * variable = (variable_t*)data;
-    free(variable->name);
-    free(variable);
-}
-
-int eaxhla_destroy(void) {
-    tommy_hashtable_foreach(&variable_table, free_variable);
-    tommy_hashtable_done(&variable_table);
-    return 0;
-}
 
 void issue_warning(const char * const format, ...) {
     extern char * yyfilename;
@@ -199,86 +209,6 @@ void issue_error(const char * const format, ...) {
                 msg
             );
     free(msg);
-}
-
-static
-void dump_variable_to_assembler(void * data) {
-    variable_t * variable = (variable_t*)data;
-    append_instruction_t4(ASMDIRMEM, variable->_id, ASMDIRIMM, type2size(variable->type));
-    append_instruction_t1(variable->elements);
-    if (variable->elements == 1) {
-        append_instruction_t1(variable->value);
-    } else {
-        for (unsigned long long i = 0; i < variable->elements; i++) {
-            debug_printf("'%d'\n", (int)*(char*)(variable->array_value + i));
-            append_instruction_t1((int)*(char*)(variable->array_value + i));
-        }
-        //memcpy(t_array + t_count, variable->array_value, variable->elements);
-    }
-}
-
-void dump_variables_to_assembler(void) {
-    tommy_hashtable_foreach(&variable_table, dump_variable_to_assembler);
-}
-
-static
-void append_token (int t) {
-    // XXX rewrite this and use memcpy
-	t_array [t_count] = t;
-	t_count += 1;
-}
-
-void append_instruction_t1 (int t1) {
-	append_token (t1); // operation
-}
-
-void append_instruction_t4 (int t4, int w, int d, int r) {
-	append_token (t4); // operation
-	append_token (w);  // width
-	append_token (d);  // destination
-	append_token (r);  // register
-}
-
-void append_instruction_t6 (int t6, int w, int d, int r, int s, int i) {
-	append_token (t6); // operation
-	append_token (w);  // width
-	append_token (d);  // destination
-	append_token (r);  // register
-	append_token (s);  // source
-	append_token (i);  // immediate
-}
-
-// my_label:
-void append_label (int rel) {
-	append_instruction_t1 (ASMDIRMEM);
-	append_instruction_t1 (rel);
-}
-
-// procedure my_procedure ... <argv> ... begin
-// rel = my_procedure (some unique index)
-// best if it's count of defined procedures!
-// it must not be address of it, or huge number!
-// optimally, it should be number 0 ... 140.
-// for now, 140 procedures is enough, will expand later!
-void append_fastcall_begin (int rel) {
-	append_label (rel);
-}
-
-// end procedure
-void append_fastcall_end (void) {
-	append_instruction_t1 (RETN);
-}
-
-// append these at the end, postpone it!
-// this function needs to be called after ALL instructions are parsed.
-// it has to do with structure of every binary executable file!
-// we can add it later, it's "triggered" on 'in'.
-void append_fastcall_arguments (int rel, int wid, int imm) { // TODO
-	append_instruction_t1 (ASMDIRMEM);
-	append_instruction_t1 (rel);
-	append_instruction_t1 (ASMDIRIMM);
-	append_instruction_t1 (wid);
-	append_instruction_t1 (imm);
 }
 
 int system_type =
