@@ -12,6 +12,11 @@
             (void)ignore;
         }
     }
+    void string_literal_buffer_append_char(char c) {
+        string_literal_ensure_surplus(1);
+        string_literal_buffer[string_litral_buffer_size] = c;
+        string_litral_buffer_size += 1;
+    }
 
     #define YY_USER_INIT \
         string_literal_buffer = malloc(128);
@@ -224,11 +229,22 @@ library        { BEGIN INITIAL; return END_LIBRARY; }
         string_litral_buffer_size = 0;
         return ARRAY_LITERAL;
 }
-.   {
-        string_literal_ensure_surplus(yyleng);
-        memcpy(string_literal_buffer + string_litral_buffer_size, yytext, yyleng);
-        string_litral_buffer_size += yyleng;
-    }
+\\n   { string_literal_buffer_append_char('\n'); }
+\\a   { string_literal_buffer_append_char('\a'); }
+\\b   { string_literal_buffer_append_char('\b'); }
+\\f   { string_literal_buffer_append_char('\f'); }
+\\r   { string_literal_buffer_append_char('\r'); }
+\\t   { string_literal_buffer_append_char('\t'); }
+\\v   { string_literal_buffer_append_char('\v'); }
+\\\"  { string_literal_buffer_append_char('\"'); }
+\\\\  { string_literal_buffer_append_char('\\'); }
+\\x({hex}|{uhex})+  {
+        long v = strtol(yytext + 2, NULL, 16);
+        string_literal_ensure_surplus(sizeof(long));
+        memcpy(string_literal_buffer + string_litral_buffer_size, &v, sizeof(long));
+        string_litral_buffer_size += sizeof(long);
+}
+.     { string_literal_buffer_append_char(yytext[0]); }
 }
 
 <IN_COMMENT>{

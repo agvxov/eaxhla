@@ -1,0 +1,4 @@
+program example
+    u8 <> var = "hello\"world\n!\vpadding\x90"
+begin
+end program
