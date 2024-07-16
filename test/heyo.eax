@@ -2,7 +2,6 @@ unix program heyo_world
 	s8 <> heyo = "Heyo world!\n"
 	s8 <> cyaa = "Cyaa world!\n"
 begin
-    /*
 	nop mov eax 1
 	nop mov edi 1
 	nop mov esi heyo
@@ -13,62 +12,124 @@ begin
 	nop mov esi cyaa
 	nop mov edx 12
 	nop syscall
-    */
-	mov eax 1
-	mov edi 1
-	mov esi heyo
-	mov edx 12
-	syscall
-
-	mov eax 60
-	mov edi 60
-	syscall
+	nop mov eax 60
+	nop mov edi 60
+	nop syscall
+	nop
 end program
 
 /*
-	NOP, MOV, D32, REG, R0, IMM, 1,
-	NOP, MOV, D32, REG, R7, IMM, 1,
-	NOP, MOV, D32, REG, R6, REL, 0,
-	NOP, MOV, D32, REG, R2, IMM, 12,
-	NOP, SYSCALL,
-	NOP, MOV, D32, REG, R0, IMM, 1,
-	NOP, MOV, D32, REG, R7, IMM, 1,
-	NOP, MOV, D32, REG, R6, REL, 1,
-	NOP, MOV, D32, REG, R2, IMM, 20,
-	NOP, SYSCALL,
-	NOP, MOV, D32, REG, R0, IMM, 1,
-	NOP, MOV, D32, REG, R7, IMM, 1,
-	NOP, MOV, D32, REG, R6, REL, 2,
-	NOP, MOV, D32, REG, R2, IMM, 12,
-	NOP, SYSCALL,
-	NOP, MOV, D32, REG, R0, IMM, 60,
-	NOP, MOV, D32, REG, R7, IMM, 60,
-	NOP, SYSCALL,
-	NOP,
-	ASMDIRMEM, 0,
-	ASMDIRIMM, D8, 72,                       ARRAY SUPPORT LATER
-	ASMDIRIMM, D8, 101,
-	ASMDIRIMM, D8, 121,
-	ASMDIRIMM, D8, 111,
-	ASMDIRIMM, D8, 32,
-	ASMDIRIMM, D8, 119,
-	ASMDIRIMM, D8, 111,
-	ASMDIRIMM, D8, 114,
-	ASMDIRIMM, D8, 108,
-	ASMDIRIMM, D8, 100,
-	ASMDIRIMM, D8, 33,
-	ASMDIRIMM, D8, 10,
-	ASMDIRMEM, 1,
-	ASMDIRIMM, D8, 77,
-	ASMDIRIMM, D8, 101,
-	ASMDIRIMM, D8, 109,
-	ASMDIRIMM, D8, 101,
-	ASMDIRIMM, D8, 32,
-	ASMDIRIMM, D8, 119,
-	ASMDIRIMM, D8, 111,
-	ASMDIRIMM, D8, 114,
-	ASMDIRIMM, D8, 108,
-	ASMDIRIMM, D8, 100,
-	ASMDIRIMM, D8, 33,
-	ASMDIRIMM, D8, 10
+Variable 't_array' expected:
+Decimal: | Hexadecimal: | Mnemo:
+20         14             NOP
+53         35             MOV
+2          02             D32
+1          01             REG
+0          00             R0
+3          03             IMM
+1          01             1
+20         14             NOP
+53         35             MOV
+2          02             D32
+1          01             REG
+7          07             R7
+3          03             IMM
+1          01             1
+20         14             NOP
+53         35             MOV
+2          02             D32
+1          01             REG
+6          06             R6
+0          00             REL
+0          00             0   -- heyo
+20         14             NOP
+53         35             MOV
+2          02             D32
+1          01             REG
+2          02             R2
+3          03             IMM
+12         0c             12  -- sizeof (heyo)
+20         14             NOP
+28         1c             SYSCALL
+20         14             NOP
+53         35             MOV
+2          02             D32
+1          01             REG
+0          00             R0
+3          03             IMM
+1          01             1
+20         14             NOP
+53         35             MOV
+2          02             D32
+1          01             REG
+7          07             R7
+3          03             IMM
+1          01             1
+20         14             NOP
+53         35             MOV
+2          02             D32
+1          01             REG
+6          06             R6
+0          00             REL
+1          01             1   -- cyaa
+20         14             NOP
+53         35             MOV
+2          02             D32
+1          01             REG
+2          02             R2
+3          03             IMM
+12         0c             12  -- sizeof (cyaa)
+20         14             NOP
+28         1c             SYSCALL
+20         14             NOP
+53         35             MOV
+2          02             D32
+1          01             REG
+0          00             R0
+3          03             IMM
+60         3c             60
+20         14             NOP
+53         35             MOV
+2          02             D32
+1          01             REG
+7          07             R7
+3          03             IMM
+60         3c             60
+20         14             NOP
+28         1c             SYSCALL
+20         14             NOP
+0          ||             ASMDIRMEM
+0          ||             0 -- heyo:
+2          ||             ASMDIRIMM
+0          ||             D8 -- typeof (heyo)
+12         ||             12 -- sizeof (heyo)
+72         ||             'H'
+101        ||             'e'
+121        ||             'y'
+111        ||             'o'
+32         ||             ' '
+119        ||             'w'
+111        ||             'o'
+114        ||             'r'
+108        ||             'l'
+100        ||             'd'
+33         ||             '!'
+10         ||             '\n'
+0          ||             ASMDIRMEM
+1          ||             1 -- cyaa:
+2          ||             ASMDIRIMM
+0          ||             D8 -- typeof (cyaa)
+12         ||             12 -- sizeof (cyaa)
+67         ||             'C'
+121        ||             'y'
+97         ||             'a'
+97         ||             'a'
+32         ||             ' '
+119        ||             'w'
+111        ||             'o'
+114        ||             'r'
+108        ||             'l'
+100        ||             'd'
+33         ||             '!'
+10         ||             '\n'
 */
