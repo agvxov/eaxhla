@@ -13,7 +13,7 @@ endif
 syn region eaxSingleLineComment start=+//+ end=+\n+
 syn region eaxMultiLineComment  start=+\/\*+ end=+\*\/+
 syn keyword eaxSpecifier fast unix in
-syn keyword eaxKeyword program machine procedure begin loop break if then else end
+syn keyword eaxKeyword program machine procedure begin until repeat break if then else end
 syn keyword eaxType u8 u16 u32 u64 s8 s16 s32 s64
 syn keyword eaxInstruction inc xor mov
 syn keyword eaxInstructionLike fastcall exit

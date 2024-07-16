@@ -1,0 +1,23 @@
+program fizzbuzz
+    u16 counter = 0
+begin
+    until counter > 100 repeat
+        if counter % 3 and counter % 5 then
+            mov esi "FizzBuzz"
+        elif counter % 3 then
+            mov esi "Fizz"
+        elif counter % 5 then
+            mov esi "Buzz"
+        else
+            // mov esi ???
+        end if
+
+        mov eax 1
+        mov edi 1
+        syscall
+
+        inc [counter]
+    end repeat
+
+    exit 0
+end program
