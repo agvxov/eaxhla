@@ -21,6 +21,10 @@
     long intval;
     char * strval;
     struct {
+        int type;
+        int value;
+    } argval;
+    struct {
         unsigned long long len;
         void * data;
     } blobval;
@@ -47,7 +51,7 @@
 
 %token<strval> IDENTIFIER LABEL
 
-%type<intval>   immediate
+%type<argval>   immediate
 %type<intval>   memory dereference
 %type<intval>   artimetric_block artimetric_expression artimetric_operand
 %type<intval>   value
@@ -139,11 +143,13 @@ declaration_section: %empty
 
 declaration:
       variable_specifier type IDENTIFIER {
+        $$.type = $2;
         $$.name = make_scoped_name(scope, $3);
         $$.elements = 1;
         add_variable($$);
     }
     | variable_specifier type IDENTIFIER '=' LITERAL {
+        $$.type = $2;
         $$.name = make_scoped_name(scope, $3);
         if (!can_fit($2, $5)) {
             issue_warning("the value \033[1m'%lld'\033[0m will overflow in assignement", $5);
@@ -153,6 +159,7 @@ declaration:
         add_variable($$);
     }
     | variable_specifier type '<' value '>' IDENTIFIER {
+        $$.type = $2;
         if (validate_array_size($4)) {
             break;
         }
@@ -161,6 +168,7 @@ declaration:
         add_variable($$);
     }
     | variable_specifier type '<' value '>' IDENTIFIER '=' ARRAY_LITERAL {
+        $$.type = $2;
         if (validate_array_size($4)) {
             break;
         }
@@ -173,6 +181,7 @@ declaration:
         add_variable($$);
     }
     | variable_specifier type '<' '>' IDENTIFIER '=' ARRAY_LITERAL {
+        $$.type = $2;
         $$.name = make_scoped_name(scope, $5);
         $$.elements = $7.len;
         $$.array_value = $7.data;
@@ -194,13 +203,19 @@ type: S8    { $$ =  S8; }
     | U64   { $$ = U64; }
     ;
 
-immediate: LITERAL
-    | IDENTIFIER { $$ = 0; /* XXX: how the fuck do i dereference? */}
+immediate: LITERAL { $$.type = IMM; $$.value = $1; }
+    | IDENTIFIER   {
+        char * varname = make_scoped_name(scope, $1);
+        variable_t * variable = get_variable(varname);
+        $$.type = REL;
+        $$.value = variable->_id;
+        free(varname);
+        free($1);
+    }
     ;
 
 memory: artimetric_block
     | dereference
-    | IDENTIFIER
     ;
 
 dereference: '[' IDENTIFIER ']' { $$ = 0; /* XXX: how the fuck do i dereference? */ }
@@ -276,10 +291,12 @@ machine_code: %empty
     | IDENTIFIER     machine_code { free($1); }
     ;
 
-call: calltype IDENTIFIER arguments { free($2); }
-    ;
-
-calltype: FASTCALL
+call: FASTCALL IDENTIFIER arguments {
+        //append_fastcall_begin(/**/);
+        //append_fastcall_arguments();
+        append_fastcall_end();
+        free($2);
+    }
     ;
 
 arguments: %empty
@@ -437,9 +454,9 @@ instruction: INOP { append_instruction_t1(NOP); }
     | ITSUB register register { append_instruction_t6( SUB, $2.size, REG, $2.number, REG, $3.number ); }
     | ITXOR register register { append_instruction_t6( XOR, $2.size, REG, $2.number, REG, $3.number ); }
     | ITCMP register register { append_instruction_t6( CMP, $2.size, REG, $2.number, REG, $3.number ); }
-    | ITSAR register immediate { append_instruction_t6( SAR, $2.size, REG, $2.number, IMM, (int)$3 ); }
+    | ITSAR register immediate { append_instruction_t6( SAR, $2.size, REG, $2.number, $3.type, $3.value ); }
     | ITMOV register register { append_instruction_t6( MOV, $2.size, REG, $2.number, REG, $3.number ); }
-    | ITMOV register immediate { append_instruction_t6( MOV, $2.size, REG, $2.number, IMM, (int)$3 ); }
+    | ITMOV register immediate { append_instruction_t6( MOV, $2.size, REG, $2.number, $3.type, $3.value ); }
 
     // #placeholder<instruction_parser_rules> END
     ;

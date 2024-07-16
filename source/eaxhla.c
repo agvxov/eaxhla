@@ -29,6 +29,7 @@ int table_compare_unsigned(const void * arg, const void * obj) {
 }
 
 void add_variable(variable_t variable) {
+    static unsigned vid = 0;
     if (get_variable(variable.name)) {
         // XXX: this should say the varname, but this function does not know it
         //       in fact this source file should not be reporting errors,
@@ -36,6 +37,7 @@ void add_variable(variable_t variable) {
         issue_error("variable declared twice");
         return;
     }
+    variable._id = vid++;
     // XXX this is cursed
     variable_t * heap_variable = malloc(sizeof(variable));
     memcpy(heap_variable, &variable, sizeof(variable));
@@ -85,6 +87,25 @@ int can_fit(int type, long long value) {
         } break;
     }
     return value > 0 ? (unsigned long long)value <= max : value >= min;
+}
+
+int type2size(int type) {
+    switch (type) {
+        case U8:
+        case S8:
+            return D8;
+        case U16:
+        case S16:
+            return D16;
+        case U32:
+        case S32:
+            return D32;
+        case U64:
+        case S64:
+            return D64;
+    }
+
+    return -1;
 }
 
 int validate_array_size(int size) {
@@ -181,8 +202,21 @@ void issue_error(const char * const format, ...) {
     free(msg);
 }
 
-extern unsigned int * t_array;
-extern unsigned int   t_count;
+static
+void dump_variable(void * data) {
+    variable_t * variable = (variable_t*)data;
+    append_instruction_t4(ASMDIRMEM, variable->_id, ASMDIRIMM, type2size(variable->type));
+    if (variable->elements == 1) {
+        append_instruction_t1(variable->value);
+    } else {
+        memcpy(t_array + t_count, variable->array_value, variable->elements);
+        t_count += variable->elements;
+    }
+}
+
+void dump_variables(void) {
+    tommy_hashtable_foreach(&variable_table, dump_variable);
+}
 
 static
 void append_token (int t) {

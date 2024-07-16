@@ -5,6 +5,7 @@ unsigned int * t_array = NULL;
 unsigned int   t_count = 0;
 
 static void dump (const char * file_name);
+void dump_variables();
 
 #include "eaxhla.h"
 #include "eaxhla.yy.h"
@@ -51,6 +52,7 @@ signed main(int argc, char * argv[]) {
     yyparse();
 
     if (!has_encountered_error) {
+        dump_variables();
         assemble (t_count, t_array);
         debug_puts("Dumping output...");
         dump ("a.out");

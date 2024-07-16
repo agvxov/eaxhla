@@ -1,20 +1,22 @@
 unix program heyo_world
-	/*s8 heyo = "Heyo world!\n"
-	s8 cyaa = "Cyaa world!\n"*/
+	s8 <> heyo = "Heyo world!"
 begin
+    /*
 	nop mov eax 1
 	nop mov edi 1
 	nop mov esi 4198610
 	nop mov edx 12
 	nop syscall
-	/*mov eax 1
+    */
+	mov eax 1
 	mov edi 1
-	mov esi cyaa
+	mov esi heyo
 	mov edx 12
-	syscall*/
-	nop mov eax 60
-	nop mov edi 60
-	nop syscall
+	syscall
+
+	mov eax 60
+	mov edi 60
+	syscall
 end program
 
 /*

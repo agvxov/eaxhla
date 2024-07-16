@@ -11,6 +11,8 @@ typedef struct {
   };
   unsigned long long elements;
   char *     name;
+  int        type;
+  unsigned   _id;
   unsigned   _hash;
   tommy_node _node;
 } variable_t;
@@ -32,6 +34,9 @@ extern int has_encountered_error;
 
 extern char * scope;
 
+extern unsigned int * t_array;
+extern unsigned int   t_count;
+
 extern int eaxhla_init(void);
 extern int eaxhla_destroy(void);
 
@@ -45,6 +50,8 @@ extern variable_t * get_variable(const char * const name);
 extern void append_instruction_t1 (int t1);
 extern void append_instruction_t4 (int t4, int w, int d, int r);
 extern void append_instruction_t6 (int t6, int w, int d, int r, int s, int i);
+
+extern int type2size(int type);
 
 /*
 -- THIS WILL BE REMOVED, HELPER COMMENT FOR ME...
@@ -111,6 +118,8 @@ extern void append_label (int rel);
 extern void append_fastcall_begin     (int rel);
 extern void append_fastcall_end       (void);
 extern void append_fastcall_arguments (int rel, int wid, int imm);
+
+extern void dump_variables(void);
 
 extern void issue_warning(const char * format, ...);
 extern void issue_error(const char * format, ...);

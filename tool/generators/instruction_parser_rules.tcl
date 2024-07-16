@@ -10,8 +10,9 @@ proc make_parser_rules {is} {
                 dict set r size  "\$$n.size"
             }
             "immediate" {
-                dict set r enum  "IMM"
-                dict set r value "(int)$$n"
+                dict set r enum  "$$n.type"
+                dict set r value "$$n.value"
+                # XXX
                 dict set r size  "32"
             }
             "memory"    {
