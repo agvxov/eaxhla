@@ -40,7 +40,7 @@ void free_variable(void * data) {
     free(variable);
 }
 
-int eaxhla_destroy(void) {
+int eaxhla_deinit(void) {
     tommy_hashtable_foreach(&variable_table, free_variable);
     tommy_hashtable_done(&variable_table);
     return 0;

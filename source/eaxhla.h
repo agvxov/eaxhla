@@ -37,7 +37,7 @@ extern char * scope;
 extern char * yyfilename;
 
 extern int eaxhla_init(void);
-extern int eaxhla_destroy(void);
+extern int eaxhla_deinit(void);
 
 extern char * make_scoped_name(const char * const scope, char * name);
 extern int can_fit(int type, long long value);

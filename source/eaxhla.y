@@ -418,45 +418,45 @@ library_code: %empty
     ;
     */
 
-instruction: INOP { append_instruction_t1(NOP); }
+instruction: INOP { append_instructions(NOP); }
     // #placeholder<instruction_parser_rules> BEGIN
-    | ITSYSCALL { append_instruction_t1(SYSCALL); }
-    | ITSYSRET { append_instruction_t1(SYSRET); }
-    | ITSYSEXIT { append_instruction_t1(SYSEXIT); }
-    | ITSYSENTER { append_instruction_t1(SYSENTER); }
-    | ITLEAVE { append_instruction_t1(LEAVE); }
-    | ITRETF { append_instruction_t1(RETF); }
-    | ITRETN { append_instruction_t1(RETN); }
-    | ITPAUSE { append_instruction_t1(PAUSE); }
-    | ITHLT { append_instruction_t1(HLT); }
-    | ITLOCK { append_instruction_t1(LOCK); }
-    | ITINC register { append_instruction_t4( INC, $2.size, REG, $2.number ); }
-    | ITDEC register { append_instruction_t4( DEC, $2.size, REG, $2.number ); }
-    | ITNOT register { append_instruction_t4( NOT, $2.size, REG, $2.number ); }
-    | ITNEG register { append_instruction_t4( NEG, $2.size, REG, $2.number ); }
-    | ITMUL register { append_instruction_t4( MUL, $2.size, REG, $2.number ); }
-    | ITIMUL register { append_instruction_t4( IMUL, $2.size, REG, $2.number ); }
-    | ITDIV register { append_instruction_t4( DIV, $2.size, REG, $2.number ); }
-    | ITIDIV register { append_instruction_t4( IDIV, $2.size, REG, $2.number ); }
-    | ITINC memory { append_instruction_t4( INC, 0 /* ??? */, MEM, 0 /* ??? */ ); }
-    | ITDEC memory { append_instruction_t4( DEC, 0 /* ??? */, MEM, 0 /* ??? */ ); }
-    | ITNOT memory { append_instruction_t4( NOT, 0 /* ??? */, MEM, 0 /* ??? */ ); }
-    | ITNEG memory { append_instruction_t4( NEG, 0 /* ??? */, MEM, 0 /* ??? */ ); }
-    | ITMUL memory { append_instruction_t4( MUL, 0 /* ??? */, MEM, 0 /* ??? */ ); }
-    | ITIMUL memory { append_instruction_t4( IMUL, 0 /* ??? */, MEM, 0 /* ??? */ ); }
-    | ITDIV memory { append_instruction_t4( DIV, 0 /* ??? */, MEM, 0 /* ??? */ ); }
-    | ITIDIV memory { append_instruction_t4( IDIV, 0 /* ??? */, MEM, 0 /* ??? */ ); }
-    | ITADD register register { append_instruction_t6( ADD, $2.size, REG, $2.number, REG, $3.number ); }
-    | ITOR register register { append_instruction_t6( OR, $2.size, REG, $2.number, REG, $3.number ); }
-    | ITADC register register { append_instruction_t6( ADC, $2.size, REG, $2.number, REG, $3.number ); }
-    | ITSBB register register { append_instruction_t6( SBB, $2.size, REG, $2.number, REG, $3.number ); }
-    | ITAND register register { append_instruction_t6( AND, $2.size, REG, $2.number, REG, $3.number ); }
-    | ITSUB register register { append_instruction_t6( SUB, $2.size, REG, $2.number, REG, $3.number ); }
-    | ITXOR register register { append_instruction_t6( XOR, $2.size, REG, $2.number, REG, $3.number ); }
-    | ITCMP register register { append_instruction_t6( CMP, $2.size, REG, $2.number, REG, $3.number ); }
-    | ITSAR register immediate { append_instruction_t6( SAR, $2.size, REG, $2.number, $3.type, $3.value ); }
-    | ITMOV register register { append_instruction_t6( MOV, $2.size, REG, $2.number, REG, $3.number ); }
-    | ITMOV register immediate { append_instruction_t6( MOV, $2.size, REG, $2.number, $3.type, $3.value ); }
+    | ITSYSCALL { append_instructions(SYSCALL); }
+    | ITSYSRET { append_instructions(SYSRET); }
+    | ITSYSEXIT { append_instructions(SYSEXIT); }
+    | ITSYSENTER { append_instructions(SYSENTER); }
+    | ITLEAVE { append_instructions(LEAVE); }
+    | ITRETF { append_instructions(RETF); }
+    | ITRETN { append_instructions(RETN); }
+    | ITPAUSE { append_instructions(PAUSE); }
+    | ITHLT { append_instructions(HLT); }
+    | ITLOCK { append_instructions(LOCK); }
+    | ITINC register { append_instructions( INC, $2.size, REG, $2.number ); }
+    | ITDEC register { append_instructions( DEC, $2.size, REG, $2.number ); }
+    | ITNOT register { append_instructions( NOT, $2.size, REG, $2.number ); }
+    | ITNEG register { append_instructions( NEG, $2.size, REG, $2.number ); }
+    | ITMUL register { append_instructions( MUL, $2.size, REG, $2.number ); }
+    | ITIMUL register { append_instructions( IMUL, $2.size, REG, $2.number ); }
+    | ITDIV register { append_instructions( DIV, $2.size, REG, $2.number ); }
+    | ITIDIV register { append_instructions( IDIV, $2.size, REG, $2.number ); }
+    | ITINC memory { append_instructions( INC, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITDEC memory { append_instructions( DEC, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITNOT memory { append_instructions( NOT, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITNEG memory { append_instructions( NEG, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITMUL memory { append_instructions( MUL, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITIMUL memory { append_instructions( IMUL, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITDIV memory { append_instructions( DIV, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITIDIV memory { append_instructions( IDIV, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITADD register register { append_instructions( ADD, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITOR register register { append_instructions( OR, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITADC register register { append_instructions( ADC, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITSBB register register { append_instructions( SBB, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITAND register register { append_instructions( AND, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITSUB register register { append_instructions( SUB, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITXOR register register { append_instructions( XOR, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITCMP register register { append_instructions( CMP, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITSAR register immediate { append_instructions( SAR, $2.size, REG, $2.number, $3.type, $3.value ); }
+    | ITMOV register register { append_instructions( MOV, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITMOV register immediate { append_instructions( MOV, $2.size, REG, $2.number, $3.type, $3.value ); }
 
     // #placeholder<instruction_parser_rules> END
     ;
