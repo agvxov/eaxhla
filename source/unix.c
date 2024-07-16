@@ -1,3 +1,4 @@
+#include "assembler.h"
 #include "unix.h"
 
 uint8_t elf_main_header_byte [ELF_MAIN_HEADER_SIZE] = {
@@ -33,23 +34,21 @@ uint8_t elf_data_sector_byte [ELF_DATA_SECTOR_SIZE] = {
 
 void elf_main_header (uint8_t  has_program,
                       uint8_t  for_linux,
-                      uint8_t  for_x86_64,
-                      uint64_t entry_point) {
-	/* */
-	uint64_t enter = entry_point; // TEST
+                      uint8_t  for_x86_64) {
+	//
+	uint32_t enter = text_entry_point + 0x4000b0u;
 
 	elf_main_header_byte [16] = (has_program) ? 0x02 : 0x03; // library
 	elf_main_header_byte [ 7] = (for_linux)   ? 0x03 : 0x00; // system v
 	elf_main_header_byte [18] = (for_x86_64)  ? 0x3e : 0x00;
 
-	if (entry_point != 0) {
-		memcpy (& elf_main_header_byte [24], & enter, sizeof (enter));
-	}
+	memcpy (& elf_main_header_byte [24], & enter, sizeof (enter));
 }
 
-void elf_text_sector (uint64_t text_size) {
-	/* */
-	uint64_t text = ELF_HEADER_SIZE + text_size; // TEST
+void elf_text_sector (uint64_t text_size,
+                      uint64_t data_size) {
+	//
+	uint64_t text = ELF_HEADER_SIZE + text_size - data_size;
 
 	memcpy (& elf_text_sector_byte [32], & text, sizeof (text));
 	memcpy (& elf_text_sector_byte [40], & text, sizeof (text));
@@ -57,9 +56,9 @@ void elf_text_sector (uint64_t text_size) {
 
 void elf_data_sector (uint64_t text_size,
                       uint64_t data_size) {
-	/* */
-	uint64_t data = data_size; // TEST
-	uint64_t core = ELF_HEADER_SIZE + text_size;
+	//
+	uint64_t data = data_size;
+	uint64_t core = ELF_HEADER_SIZE + text_size - data_size;
 	uint64_t move = 0x401000 + core;
 
 	memcpy (& elf_data_sector_byte [ 8], & core, sizeof (core));

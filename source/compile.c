@@ -54,9 +54,9 @@ void dump_variables_to_assembler(void) {
 static
 int write_output(FILE * file) {
     // XXX Where can i move these?
-	elf_main_header (1, 1, 1, 0);
-	elf_text_sector (text_sector_size);
-	elf_data_sector (text_sector_size, 12);
+	elf_main_header (1, 1, 1);
+	elf_text_sector (text_sector_size, 0x27); // HACK
+	elf_data_sector (text_sector_size, 0x27); // HACK
 
 	checked_fwrite(elf_main_header_byte, 1UL, ELF_MAIN_HEADER_SIZE, file);
 	checked_fwrite(elf_text_sector_byte, 1UL, ELF_TEXT_SECTOR_SIZE, file);
@@ -71,7 +71,7 @@ int write_output(FILE * file) {
 static
 int make_executable(const char * const filename) {
     int r = 0;
-    
+
   #if defined(__unix__)
     r = chmod(filename, 0755);
   #endif

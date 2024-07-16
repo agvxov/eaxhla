@@ -71,7 +71,8 @@ typedef enum {
 extern next   text_sector_size;
 extern byte * text_sector_byte;
 
-extern int was_instruction_array_empty;
+extern          int was_instruction_array_empty;
+extern unsigned int text_entry_point;
 
 extern void assemble (next count, next * array);
 
