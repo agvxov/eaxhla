@@ -351,6 +351,7 @@ void assemble (next   count,
 			index += 1;
 		} else if (array [index] == ASMDIRMEM) {
 			asmdirmem (1, array [index + 1]);
+			printf ("ASMDIRMEM %u\n", array [index + 1]);
 			index += 1;
 		} else if (array [index] == ASMDIRIMM) {
 			next repeat;
