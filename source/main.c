@@ -15,7 +15,6 @@ void deinit(void) {
 
     eaxhla_destroy();
 
-	free (text_sector_byte);
 	free (token_array);
 }
 
@@ -25,8 +24,7 @@ signed main(int argc, char * argv[]) {
         return 1;
     }
 
-	text_sector_byte = calloc (1440UL, sizeof (* text_sector_byte));
-	token_array      = calloc (1440UL, sizeof (* token_array));
+	token_array = calloc (1440UL, sizeof (* token_array));
 
     #if DEBUG == 1
         yydebug = 1;
