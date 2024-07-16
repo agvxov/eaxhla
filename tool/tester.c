@@ -17,6 +17,7 @@ static unsigned int array [] = {
 	NOP, MOV, D32, REG, R6, REL, 1,
 	NOP, MOV, D32, REG, R2, IMM, 20,
 	NOP, SYSCALL,
+	NOP, CALL, REL, 3,
 	NOP, MOV, D32, REG, R0, IMM, 1,
 	NOP, MOV, D32, REG, R7, IMM, 1,
 	NOP, MOV, D32, REG, R6, REL, 2,
@@ -25,6 +26,13 @@ static unsigned int array [] = {
 	NOP, MOV, D32, REG, R0, IMM, 60,
 	NOP, MOV, D32, REG, R7, IMM, 60,
 	NOP, SYSCALL,
+	ASMDIRMEM, 3,
+	NOP, MOV, D32, REG, R0, IMM, 1,
+	NOP, MOV, D32, REG, R7, IMM, 1,
+	NOP, MOV, D32, REG, R6, REL, 0,
+	NOP, MOV, D32, REG, R2, IMM, 12,
+	NOP, SYSCALL,
+	NOP, RETN,
 	NOP,
 	ASMDIRMEM, 0,
 	ASMDIRIMM, D8, 12, 72, 101, 121, 111, 32, 119, 111, 114, 108, 100, 33, 10,
@@ -37,8 +45,6 @@ static unsigned int array [] = {
 
 int main (void) {
 	FILE * file = NULL;
-
-	text_sector_byte = malloc (1024UL * 1024UL * sizeof (* text_sector_byte));
 
 	file = fopen ("run_me_please", "w+");
 
@@ -55,8 +61,6 @@ int main (void) {
 	printf ("> %u\n", (unsigned int) (sizeof (array) / sizeof (array [0])));
 
 	fwrite (text_sector_byte, 1UL, (size_t) text_sector_size, file);
-
-	free (text_sector_byte);
 
 	fclose (file);
 
