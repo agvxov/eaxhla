@@ -416,6 +416,8 @@ void assemble (next   count,
 			            array [index + 3], array [index + 4],
 			            array [index + 5]);
 			index += 5;
+		} else if (array [index] == CALL) {
+			build_call (array [index + 1], array [index + 2]);
 		} else {
 			return;
 		}
