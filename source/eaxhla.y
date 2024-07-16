@@ -111,6 +111,7 @@ program_head: program_specifier PROGRAM IDENTIFIER {
             YYERROR;
         }
         is_program_found = 1;
+        append_instructions(ASMDIRMEM, 0);
         scope = $3; // !!! IF WE START USING THE REFERENCE OF $3 THIS WILL DOUBLE FREE
     };
 

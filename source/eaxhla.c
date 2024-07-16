@@ -18,7 +18,7 @@
 
 unsigned long long anon_variable_counter = 0;
 
-static unsigned symbol_id = 0;
+static unsigned symbol_id = 1;
 tommy_hashtable symbol_table;
 
 int has_encountered_error = 0;
