@@ -1,5 +1,10 @@
 # General
 
+## The following instructions are fully supported:
+```asm
+    ; XXX fillin
+```
+
 ## 2 argument instructions (t6)
 
 ### add, or, adc, sbb, and, sub, xor, cmp;
@@ -54,4 +59,27 @@ mov [x] 0x11223344 // MOV D32 MEM 69 IMM 0x11223344
 mov eax x          // MOV D32 REG R0 REL 69
 ...
 u32 x = 420        // ASMDIRMEM 69 ASMDIRIMM D32 420
+```
+
+As for core instructions we must support, no matter what, here's the list:
+```
+mov                               <REG/MEM> <REG/MEM/IMM> -- immediate value can be up to 64 bits.
+add or adc sbb and sub xor cmp    <REG/MEM> <REG/MEM/IMM> -- immediate value can be up to 32 bits.
+inc dec not neg mul imul div idiv <REG/MEM>               -- no immediates allowed here.
+jmp jCC cmovCC                    <>        <>            -- conditional instructions, important!
+enter leave pop push                                      -- stack focused instructions.
+sysenter sysexit syscall sysret                           -- kernel/system focused instructions.
+in out nop call bswap sal sar shr shl rol ror xchg loop   -- ease-of-use focused instructions.
+```
+
+- Here is what's available to use, it's in the list below, there are 5 combinations, for 2 argument instructions.
+```
+ins REG REG -- mov, add, cmp, xor, and
+ins REG MEM -- ^
+ins REG IMM -- ^
+ins MEM REG -- ^
+ins MEM IMM -- ^
+ins REG     -- inc, dec, not, div, mul
+ins MEM     -- ^
+ins         -- syscall, pause, hlt, ret, leave
 ```
