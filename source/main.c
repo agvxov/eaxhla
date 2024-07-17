@@ -45,6 +45,7 @@ signed main(int argc, char * argv[]) {
     yyparse();
 
     debug_dump_symbols();
+    debug_token_dump();
 
     if (!has_encountered_error) {
         compile();
