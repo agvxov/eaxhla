@@ -47,18 +47,39 @@ main:
 	syscall
 	nop
 	call cyaa
+	lod:
 	nop
 	mov eax, 60
 	nop
 	mov edi, 60
 	nop
 	syscall
+	nop
+	nop
+	nop
+	nop
+	call rax
+	nop
+	call rcx
+	nop
+	call r8
+	nop
+	call r9
+	nop
+	call loc
+	nop
+	call lod
+	nop
+	nop
+	nop
 
 segment readable writable
 
 h: db "Heyo world!", 10
 m: db "Meme world!!", 10
 c: db "Cyaa world!!!", 10
+
+loc: dq 0
 
 ;~FASM                                                                            EAXHLA
 ;~7F 45 4C 46 02 01 01 03 00 00 00 00 00 00 00 00                                 7F 45 4C 46 02 01 01 03 00 00 00 00 00 00 00 00

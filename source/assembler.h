@@ -29,7 +29,7 @@ typedef enum {
 	MUL,              IMUL,             DIV,              IDIV,
 	/* */
 	NOP,              RETN,             RETF,             LEAVE,
-	LOCK,             HLT,
+	LOCK,             HLT,              POPF,             PUSHF,
 	/* */
 	SYSENTER,         SYSEXIT,          SYSCALL,          SYSRET,
 	PAUSE,            CPUID,
