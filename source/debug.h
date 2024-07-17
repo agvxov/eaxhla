@@ -6,6 +6,9 @@
 #include <stdarg.h>
 #include "eaxhla.h"
 
+static
+void breakpoint(void) { ; }
+
 # define debug_puts(msg) do { puts(msg); } while (0)
 
 static  // this is less horid than macro varargs

@@ -8,6 +8,7 @@ eaxcc
 gdb.txt
 *.pp
 library/tommyds/
+library/sds/
 tmp-*
 .cmdtest-filter
 *.pluglock

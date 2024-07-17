@@ -15,6 +15,8 @@ extern void append_label(int rel);
 
 extern void append_exit(int code);
 
+extern void append_instructions_from_mem(void * src, unsigned n);
+
 /* --- Token appending
  * The core problem is that we want an interface where we can append {instructoin}
  *  tokens without modifying the counter as that gets old fast and error prone

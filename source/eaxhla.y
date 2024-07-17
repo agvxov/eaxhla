@@ -9,6 +9,7 @@
     #include "assembler.h"
     #include "compile.h"
     #include "eaxhla.h"
+    #include "debug.h"
 
     extern void yyfree_leftovers(void);
     extern char * yyfilename;
@@ -291,14 +292,16 @@ machine: MACHINE machine_code END_MACHINE
     ;
 
 machine_code: %empty
-    | LITERAL        machine_code { append_instructions(ASMDIRIMM, D8, 1, $1); }
-    | ARRAY_LITERAL  machine_code {
-        append_instructions(ASMDIRIMM, D8, $1.len);
-        for (unsigned long long i = 0; i < $1.len; i++) {
-            append_instructions((int)*((char*)$1.data + i));
+    | machine_code LITERAL {
+        append_instructions(ASMDIRIMM, D8, 1, $2);
+    }
+    | machine_code ARRAY_LITERAL {
+        append_instructions(ASMDIRIMM, D8, $2.len);
+        for (unsigned long long i = 0; i < $2.len; i++) {
+            append_instructions(((char*)$2.data)[i]);
         }
     }
-    | IDENTIFIER     machine_code { free($1); }
+    | machine_code IDENTIFIER { free($2); }
     ;
 
 call: FASTCALL IDENTIFIER arguments {

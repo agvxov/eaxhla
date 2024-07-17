@@ -55,6 +55,7 @@ void dump_variables_to_assembler(void) {
 
 static
 int write_output(FILE * file) {
+    // XXX portability
 	checked_fwrite(elf_main_header_byte, 1UL, ELF_MAIN_HEADER_SIZE, file);
 	checked_fwrite(elf_text_sector_byte, 1UL, ELF_TEXT_SECTOR_SIZE, file);
 	checked_fwrite(elf_data_sector_byte, 1UL, ELF_DATA_SECTOR_SIZE, file);
@@ -67,11 +68,15 @@ int write_output(FILE * file) {
 
 static
 int create_header() {
-    int total_reserved_size = variable_size_sum();
-    // XXX portability
-	elf_main_header(1, 1, 1);
-	elf_text_sector(text_sector_size, total_reserved_size);
-	elf_data_sector(text_sector_size, total_reserved_size);
+    if (system_type == UNIX) {
+        int total_reserved_size = variable_size_sum();
+
+        elf_main_header(1, 1, 1);
+        elf_text_sector(text_sector_size, total_reserved_size);
+        elf_data_sector(text_sector_size, total_reserved_size);
+    }
+
+    return 0;
 }
 
 static
@@ -101,6 +106,11 @@ int compile(void) {
     make_executable(output_file_name);
 
     return 0;
+}
+
+void append_instructions_from_mem(void * src, unsigned n) {
+    memcpy(token_array + token_count, src, n);
+    token_count += n;
 }
 
 void _append_instructions(const unsigned argc, ...) {

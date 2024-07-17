@@ -1,9 +1,12 @@
 program mymachine
 begin
     machine
-        0xB8 0x3C 0x00 0x00
-        0x00 0xBF 0x45 0x00
-        0x00 0x00 0x0F 0x05
-        //"\xb8" /*D8*/ 60 /*D32*/ "\xbf" /*D8*/ 69 /*D32*/ "\x0f\x05"
+        # 0xB8 0x3C 0x00 0x00
+        # 0x00 0xBF 0x45 0x00
+        # 0x00 0x00 0x0F 0x05
+        #"\xB8\x3C\x00\x00\x00\xBF\x45\x00\x00\x00\x0F\x05"
+        "\xB8\x3C\x00\x00"
+        "\x00\xBF\x45\x00"
+        "\x00\x00\x0F\x05"
     end machine
 end program

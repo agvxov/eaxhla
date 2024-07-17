@@ -1,25 +1,12 @@
 %{
     #include <stdlib.h>
+    #include "sds/sds.h"
     #include "eaxhla.tab.h"
 
-    char * string_literal_buffer;
-    int string_litral_buffer_size     = 0;
-    int string_litral_buffer_capacity = 128;
-    void string_literal_ensure_surplus(int s) {
-        if (string_litral_buffer_size + s > string_litral_buffer_capacity) {
-            string_litral_buffer_capacity *= 2;
-            void * ignore = realloc(string_literal_buffer, string_litral_buffer_capacity);
-            (void)ignore;
-        }
-    }
-    void string_literal_buffer_append_char(char c) {
-        string_literal_ensure_surplus(1);
-        string_literal_buffer[string_litral_buffer_size] = c;
-        string_litral_buffer_size += 1;
-    }
+    sds string_literal_buffer;
 
     #define YY_USER_INIT \
-        string_literal_buffer = malloc(128);
+        string_literal_buffer = sdsnew("");
 %}
 %option noyywrap
 
@@ -216,43 +203,51 @@ library        { BEGIN INITIAL; return END_LIBRARY; }
 <IN_STRING>{
     /* XXX: multiline strings will die */
     /* XXX: the first WORD_SIZE_IN_BYTES bytes should be 0'd */
+    /* XXX: i wanted short strings to be literals;
+            this however clashes with with the sanity of machine blocks;
+            those should be moved to '' (exactly like in Holy C)
+    */
 \"  {
         BEGIN INITIAL;
-        if (string_litral_buffer_size <= WORD_SIZE_IN_BYTES) {
-            memcpy(&yylval.intval, yytext, WORD_SIZE_IN_BYTES);
-            return LITERAL;
-        }
+        yylval.blobval.data = malloc(sdslen(string_literal_buffer));
+        memcpy(yylval.blobval.data, string_literal_buffer, sdslen(string_literal_buffer));
+        yylval.blobval.len = sdslen(string_literal_buffer);
 
-        yylval.blobval.data = malloc(string_litral_buffer_size);
-        memcpy(yylval.blobval.data, string_literal_buffer, string_litral_buffer_size);
-        yylval.blobval.len = string_litral_buffer_size;
-        string_litral_buffer_size = 0;
+        string_literal_buffer[0] = '\0';
+        sdsupdatelen(string_literal_buffer);
+
         return ARRAY_LITERAL;
 }
-\\n   { string_literal_buffer_append_char('\n'); }
-\\a   { string_literal_buffer_append_char('\a'); }
-\\b   { string_literal_buffer_append_char('\b'); }
-\\f   { string_literal_buffer_append_char('\f'); }
-\\r   { string_literal_buffer_append_char('\r'); }
-\\t   { string_literal_buffer_append_char('\t'); }
-\\v   { string_literal_buffer_append_char('\v'); }
-\\0   { string_literal_buffer_append_char('\0'); }
-\\\"  { string_literal_buffer_append_char('\"'); }
-\\\\  { string_literal_buffer_append_char('\\'); }
+\\n   { string_literal_buffer = sdscat(string_literal_buffer, "\n");}
+\\a   { string_literal_buffer = sdscat(string_literal_buffer, "\a"); }
+\\b   { string_literal_buffer = sdscat(string_literal_buffer, "\b"); }
+\\f   { string_literal_buffer = sdscat(string_literal_buffer, "\f"); }
+\\r   { string_literal_buffer = sdscat(string_literal_buffer, "\r"); }
+\\t   { string_literal_buffer = sdscat(string_literal_buffer, "\t"); }
+\\v   { string_literal_buffer = sdscat(string_literal_buffer, "\v"); }
+\\\"  { string_literal_buffer = sdscat(string_literal_buffer, "\""); }
+\\\\  { string_literal_buffer = sdscat(string_literal_buffer, "\\"); }
+\\0   { string_literal_buffer = sdscatlen(string_literal_buffer, "\0", 1); }
 \\x({hex}|{uhex})+  {
         long v = strtol(yytext + 2, NULL, 16);
-        string_literal_ensure_surplus(sizeof(long));
-        memcpy(string_literal_buffer + string_litral_buffer_size, &v, sizeof(long));
-        string_litral_buffer_size += sizeof(long);
+        if (v >  255
+        ||  v < -255) {
+            issue_warning("hex escapes are char sized. '%ld' will be truncated", v);
+        }
+        string_literal_buffer = sdscatlen(string_literal_buffer, &v, 1);
 }
 \n    {
         issue_error("string was never terminated");
+
         yylval.blobval.data = strdup("");
         yylval.blobval.len  = 0;
-        string_litral_buffer_size = 0;
+
+        string_literal_buffer[0] = '\0';
+        sdsupdatelen(string_literal_buffer);
+
         return ARRAY_LITERAL;
       }
-.     { string_literal_buffer_append_char(yytext[0]); }
+.     { string_literal_buffer = sdscat(string_literal_buffer, yytext); }
 }
 
 <IN_COMMENT>{
@@ -307,5 +302,5 @@ void yyfree_leftovers(void) {
 
     yylex_destroy();
 
-    free(string_literal_buffer);
+    sdsfree(string_literal_buffer);
 }
