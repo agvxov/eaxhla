@@ -1,0 +1,5 @@
+unix
+program myexit
+begin
+    exit 69
+end program

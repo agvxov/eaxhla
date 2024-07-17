@@ -159,6 +159,34 @@ int type2size(const int type) {
     return -1;
 }
 
+int size2bytes(const int size) {
+    switch (size) {
+        case D8:  return 1;
+        case D16: return 2;
+        case D32: return 4;
+        case D64: return 8;
+    }
+
+    issue_error("internal error");
+    return -1;
+}
+
+static
+void _variable_size_sum_iteration(void * i, void * data) {
+    symbol_t * variable = (symbol_t*)data;
+    if (variable->symbol_type != VARIABLE) { return; }
+
+    int * sum = i;
+
+    *sum += variable->elements * size2bytes(type2size(variable->type));
+}
+
+int variable_size_sum(void) {
+    int r = 0;
+    tommy_hashtable_foreach_arg(&symbol_table, _variable_size_sum_iteration, &r);
+    return r;
+}
+
 int validate_array_size(const int size) {
     if (size < 1) {
         issue_error("cannot create an array of size '%d', because its less than 1", size);

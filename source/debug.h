@@ -62,6 +62,7 @@ static
 void debug_dump_symbols(void) {
     debug_dump_variables();
     debug_dump_functions();
+    printf("# Total variable size: '%d'\n", variable_size_sum());
 }
 
 static

@@ -66,6 +66,8 @@ extern void add_procedure(symbol_t procedure);
 extern symbol_t * get_function(const char * const name);
 
 extern int type2size(int type);
+extern int size2bytes(const int size);
+extern int variable_size_sum(void);
 
 extern void issue_warning(const char * format, ...);
 extern void issue_error(const char * format, ...);

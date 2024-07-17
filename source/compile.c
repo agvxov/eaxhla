@@ -5,6 +5,8 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 
+#include "eaxhla.tab.h"
+
 #include "eaxhla.h"
 #include "assembler.h"
 #include "unix.h"
@@ -53,11 +55,6 @@ void dump_variables_to_assembler(void) {
 
 static
 int write_output(FILE * file) {
-    // XXX Where can i move these?
-	elf_main_header (1, 1, 1);
-	elf_text_sector (text_sector_size, 0x27); // HACK
-	elf_data_sector (text_sector_size, 0x27); // HACK
-
 	checked_fwrite(elf_main_header_byte, 1UL, ELF_MAIN_HEADER_SIZE, file);
 	checked_fwrite(elf_text_sector_byte, 1UL, ELF_TEXT_SECTOR_SIZE, file);
 	checked_fwrite(elf_data_sector_byte, 1UL, ELF_DATA_SECTOR_SIZE, file);
@@ -66,6 +63,15 @@ int write_output(FILE * file) {
 	checked_fwrite(text_sector_byte, sizeof(*text_sector_byte), (size_t)text_sector_size, file);
 
     return 0;
+}
+
+static
+int create_header() {
+    int total_reserved_size = variable_size_sum();
+    // XXX portability
+	elf_main_header(1, 1, 1);
+	elf_text_sector(text_sector_size, total_reserved_size);
+	elf_data_sector(text_sector_size, total_reserved_size);
 }
 
 static
@@ -85,6 +91,8 @@ int compile(void) {
     dump_variables_to_assembler();
 
     assemble(token_count, token_array);
+
+    create_header();
 
 	FILE * output_file = fopen(output_file_name, "w");
     check(write_output(output_file));
@@ -107,7 +115,12 @@ void _append_instructions(const unsigned argc, ...) {
     va_end(ap);
 }
 
-// my_label:
+extern void append_exit(int code) {
+    if (system_type == UNIX) {
+        append_instructions(MOV, R0, 60, MOV, R7, code, SYSCALL);
+    }
+}
+
 void append_label (int rel) {
     append_instructions(ASMDIRMEM, rel);
 }

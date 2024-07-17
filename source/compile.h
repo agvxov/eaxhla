@@ -11,7 +11,9 @@ extern int compile_deinit(void);
 
 extern int compile(void);
 
-extern void append_label (int rel);
+extern void append_label(int rel);
+
+extern void append_exit(int code);
 
 /* --- Token appending
  * The core problem is that we want an interface where we can append {instructoin}

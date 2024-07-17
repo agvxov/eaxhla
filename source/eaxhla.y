@@ -411,7 +411,7 @@ artimetric_operand: LITERAL
     | IDENTIFIER { $$ = 0; /*XXX*/ }
     ;
 
-exit: EXIT value
+exit: EXIT value { append_exit($2); }
     ;
 
     /* XXX
