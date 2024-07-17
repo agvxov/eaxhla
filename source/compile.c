@@ -117,7 +117,10 @@ void _append_instructions(const unsigned argc, ...) {
 
 extern void append_exit(int code) {
     if (system_type == UNIX) {
-        append_instructions(MOV, R0, 60, MOV, R7, code, SYSCALL);
+        append_instructions(MOV, D32, REG, R0, IMM, 60,
+                            MOV, D32, REG, R7, IMM, code,
+                            SYSCALL
+                        );
     }
 }
 
