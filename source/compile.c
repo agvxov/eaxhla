@@ -115,7 +115,7 @@ void _append_instructions(const unsigned argc, ...) {
     va_end(ap);
 }
 
-extern void append_exit(int code) {
+void append_exit(int code) {
     if (system_type == UNIX) {
         append_instructions(MOV, D32, REG, R0, IMM, 60,
                             MOV, D32, REG, R7, IMM, code,

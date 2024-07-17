@@ -291,8 +291,13 @@ machine: MACHINE machine_code END_MACHINE
     ;
 
 machine_code: %empty
-    | LITERAL        machine_code
-    | ARRAY_LITERAL  machine_code
+    | LITERAL        machine_code { append_instructions(ASMDIRIMM, D8, 1, $1); }
+    | ARRAY_LITERAL  machine_code {
+        append_instructions(ASMDIRIMM, D8, $1.len);
+        for (unsigned long long i = 0; i < $1.len; i++) {
+            append_instructions((int)*((char*)$1.data + i));
+        }
+    }
     | IDENTIFIER     machine_code { free($1); }
     ;
 
