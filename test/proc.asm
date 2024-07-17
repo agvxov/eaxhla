@@ -1,71 +1,45 @@
-; fasm proc.asm proc && chmod +x proc && ./proc
+fast procedure heyo
+	s8 <> h = "Heyo world!\n"
+begin
+	nop mov eax 1
+	nop mov edi 1
+	nop mov esi h
+	nop mov edx 12
+	nop syscall
+end procedure
 
-format ELF64 executable 3
+fast procedure lnao
+	s8 <> l = "Lnao world!!!!\n"
+begin
+	nop mov eax 1
+	nop mov edi 1
+	nop mov esi l
+	nop mov edx 15
+	nop syscall
+end procedure
 
-segment readable executable
+fast procedure cyaa
+	s8 <> c = "Cyaa world!!!\n"
+begin
+	nop mov eax 1
+	nop mov edi 1
+	nop mov esi c
+	nop mov edx 14
+	nop syscall
+end procedure
 
-entry main
-
-heyo:
-	nop
-	mov eax, 1
-	nop
-	mov edi, 1
-	nop
-	mov esi, h
-	nop
-	mov edx, 12
-	nop
-	syscall
-	nop
-	call meme
-	nop
-	ret
-
-cyaa:
-	nop
-	mov eax, 1
-	nop
-	mov edi, 1
-	nop
-	mov esi, c
-	nop
-	mov edx, 12
-	nop
-	syscall
-	nop
-	ret
-
-main:
-	nop
-	call heyo
-	nop
-	call cyaa
-	nop
-	mov eax, 60
-	nop
-	mov edi, 60
-	nop
-	syscall
-
-meme:
-	nop
-	mov eax, 1
-	nop
-	mov edi, 1
-	nop
-	mov esi, m
-	nop
-	mov edx, 12
-	nop
-	syscall
-	nop
-	ret
-
-	nop
-
-segment readable writable
-
-h: db "Heyo world!", 10
-c: db "Cyaa world!", 10
-m: db "Meme world!", 10
+unix program main
+	s8 <> m = "Meme world!!\n"
+begin
+	nop fastcall heyo
+	nop mov eax 1
+	nop mov edi 1
+	nop mov esi m
+	nop mov edx 13
+	nop syscall
+	nop fastcall cyaa
+	nop fastcall lnao
+	nop mov eax 60
+	nop mov edi 60
+	nop syscall
+end program

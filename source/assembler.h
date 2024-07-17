@@ -4,7 +4,6 @@ typedef signed   int  form;
 typedef unsigned int  next;
 typedef unsigned char byte;
 
-// XXX: we could be using binary literals IF SOMEONE WERE WILLING TO UPGRADE HIS GRANNY SYSTEM
 typedef enum {
 	D8  = 0,
 	D16 = 1,
@@ -17,37 +16,37 @@ typedef enum {
 } type_index;
 
 typedef enum {
-	ASMDIRMEM, // Assembler directive: >LABEL '"goto" clabel;'
-	ASMDIRREL, // Assembler directive: LABEL: 'clabel:'
-	ASMDIRIMM, // Assembler directive: D8-D64 {REDO} {DATA}
-	ASMDIRREP, // Assembler directive: ...
-	/* HIGHLY EXPERIMENTAL CODE ABOVE... */
+	ASMDIRMEM, // Assembler directive: Insert label location.
+	ASMDIRREL, // Assembler directive: Insert relative location.
+	ASMDIRIMM, // Assembler directive: Append immediate.
+	ASMDIRREP, // Assembler directive: --
+	//
 	ADD,              OR,               ADC,              SBB,
 	AND,              SUB,              XOR,              CMP,
-	/* */
+	//
 	INC,              DEC,              NOT,              NEG,
 	MUL,              IMUL,             DIV,              IDIV,
-	/* */
+	//
 	NOP,              RETN,             RETF,             LEAVE,
-	LOCK,             HLT,
-	/* */
+	LOCK,             HLT,              POPF,             PUSHF,
+	//
 	SYSENTER,         SYSEXIT,          SYSCALL,          SYSRET,
-	PAUSE,            CPUID,
-	/* */
+	PAUSE,            CPUID,            EMMS,
+	//
 	ENTER,            CALL,             IN,               OUT,
-	/* */
+	//
 	JMP,
 	JO,               JNO,              JB,               JAE,
 	JE,               JNE,              JBE,              JA,
 	JS,               JNS,              JPE,              JPO,
 	JL,               JGE,              JLE,              JG,
-	/* */
+	//
 	MOV,
 	CMOVO,            CMOVNO,           CMOVB,            CMOVAE,
 	CMOVE,            CMOVNE,           CMOVBE,           CMOVA,
 	CMOVS,            CMOVNS,           CMOVPE,           CMOVPO,
 	CMOVL,            CMOVGE,           CMOVLE,           CMOVG,
-	/* */
+	//
 	PUSH,             POP,              BSWAP,            TEST,
 	RCL,              RCR,              ROL,              ROR,
 	SHL,              SHR,              SAL,              SAR,

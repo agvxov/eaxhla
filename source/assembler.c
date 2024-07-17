@@ -8,9 +8,9 @@
 #define IRREGULAR_BEGIN (INC)
 #define IRREGULAR_END   (IDIV)
 #define SPECIAL_1_BEGIN (NOP)
-#define SPECIAL_1_END   (HLT)
+#define SPECIAL_1_END   (PUSHF)
 #define SPECIAL_2_BEGIN (SYSENTER)
-#define SPECIAL_2_END   (CPUID)
+#define SPECIAL_2_END   (EMMS)
 #define JUMP_IF_BEGIN   (JO)
 #define JUMP_IF_END     (JG)
 #define MOVE_IF_BEGIN   (CMOVO)
@@ -18,7 +18,7 @@
 
 #define REGULAR_COUNT   (REGULAR_END   - REGULAR_BEGIN   + 1) // 16
 #define IRREGULAR_COUNT (IRREGULAR_END - IRREGULAR_BEGIN + 1) // 16
-#define SPECIAL_1_COUNT (SPECIAL_1_END - SPECIAL_1_BEGIN + 1) // 6
+#define SPECIAL_1_COUNT (SPECIAL_1_END - SPECIAL_1_BEGIN + 1) // 8
 #define SPECIAL_2_COUNT (SPECIAL_2_END - SPECIAL_2_BEGIN + 1) // 6
 #define JUMP_IF_COUNT   (JUMP_IF_END   - JUMP_IF_BEGIN   + 1) // 16
 #define MOVE_IF_COUNT   (MOVE_IF_END   - MOVE_IF_BEGIN   + 1) // 16
@@ -144,7 +144,7 @@ static void build_regular (operation_index operation,
                            next            destination,
                            type_index      from,
                            next            source) {
-	// 00-3F : add, or, adc, sbb, and, sub, xor, cmp
+	// 00-3F : add, or, adc, sbb, and, sub, xor, cmp;
 	build_short_prefix (size == D16);
 
 	build_long_prefix (size == D64,
@@ -194,7 +194,7 @@ static void build_irregular (operation_index operation,
                              size_index      size,
                              type_index      to,
                              next            destination) {
-	// F0-FF : inc, dec, not, neg, mul, imul, div, idiv
+	// F0-FF : inc, dec, not, neg, mul, imul, div, idiv;
 	build_short_prefix (size == D16);
 
 	build_long_prefix (size == D64,
@@ -219,19 +219,19 @@ static void build_irregular (operation_index operation,
 }
 
 static void build_special_1 (operation_index operation) {
-	// nop, retn, retf, leave, lock, hlt
+	// XX : nop, retn, retf, leave, lock, hlt, popf, pushf;
 	const byte data [1 * SPECIAL_1_COUNT] = {
-		0x90, 0xc3, 0xcb, 0xc9, 0xf0, 0xf4
+		0x90, 0xc3, 0xcb, 0xc9, 0xf0, 0xf4, 0x9d, 0x9c
 	};
 
 	input (1, data [operation - SPECIAL_1_BEGIN]);
 }
 
 static void build_special_2 (operation_index operation) {
-	// sysenter, sysleave, syscall, sysret, pause, cpuid
+	// XX XX : sysenter, sysleave, syscall, sysret, pause, cpuid, emms;
 	const byte data [2 * SPECIAL_2_COUNT] = {
-		0x0f, 0x0f, 0x0f, 0x0f, 0xf3, 0x0f,
-		0x34, 0x35, 0x05, 0x07, 0x90, 0xa2
+		0x0f, 0x0f, 0x0f, 0x0f, 0xf3, 0x0f, 0x0f,
+		0x34, 0x35, 0x05, 0x07, 0x90, 0xa2, 0x77
 	};
 
 	input (1, data [operation - SPECIAL_2_BEGIN]);
@@ -328,9 +328,71 @@ static void build_move (size_index size,
 static void build_call (type_index from,
                         next       source) {
 	// call
+	input ((from == REG) && (upper ((form) source)), (byte) 0x41);
+
 	input (from == REL, (byte) 0xe8);
+	input (from == REG, (byte) 0xff);
 
 	input_at (from == REL, D32, source, (next) -(text_sector_size + 4));
+
+	input (from == REG, (byte) (0xd0 + 0x01 * (source & 0x07)));
+}
+
+static void build_enter (next dynamic_storage,
+                         next nesting_level) {
+	// enter
+	input (1, (byte) 0xc8);
+
+	input_by (1, D16, dynamic_storage);
+	input_by (1, D8,  nesting_level & (next) 0x1f);
+}
+
+static void build_in_out (form       move,
+                          size_index size,
+                          type_index type,
+                          next       port) {
+	// E4-EF : in, out;
+	build_short_prefix (size == D16);
+
+	input (1,
+	       (byte) 0xe4
+	            + 0x01 * (size != D8)
+	            + 0x02 * (move != OUT)
+	            + 0x08 * (type == REG));
+
+	input_by (type == IMM, D8, port);
+}
+
+static void build_pop (size_index size,
+                       type_index to,
+                       next       destination) {
+	// pop
+	build_short_prefix (size == D16);
+
+	input ((to == REG) && (upper ((form) destination)), (byte) 0x41);
+
+	input (to == REG, (byte) (0x58 + 0x01 * (destination & 0x07)));
+	input (to == MEM, (byte) 0x8f);
+	input (to == MEM, (byte) 0x05);
+
+	input_at (to == MEM, D32, destination, 0);
+}
+
+static void build_push (size_index size,
+                        type_index from,
+                        next       source) {
+	// push
+	build_short_prefix (size == D16);
+
+	input ((from == REG) && (upper ((form) source)), (byte) 0x41);
+
+	input (from == REG, (byte) (0x50 + 0x01 * (source & 0x07)));
+	input (from == MEM, (byte) 0xff);
+	input (from == MEM, (byte) 0x35);
+	input (from == IMM, (byte) 0x68 + 0x02 * (size == D8));
+
+	input_at (from == MEM, D32,  source, 0);
+	input_by (from == IMM, size, source);
 }
 
 static void assemble_clean_up (void) {
@@ -429,6 +491,21 @@ void assemble (next   count,
 		} else if (array [index] == CALL) {
 			build_call (array [index + 1], array [index + 2]);
 			index += 2;
+		} else if (array [index] == ENTER) {
+			build_enter (array [index + 1], array [index + 2]);
+			index += 2;
+		} else if ((array [index] == IN) || (array [index] == OUT)) {
+			build_in_out (array [index + 0], array [index + 1],
+			              array [index + 2], array [index + 3]);
+			index += 3;
+		} else if (array [index] == POP) {
+			build_pop (array [index + 1], array [index + 2],
+			           array [index + 3]);
+			index += 3;
+		} else if (array [index] == PUSH) {
+			build_push (array [index + 1], array [index + 2],
+			            array [index + 3]);
+			index += 3;
 		} else {
 			return;
 		}
@@ -438,8 +515,11 @@ void assemble (next   count,
 
 	for (index = 0; index < empty_holes; ++index) {
 		next set = 0, get = empty_array [index];
+
 		memcpy (& set, & text_sector_byte [get], sizeof (set));
+
 		set += empty_store [empty_imbue [index]];
+
 		memcpy (& text_sector_byte [get], & set, sizeof (set));
 	}
 }
