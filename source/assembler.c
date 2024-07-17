@@ -10,7 +10,7 @@
 #define SPECIAL_1_BEGIN (NOP)
 #define SPECIAL_1_END   (PUSHF)
 #define SPECIAL_2_BEGIN (SYSENTER)
-#define SPECIAL_2_END   (CPUID)
+#define SPECIAL_2_END   (EMMS)
 #define JUMP_IF_BEGIN   (JO)
 #define JUMP_IF_END     (JG)
 #define MOVE_IF_BEGIN   (CMOVO)
@@ -144,7 +144,7 @@ static void build_regular (operation_index operation,
                            next            destination,
                            type_index      from,
                            next            source) {
-	// 00-3F : add, or, adc, sbb, and, sub, xor, cmp
+	// 00-3F : add, or, adc, sbb, and, sub, xor, cmp;
 	build_short_prefix (size == D16);
 
 	build_long_prefix (size == D64,
@@ -194,7 +194,7 @@ static void build_irregular (operation_index operation,
                              size_index      size,
                              type_index      to,
                              next            destination) {
-	// F0-FF : inc, dec, not, neg, mul, imul, div, idiv
+	// F0-FF : inc, dec, not, neg, mul, imul, div, idiv;
 	build_short_prefix (size == D16);
 
 	build_long_prefix (size == D64,
@@ -219,7 +219,7 @@ static void build_irregular (operation_index operation,
 }
 
 static void build_special_1 (operation_index operation) {
-	// nop, retn, retf, leave, lock, hlt, popf, pushf
+	// XX : nop, retn, retf, leave, lock, hlt, popf, pushf;
 	const byte data [1 * SPECIAL_1_COUNT] = {
 		0x90, 0xc3, 0xcb, 0xc9, 0xf0, 0xf4, 0x9d, 0x9c
 	};
@@ -228,10 +228,10 @@ static void build_special_1 (operation_index operation) {
 }
 
 static void build_special_2 (operation_index operation) {
-	// sysenter, sysleave, syscall, sysret, pause, cpuid
+	// XX XX : sysenter, sysleave, syscall, sysret, pause, cpuid, emms;
 	const byte data [2 * SPECIAL_2_COUNT] = {
-		0x0f, 0x0f, 0x0f, 0x0f, 0xf3, 0x0f,
-		0x34, 0x35, 0x05, 0x07, 0x90, 0xa2
+		0x0f, 0x0f, 0x0f, 0x0f, 0xf3, 0x0f, 0x0f,
+		0x34, 0x35, 0x05, 0x07, 0x90, 0xa2, 0x77
 	};
 
 	input (1, data [operation - SPECIAL_2_BEGIN]);
@@ -337,20 +337,32 @@ static void build_call (type_index from,
 
 	input (from == REG, (byte) (0xd0 + 0x01 * (source & 0x07)));
 }
-/*
-static void build_enter (type_index from,
-                         next       source) {
+
+static void build_enter (next dynamic_storage,
+                         next nesting_level) {
 	// enter
-	input ((from == REG) && (upper ((form) source)), (byte) 0x41);
+	input (1, (byte) 0xc8);
 
-	input (from == REL, (byte) 0xe8);
-	input (from == REG, (byte) 0xff);
-
-	input_at (from == REL, D32, source, (next) -(text_sector_size + 4));
-
-	input (from == REG, (byte) (0xd0 + 0x01 * (source & 0x07)));
+	input_by (1, D16, dynamic_storage);
+	input_by (1, D8,  nesting_level & (next) 0x1f);
 }
-*/
+
+static void build_in_out (form       move,
+                          size_index size,
+                          type_index type,
+                          next       port) {
+	// E4-EF : in, out;
+	build_short_prefix (size == D16);
+
+	input (1,
+	       (byte) 0xe4
+	            + 0x01 * (size != D8)
+	            + 0x02 * (move != OUT)
+	            + 0x08 * (type == REG));
+
+	input_by (type == IMM, D8, port);
+}
+
 static void build_pop (size_index size,
                        type_index to,
                        next       destination) {
@@ -479,6 +491,13 @@ void assemble (next   count,
 		} else if (array [index] == CALL) {
 			build_call (array [index + 1], array [index + 2]);
 			index += 2;
+		} else if (array [index] == ENTER) {
+			build_enter (array [index + 1], array [index + 2]);
+			index += 2;
+		} else if ((array [index] == IN) || (array [index] == OUT)) {
+			build_in_out (array [index + 0], array [index + 1],
+			              array [index + 2], array [index + 3]);
+			index += 3;
 		} else if (array [index] == POP) {
 			build_pop (array [index + 1], array [index + 2],
 			           array [index + 3]);
