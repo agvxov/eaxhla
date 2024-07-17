@@ -10,7 +10,8 @@ endif
 "runtime! syntax/c.vim
 "unlet b:current_syntax
 
-syn region eaxSingleLineComment start=+//+ end=+\n+
+syn region eaxSingleLineComment  start=+//+ end=+\n+
+syn region eaxSingleLineComment2 start=+#+ end=+\n+
 syn region eaxMultiLineComment  start=+\/\*+ end=+\*\/+
 syn keyword eaxSpecifier fast unix in
 syn keyword eaxKeyword program machine procedure begin until repeat break if then else end
@@ -23,15 +24,16 @@ syn match eaxHex     "0x[0-9a-fA-F]\+"
 syn match eaxBin     "0b\[01\]\+"
 syn region artimetricBlock start=+\[+ end=+\]+
 
-hi link eaxSingleLineComment Comment
-hi link eaxMultiLineComment  Comment
-hi link eaxSpecifier         Statement
-hi link eaxKeyword           Keyword
-hi link eaxType              Type
-hi link eaxInstruction       Function
-hi link eaxInstructionLike   Function
-hi link eaxRegister          Special
-hi link eaxInt               Number
-hi link eaxHex               Number
-hi link eaxBin               Number
-hi link artimetricBlock      Statement
+hi link eaxSingleLineComment  Comment
+hi link eaxSingleLineComment2 Comment
+hi link eaxMultiLineComment   Comment
+hi link eaxSpecifier          Statement
+hi link eaxKeyword            Keyword
+hi link eaxType               Type
+hi link eaxInstruction        Function
+hi link eaxInstructionLike    Function
+hi link eaxRegister           Special
+hi link eaxInt                Number
+hi link eaxHex                Number
+hi link eaxBin                Number
+hi link artimetricBlock       Statement

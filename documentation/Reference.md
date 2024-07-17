@@ -47,6 +47,11 @@ options:
 HLA uses C/C++ comments,
 but C comments cannot be multilined.
 Nested multiline comments are still not allowed.
+```sh
+    # single line comment
+```
+HLA also supports script like comments
+
 
 ### Asm
 + no ',' argument deliteters

@@ -80,8 +80,8 @@ u64        { return U64; }
 \!\=       { return ITNEQ; }
 \!         { return ITNOT; }
 
-\/\/    { BEGIN IN_COMMENT; }
-\/\*    { BEGIN IN_MULTILINE_COMMENT; }
+(\/\/)|\#  { BEGIN IN_COMMENT; }
+\/\*       { BEGIN IN_MULTILINE_COMMENT; }
 
 \[|\]|\{|\}|\+|\-|\*|\/|\%|\^|\:|\<|\> {
         return yytext[0];

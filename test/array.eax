@@ -1,3 +1,5 @@
+#  comment1
+// comment2
 program main
     u8<10> myarray
     u8<>   myarray2 = "test test test\0"
