@@ -8,9 +8,9 @@
 #define IRREGULAR_BEGIN (INC)
 #define IRREGULAR_END   (IDIV)
 #define SPECIAL_1_BEGIN (NOP)
-#define SPECIAL_1_END   (PUSHF)
+#define SPECIAL_1_END   (WAIT)
 #define SPECIAL_2_BEGIN (SYSENTER)
-#define SPECIAL_2_END   (EMMS)
+#define SPECIAL_2_END   (FCOS)
 #define JUMP_IF_BEGIN   (JO)
 #define JUMP_IF_END     (JG)
 #define MOVE_IF_BEGIN   (CMOVO)
@@ -18,8 +18,8 @@
 
 #define REGULAR_COUNT   (REGULAR_END   - REGULAR_BEGIN   + 1) // 16
 #define IRREGULAR_COUNT (IRREGULAR_END - IRREGULAR_BEGIN + 1) // 16
-#define SPECIAL_1_COUNT (SPECIAL_1_END - SPECIAL_1_BEGIN + 1) // 8
-#define SPECIAL_2_COUNT (SPECIAL_2_END - SPECIAL_2_BEGIN + 1) // 6
+#define SPECIAL_1_COUNT (SPECIAL_1_END - SPECIAL_1_BEGIN + 1) // 9
+#define SPECIAL_2_COUNT (SPECIAL_2_END - SPECIAL_2_BEGIN + 1) // 36
 #define JUMP_IF_COUNT   (JUMP_IF_END   - JUMP_IF_BEGIN   + 1) // 16
 #define MOVE_IF_COUNT   (MOVE_IF_END   - MOVE_IF_BEGIN   + 1) // 16
 
@@ -219,19 +219,29 @@ static void build_irregular (operation_index operation,
 }
 
 static void build_special_1 (operation_index operation) {
-	// XX : nop, retn, retf, leave, lock, hlt, popf, pushf;
+	// XX
 	const byte data [1 * SPECIAL_1_COUNT] = {
-		0x90, 0xc3, 0xcb, 0xc9, 0xf0, 0xf4, 0x9d, 0x9c
+		0x90, 0xc3, 0xcb, 0xc9, 0xf0, 0xf4, 0x9d, 0x9c,
+		0x9b
 	};
 
 	input (1, data [operation - SPECIAL_1_BEGIN]);
 }
 
 static void build_special_2 (operation_index operation) {
-	// XX XX : sysenter, sysleave, syscall, sysret, pause, cpuid, emms;
+	// XX XX
 	const byte data [2 * SPECIAL_2_COUNT] = {
-		0x0f, 0x0f, 0x0f, 0x0f, 0xf3, 0x0f, 0x0f,
-		0x34, 0x35, 0x05, 0x07, 0x90, 0xa2, 0x77
+		0x0f, 0x0f, 0x0f, 0x0f, 0xf3, 0x0f, 0x0f, 0x0f,
+		0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9,
+		0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9,
+		0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9,
+		0xd9, 0xd9, 0xd9, 0xd9,
+		//
+		0x34, 0x35, 0x05, 0x07, 0x90, 0xa2, 0x77, 0xaa,
+		0xd0, 0xe0, 0xe1, 0xe4, 0xe5, 0xe8, 0xe9, 0xea,
+		0xeb, 0xec, 0xed, 0xee, 0xf0, 0xf1, 0xf2, 0xf3,
+		0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb,
+		0xfc, 0xfd, 0xfe, 0xff
 	};
 
 	input (1, data [operation - SPECIAL_2_BEGIN]);

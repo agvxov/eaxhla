@@ -29,9 +29,17 @@ typedef enum {
 	//
 	NOP,              RETN,             RETF,             LEAVE,
 	LOCK,             HLT,              POPF,             PUSHF,
+	WAIT,
 	//
 	SYSENTER,         SYSEXIT,          SYSCALL,          SYSRET,
-	PAUSE,            CPUID,            EMMS,
+	PAUSE,            CPUID,            EMMS,             RSM,
+	FNOP,             FCHS,             FABS,             FTST,
+	FXAM,             FLD1,             FLDL2T,           FLDL2E,
+	FLDPI,            FLDLG2,           FLDLN2,           FLDZ,
+	F2XM1,            FYL2X,            FPTAN,            FPATAN,
+	FXTRACT,          FPREM1,           FDECSTP,          FINCSTP,
+	FPREM,            FYL2XP1,          FSQRT,            FSINCOS,
+	FRNDINT,          FSCALE,           FSIN,             FCOS,
 	//
 	ENTER,            CALL,             IN,               OUT,
 	//
@@ -54,10 +62,8 @@ typedef enum {
 	LOOP,             LOOPE,            LOOPNE,           MOVBE,
 	XADD,             XCHG,             LEA,              POPCNT,
 	INTI,             BSF,              BSR,              BOUND,
+	//
 	FADD,             FSUB,             FMUL,             FDIV,
-	FNOP,             FXAM,             FABS,             FSCALE,
-	FSIN,             FCOS,             FSQRT,            FCHS,
-	FXCH,             FREM,             FLDPI,            FLDZ,
 } operation_index;
 
 typedef enum {
