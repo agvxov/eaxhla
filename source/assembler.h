@@ -63,7 +63,8 @@ typedef enum {
 	XADD,             XCHG,             LEA,              POPCNT,
 	INTI,             BSF,              BSR,              BOUND,
 	//
-	FADD,             FSUB,             FMUL,             FDIV,
+	FADD,             FMUL,             FCOM,             FCOMP,
+	FSUB,             FSUBR,            FDIV,             FDIVR,
 } operation_index;
 
 typedef enum {

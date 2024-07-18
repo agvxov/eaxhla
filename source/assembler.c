@@ -1,7 +1,6 @@
 #include "assembler.h"
 
 #include <stdlib.h>
-#include <string.h>
 
 #define REGULAR_BEGIN   (ADD)
 #define REGULAR_END     (CMP)
@@ -15,6 +14,8 @@
 #define JUMP_IF_END     (JG)
 #define MOVE_IF_BEGIN   (CMOVO)
 #define MOVE_IF_END     (CMOVG)
+#define FLOAT_BEGIN     (FADD)
+#define FLOAT_END       (FDIVR)
 
 #define REGULAR_COUNT   (REGULAR_END   - REGULAR_BEGIN   + 1) // 16
 #define IRREGULAR_COUNT (IRREGULAR_END - IRREGULAR_BEGIN + 1) // 16
@@ -22,6 +23,7 @@
 #define SPECIAL_2_COUNT (SPECIAL_2_END - SPECIAL_2_BEGIN + 1) // 36
 #define JUMP_IF_COUNT   (JUMP_IF_END   - JUMP_IF_BEGIN   + 1) // 16
 #define MOVE_IF_COUNT   (MOVE_IF_END   - MOVE_IF_BEGIN   + 1) // 16
+#define FLOAT_COUNT     (FLOAT_END     - FLOAT_BEGIN     + 1) // 8
 
 static int assemble_clean_up_queued = 0;
 
@@ -30,6 +32,15 @@ static next   empty_holes = 0;
 static next * empty_array = NULL;
 static next * empty_imbue = NULL;
 static next * empty_store = NULL;
+
+static void replace (unsigned char   *          destination,
+                     unsigned char   * restrict source,
+                              size_t            size) {
+	do {
+		--size;
+		destination [size] = source [size];
+	} while (size != 0);
+}
 
 static void input (form when,
                    byte data) {
@@ -122,8 +133,8 @@ static void build_register_direction (form when,
 	             + 0x08 * (source      & 0x07)));
 }
 
-static void build_register_redirection (form when,
-                                        next direction) {
+static void build_at (form when,
+                      next direction) {
 	// 05-3D
 	input (when,
 	       (byte) (0x05
@@ -180,8 +191,8 @@ static void build_regular (operation_index operation,
 	build_register_direction ((to == REG) && (from == REG),
 	                          destination, source);
 
-	build_register_redirection ((to == REG) && (from == MEM), destination);
-	build_register_redirection ((to == MEM) && (from == REG), source);
+	build_at ((to == REG) && (from == MEM), destination);
+	build_at ((to == MEM) && (from == REG), source);
 
 	input_by ((to == REG) && (from == MEM), D32,  (next) ~0);
 	input_by ((to == REG) && (from == IMM), size, source);
@@ -280,7 +291,7 @@ static void build_move_if (operation_index operation,
 	build_register_direction ((to == REG) && (from == REG),
 	                          destination, source);
 
-	build_register_redirection ((to == REG) && (from == MEM), destination);
+	build_at ((to == REG) && (from == MEM), destination);
 
 	// displacement (4, 0X12345678); // Not implemented at this point!
 }
@@ -316,8 +327,8 @@ static void build_move (size_index size,
 	input ((to == REG) && (from == MEM), (byte) (0x8a + (size != D8)));
 	input ((to == MEM) && (from == REG), (byte) (0x88 + (size != D8)));
 
-	build_register_redirection ((to == REG) && (from == MEM), destination);
-	build_register_redirection ((to == MEM) && (from == REG), source);
+	build_at ((to == REG) && (from == MEM), destination);
+	build_at ((to == MEM) && (from == REG), source);
 
 	input ((to == REG) && ((from == IMM) || (from == REL)),
 	       (byte) (0xb8
@@ -405,6 +416,18 @@ static void build_push (size_index size,
 	input_by (from == IMM, size, source);
 }
 
+static void build_float (operation_index operation,
+                         size_index      size,
+                         type_index      from,
+                         next            source) {
+	// DX : fadd, fmul, fcom, fcomp, fsub, fsubr, fdiv, fdivr;
+
+	input (from == MEM, (byte) (0xd8 + 0x04 * (size == D64)));
+
+	build_at (from == MEM, (next) operation);
+	input_at (from == MEM, size, source, 0);
+}
+
 static void assemble_clean_up (void) {
 	if (assemble_clean_up_queued == 0) {
 		return;
@@ -458,9 +481,8 @@ void assemble (next   count,
 				              array [index + 3 + repeat]);
 			}
 			index += 2 + array [index + 2];
-		// } else if (array [index] == ASMDIRREP) {
 		} else if ((array [index] >= REGULAR_BEGIN)
-		&&  (array [index] <= REGULAR_END)) {
+		       &&  (array [index] <= REGULAR_END)) {
 			build_regular (array [index + 0], array [index + 1],
 			               array [index + 2], array [index + 3],
 			               array [index + 4], array [index + 5]);
@@ -524,12 +546,17 @@ void assemble (next   count,
 	text_entry_point = empty_store [0];
 
 	for (index = 0; index < empty_holes; ++index) {
-		next set = 0, get = empty_array [index];
+		next set = 0;
+		next get = empty_array [index];
 
-		memcpy (& set, & text_sector_byte [get], sizeof (set));
+		replace ((unsigned char *) & set,
+		         & text_sector_byte [get],
+		         sizeof (set));
 
 		set += empty_store [empty_imbue [index]];
 
-		memcpy (& text_sector_byte [get], & set, sizeof (set));
+		replace (& text_sector_byte [get],
+		         (unsigned char *) & set,
+		         sizeof (set));
 	}
 }
