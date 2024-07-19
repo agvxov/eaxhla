@@ -54,16 +54,20 @@ extern char * yyfilename;
 extern int eaxhla_init(void);
 extern int eaxhla_deinit(void);
 
-extern char * make_scoped_name(const char * const scope, char * name);
+extern char * make_scoped_name(const char * const scope, const char * const name);
 extern int can_fit(const int type, const long long value);
 extern int validate_array_size(const int size);
 
 extern void add_variable(symbol_t variable);
 extern symbol_t * get_variable(const char * const name);
 
+extern symbol_t * get_symbol(const char * const name);
 //extern void add_function(symbol_t function);
 extern void add_procedure(symbol_t procedure);
 extern symbol_t * get_function(const char * const name);
+extern void add_program(const char * const name);
+
+extern void add_fastcall(const char * const destination);
 
 extern int type2size(int type);
 extern int size2bytes(const int size);

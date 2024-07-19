@@ -1,0 +1,11 @@
+program main
+    u8 <> msg = "heyo\n"
+begin
+  redo:
+    mov eax 1
+    mov edi 1
+    mov esi msg
+    mov edx 5
+    syscall
+    jmp redo
+end program

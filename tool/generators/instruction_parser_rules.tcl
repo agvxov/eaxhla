@@ -13,7 +13,12 @@ proc make_parser_rules {is} {
                 dict set r enum  "$$n.type"
                 dict set r value "$$n.value"
                 # XXX
-                dict set r size  "32"
+                dict set r size  "D32"
+            }
+            "relative"  {
+                dict set r enum  "REL"
+                dict set r value "$$n"
+                dict set r size  "D32"
             }
             "memory"    {
                 dict set r enum  "MEM"
@@ -25,10 +30,11 @@ proc make_parser_rules {is} {
         return $r
     }
     proc make_parser_rule {i} {
+        set token_name [string toupper [lindex $i 0]]
         if {[llength $i] == 1} {
             set rule [format "    | IT%s { append_instructions(%s); }" \
-                [string toupper [lindex $i 0]] \
-                [string toupper [lindex $i 0]] \
+                $token_name \
+                $token_name \
             ]
         } elseif {[llength $i] == 2} {
             set arg [init_iarg [lindex $i 1] 2]
@@ -38,10 +44,10 @@ proc make_parser_rules {is} {
                                                     %s,\
                                                     %s\
                             ); \}" \
-                [string toupper [lindex $i 0]] \
+                $token_name \
                 [lindex $i 1]                  \
                 \
-                [string toupper [lindex $i 0]] \
+                $token_name \
                 [dict get $arg size]           \
                 [dict get $arg enum]           \
                 [dict get $arg value]          \
@@ -57,11 +63,11 @@ proc make_parser_rules {is} {
                                                     %s,\
                                                     %s\
                             ); \}" \
-                [string toupper [lindex $i 0]] \
+                $token_name \
                 [lindex $i 1]                  \
                 [lindex $i 2]                  \
                 \
-                [string toupper [lindex $i 0]] \
+                $token_name \
                 [dict get $arg1 size]          \
                 [dict get $arg1 enum]          \
                 [dict get $arg1 value]         \

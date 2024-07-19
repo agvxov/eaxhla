@@ -162,6 +162,7 @@ hlt             { return ITHLT; }
 idiv            { return ITIDIV; }
 imul            { return ITIMUL; }
 inc             { return ITINC; }
+jmp             { return ITJMP; }
 leave           { return ITLEAVE; }
 lock            { return ITLOCK; }
 mov             { return ITMOV; }
@@ -201,7 +202,6 @@ library        { BEGIN INITIAL; return END_LIBRARY; }
 }
 
 <IN_STRING>{
-    /* XXX: multiline strings will die */
     /* XXX: the first WORD_SIZE_IN_BYTES bytes should be 0'd */
     /* XXX: i wanted short strings to be literals;
             this however clashes with with the sanity of machine blocks;
@@ -289,7 +289,11 @@ library        { BEGIN INITIAL; return END_LIBRARY; }
 }
 
 {identifier}  { yylval.strval = strdup(yytext); return IDENTIFIER; }
-{identifier}: { yylval.strval = strdup(yytext); return LABEL; }
+{identifier}: {
+                yytext[yyleng-1] = '\0';
+                yylval.strval = strdup(yytext);
+                return LABEL;
+              }
 
 . { issue_error("unknown symbol \033[1m'%c'\033[0m", yytext[0]); }
 

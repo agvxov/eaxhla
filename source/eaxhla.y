@@ -48,7 +48,7 @@
 %token<strval> IDENTIFIER LABEL
 
 %type<argval>   immediate
-%type<intval>   memory dereference
+%type<intval>   memory dereference relative
 %type<intval>   artimetric_block artimetric_expression artimetric_operand
 %type<intval>   value
 %token<intval>  LITERAL
@@ -86,7 +86,7 @@
 // Instructions
 %token INOP
 // #placeholder<instruction_token_list> BEGIN
-%token ITADC ITADD ITAND ITCMP ITDEC ITDIV ITHLT ITIDIV ITIMUL ITINC ITLEAVE ITLOCK ITMOV ITMUL ITNEG ITNOT ITOR ITPAUSE ITRETF ITRETN ITSAR ITSBB ITSUB ITSYSCALL ITSYSENTER ITSYSEXIT ITSYSRET ITXOR
+%token ITADC ITADD ITAND ITCMP ITDEC ITDIV ITHLT ITIDIV ITIMUL ITINC ITJMP ITLEAVE ITLOCK ITMOV ITMUL ITNEG ITNOT ITOR ITPAUSE ITRETF ITRETN ITSAR ITSBB ITSUB ITSYSCALL ITSYSENTER ITSYSEXIT ITSYSRET ITXOR
 // #placeholder<instruction_token_list> END
 
 // Instruction-likes
@@ -107,13 +107,8 @@ program: program_head declaration_section MYBEGIN code END_PROGRAM {
     ;
 
 program_head: program_specifier PROGRAM IDENTIFIER {
-        if (is_program_found) {
-            issue_error("only 1 entry point is allowed and a program block was already found");
-            YYERROR;
-        }
-        is_program_found = 1;
-        append_instructions(ASMDIRMEM, 0);
-        scope = $3; // !!! IF WE START USING THE REFERENCE OF $3 THIS WILL DOUBLE FREE
+        add_program($3);
+        free($3);
     };
 
 program_specifier: %empty
@@ -133,6 +128,7 @@ function: function_head declaration_section MYBEGIN code END_PROCEDURE {
 
 function_head: function_specifier PROCEDURE IDENTIFIER {
         scope = strdup($3);
+
         symbol_t procedure;
         procedure.name = $3;
         add_procedure(procedure);
@@ -154,6 +150,8 @@ declaration:
         $$.name = make_scoped_name(scope, $3);
         $$.elements = 1;
         add_variable($$);
+
+        free($3);
     }
     | variable_specifier type IDENTIFIER '=' LITERAL {
         $$.type = $2;
@@ -164,6 +162,8 @@ declaration:
         $$.elements = 1;
         $$.value = $5;
         add_variable($$);
+
+        free($3);
     }
     | variable_specifier type '<' value '>' IDENTIFIER {
         $$.type = $2;
@@ -173,6 +173,8 @@ declaration:
         $$.name = make_scoped_name(scope, $6);
         $$.elements = $4;
         add_variable($$);
+
+        free($6);
     }
     | variable_specifier type '<' value '>' IDENTIFIER '=' ARRAY_LITERAL {
         $$.type = $2;
@@ -186,6 +188,8 @@ declaration:
         $$.elements = $4;
         $$.array_value = $8.data;
         add_variable($$);
+
+        free($6);
     }
     | variable_specifier type '<' '>' IDENTIFIER '=' ARRAY_LITERAL {
         $$.type = $2;
@@ -193,6 +197,8 @@ declaration:
         $$.elements = $7.len;
         $$.array_value = $7.data;
         add_variable($$);
+
+        free($5);
     }
     ;
 
@@ -210,13 +216,16 @@ type: S8    { $$ =  S8; }
     | U64   { $$ = U64; }
     ;
 
-immediate: LITERAL { $$.type = IMM; $$.value = $1; }
+immediate: LITERAL {
+        $$.type  = IMM;
+        $$.value = $1;
+    }
     | IDENTIFIER {
-        char * varname = make_scoped_name(scope, $1);
-        symbol_t * variable = get_variable(varname);
+        symbol_t * variable = get_variable($1);
         $$.type  = REL;
         $$.value = variable->_id;
-        free(varname);
+
+        free($1);
     }
     ;
 
@@ -229,13 +238,19 @@ dereference: '[' IDENTIFIER ']' { $$ = 0; /* XXX: how the fuck do i dereference?
     | '[' IDENTIFIER '-' value ']' { $$ = 0; /* XXX: how the fuck do i dereference? */ }
     ;
 
+relative: IDENTIFIER {
+        symbol_t * relative = get_symbol($1);
+        breakpoint();
+        $$ = relative->_id;
+    }
+    ;
+
 value: artimetric_block
     | LITERAL
     | IDENTIFIER        {
-        char * varname = make_scoped_name(scope, $1);
-        symbol_t * var = get_variable(varname);
+        symbol_t * var = get_variable($1);
         $$ = var->value;
-        free(var);
+        free($1);
     }
     ;
 
@@ -253,11 +268,18 @@ code: %empty
     | repeat  code
     | if      code
     | call    code
-    | LABEL   code { /* XXX */ free($1); }
+    | label   code
     | machine code
     | BREAK   code
     | exit    code
     | instruction code
+    ;
+
+label: LABEL {
+        symbol_t label;
+        label.name = make_scoped_name(scope, $1);
+        add_procedure(label);
+    }
     ;
 
 repeat: REPEAT code END_REPEAT
@@ -305,9 +327,7 @@ machine_code: %empty
     ;
 
 call: FASTCALL IDENTIFIER arguments {
-        // XXX
-        symbol_t * function = get_function($2);
-        append_instructions(CALL, REL, function->_id);
+        add_fastcall($2);
         free($2);
     }
     ;
@@ -443,6 +463,7 @@ instruction: INOP { append_instructions(NOP); }
     | ITPAUSE { append_instructions(PAUSE); }
     | ITHLT { append_instructions(HLT); }
     | ITLOCK { append_instructions(LOCK); }
+    | ITJMP relative { append_instructions( JMP, D32, REL, 0 ); }
     | ITINC register { append_instructions( INC, $2.size, REG, $2.number ); }
     | ITDEC register { append_instructions( DEC, $2.size, REG, $2.number ); }
     | ITNOT register { append_instructions( NOT, $2.size, REG, $2.number ); }

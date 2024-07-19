@@ -13,6 +13,16 @@ The C source contains definitions which
 store the abstract state and or
 required to construct it
 
+`eaxhla.l` is strictly limited to raising
+errors which sabotage scanning.
+(Unterminated/partial tokens.)
+
+`eaxhla.y` is strictly limited to raising
+syntax errors.
+
+`eaxhla.c` is strictly limited to raising
+logical errors
+
 ## compile.c|h
 Responsible for transforming the abstract state
 of eaxhla.c to something that can be understood

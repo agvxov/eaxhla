@@ -52,10 +52,41 @@ int eaxhla_deinit(void) {
 }
 
 
-
 static
 int table_compare_unsigned(const void * arg, const void * obj) {
   return *(const unsigned *) arg != ((const symbol_t*)obj)->_hash;
+}
+
+static
+void * symbol_lookup(const char * const name) {
+    unsigned lookup_hash = tommy_strhash_u32(0, name);
+    void * r = tommy_hashtable_search(&symbol_table,
+                                      table_compare_unsigned,
+                                      &lookup_hash,
+                                      lookup_hash
+                                    );
+    return r;
+}
+
+static
+void symbol_insert(symbol_t * symbol) {
+    symbol->_hash = tommy_strhash_u32(0, symbol->name);
+    tommy_hashtable_insert(&symbol_table,
+                           &symbol->_node,
+                            symbol,
+                            symbol->_hash
+                        );
+}
+
+void add_program(const char * const name) {
+    if (is_program_found) {
+        issue_error("only 1 entry point is allowed and a program block was already found");
+    }
+    is_program_found = 1;
+
+    append_instructions(ASMDIRMEM, 0);
+
+    scope = strdup(name);
 }
 
 void add_variable(symbol_t variable) {
@@ -70,16 +101,11 @@ void add_variable(symbol_t variable) {
     symbol_t * heap_variable = malloc(sizeof(variable));
     memcpy(heap_variable, &variable, sizeof(variable));
 
-    heap_variable->_hash = tommy_strhash_u32(0, heap_variable->name);
-    tommy_hashtable_insert(&symbol_table,
-                            &heap_variable->_node,
-                            heap_variable,
-                            heap_variable->_hash
-                        );
+    symbol_insert(heap_variable);
 }
 
 void add_procedure(symbol_t procedure) {
-    if (get_function(procedure.name)) {
+    if (get_symbol(procedure.name)) {
         issue_error("symbol '%s' redeclared as new function", procedure.name);
         return;
     }
@@ -90,14 +116,19 @@ void add_procedure(symbol_t procedure) {
     symbol_t * heap_procedure = malloc(sizeof(procedure));
     memcpy(heap_procedure, &procedure, sizeof(procedure));
 
-    heap_procedure->_hash = tommy_strhash_u32(0, heap_procedure->name);
-    tommy_hashtable_insert(&symbol_table,
-                            &heap_procedure->_node,
-                            heap_procedure,
-                            heap_procedure->_hash
-                        );
+    symbol_insert(heap_procedure);
     //
     append_instructions(ASMDIRMEM, procedure._id);
+}
+
+void add_fastcall(const char * const destination) {
+    symbol_t * function = get_function(destination);
+    if (!function) {
+        issue_error("can't fastcall '%s', no such known symbol", destination);
+        return;
+    }
+
+    append_instructions(CALL, REL, function->_id);
 }
 
 /* Are these literals ugly? yes.
@@ -195,9 +226,9 @@ int validate_array_size(const int size) {
     return 0;
 }
 
-char * make_scoped_name(const char * const scope, char * name) {
+char * make_scoped_name(const char * const scope, const char * const name) {
     if (!scope) {
-        return name;
+        return (char*)name;
     }
 
     char * r;
@@ -210,23 +241,29 @@ char * make_scoped_name(const char * const scope, char * name) {
     r[2 + scl] = '_';
     memcpy(r + 2 + scl + 1, name, nml);
     r[2 + scl + 1 + nml] = '\0';
-    free(name);
+
     return r;
 }
 
-static
-void * symbol_lookup(const char * const name) {
-    unsigned lookup_hash = tommy_strhash_u32(0, name);
-    void * r = tommy_hashtable_search(&symbol_table,
-                                      table_compare_unsigned,
-                                      &lookup_hash,
-                                      lookup_hash
-                                    );
+symbol_t * get_symbol(const char * const name) {
+    symbol_t * r;
+    r = symbol_lookup(name);
+    if (r) {
+        return r;
+    }
+
+    char * alternative_name = make_scoped_name(scope, name);
+    r = symbol_lookup(alternative_name);
+    free(alternative_name);
+
     return r;
 }
 
 symbol_t * get_variable(const char * const name) {
-    symbol_t *r = symbol_lookup(name);
+    symbol_t * r;
+    char * varname = make_scoped_name(scope, name);
+
+    r = symbol_lookup(varname);
     if (r
     &&  r->symbol_type != VARIABLE) {
         issue_error("the symbol '%s' is not a variable", name);
@@ -236,7 +273,8 @@ symbol_t * get_variable(const char * const name) {
 }
 
 symbol_t * get_function(const char * const name) {
-    symbol_t * r = symbol_lookup(name);
+    symbol_t * r;
+    r = symbol_lookup(name);
     if (r
     &&  r->symbol_type != FUNCTION) {
         issue_error("the symbol '%s' is not a function", name);

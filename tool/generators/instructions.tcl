@@ -9,6 +9,7 @@ set instructions {
     {pause}
     {hlt}
     {lock}
+    {jmp  relative}
     {inc  register}
     {dec  register}
     {not  register}
