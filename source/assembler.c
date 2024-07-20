@@ -245,8 +245,9 @@ static void build_jump(unsigned int size,
 	input(to == MEM, 0xff);
 	input(to == MEM, 0x25);
 
-	input_at(to == REL, size, destination, 0x1000);
-	input_at(to == MEM, D32,  destination, 0x1000);
+	input_at(to == REL, D32, destination, -(text_sector_size + 4));
+
+	input_at(to == MEM, D32, destination, 0x4010b0);
 }
 
 static void build_move(unsigned int size,
@@ -449,15 +450,9 @@ void assemble(unsigned int   count,
 			build_move(array[index + 1], array[index + 2],
 			           array[index + 3], array[index + 4],
 			           array[index + 5]);
-			printf ("MOV %i %i %i %i %i\n",
-			        array[index + 1], array[index + 2],
-			        array[index + 3], array[index + 4],
-			        array[index + 5]);
 			index += 5;
 		} else if (array[index] == CALL) {
 			build_call(array[index + 1], array[index + 2]);
-			printf ("CALL %i %i\n",
-			        array[index + 1], array[index + 2]);
 			index += 2;
 		} else if (array[index] == ENTER) {
 			build_enter(array[index + 1], array[index + 2]);
@@ -485,8 +480,6 @@ void assemble(unsigned int   count,
 
 	index = 0;
 
-	printf ("holes: %u\n", empty_holes);
-
 	while (index < empty_holes) {
 		unsigned int set = 0;
 		unsigned int get = empty_array[index];
@@ -495,11 +488,7 @@ void assemble(unsigned int   count,
 		        & text_sector_byte[get],
 		        sizeof (set));
 
-		printf (">> %08x ", set);
-
 		set += empty_store[empty_imbue[index]];
-
-		printf (">> %08x\n", set);
 
 		replace(& text_sector_byte[get],
 		        (unsigned char *) & set,
