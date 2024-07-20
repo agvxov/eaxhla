@@ -31,6 +31,8 @@ static void replace(unsigned char * destination,
 	while (--size) {
 		destination [size] = source [size];
 	}
+
+	destination [size] = source [size];
 }
 
 static void input(int when, unsigned int data) {
@@ -66,10 +68,10 @@ static void asmdirimm(int when, unsigned int size, unsigned int data) {
 static void input_at(int when, unsigned int size, unsigned int data, unsigned int base) {
 	asmdirrel(when, data);
 
-	input((when),                  ((base >>  0) & 0xff));
-	input((when) && (size >= D16), ((base >>  8) & 0xff));
-	input((when) && (size >= D32), ((base >> 16) & 0xff));
-	input((when) && (size >= D32), ((base >> 24) & 0xff));
+	input((when),                  (base >>  0) & 0xff);
+	input((when) && (size >= D16), (base >>  8) & 0xff);
+	input((when) && (size >= D32), (base >> 16) & 0xff);
+	input((when) && (size >= D32), (base >> 24) & 0xff);
 }
 
 static int front(unsigned int data) { return ((data >= 4) && (data <=  7)); }
@@ -177,7 +179,7 @@ static void build_irregular(unsigned int operation,
 }
 
 static void build_special_1(unsigned int operation) {
-	const unsigned char data [SPECIAL_1_END - SPECIAL_1_BEGIN + 1] = {
+	const unsigned char data [9] = {
 		0x90, 0xc3, 0xcb, 0xc9, 0xf0, 0xf4, 0x9d, 0x9c,
 		0x9b
 	};
@@ -186,7 +188,7 @@ static void build_special_1(unsigned int operation) {
 }
 
 static void build_special_2(unsigned int operation) {
-	const unsigned char data [2 * (SPECIAL_2_END - SPECIAL_2_BEGIN + 1)] = {
+	const unsigned short data [72] = {
 		0x0f, 0x0f, 0x0f, 0x0f, 0xf3, 0x0f, 0x0f, 0x0f,
 		0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9,
 		0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9,
@@ -199,8 +201,9 @@ static void build_special_2(unsigned int operation) {
 		0xfc, 0xfd, 0xfe, 0xff
 	};
 
-	input(1, data[operation - 1 * SPECIAL_2_BEGIN]);
-	input(1, data[operation - 2 * SPECIAL_2_BEGIN + SPECIAL_1_END + 1]);
+	//~input_by(1, D16, data[operation - SPECIAL_2_BEGIN]);
+	input(1, data[operation - SPECIAL_2_BEGIN]);
+	input(1, data[operation - SPECIAL_2_BEGIN + 36]);
 }
 
 static void build_jump_if(unsigned int operation,
@@ -241,6 +244,9 @@ static void build_jump(unsigned int size,
 	input(to == REG, 0xe0 + 0x01 * (destination & 0x07));
 	input(to == MEM, 0xff);
 	input(to == MEM, 0x25);
+
+	input_at(to == REL, size, destination, 0x1000);
+	input_at(to == MEM, D32,  destination, 0x1000);
 }
 
 static void build_move(unsigned int size,
@@ -375,10 +381,10 @@ void assemble(unsigned int   count,
 		return;
 	}
 
-	text_sector_byte = calloc(1440UL, sizeof(* text_sector_byte));
-	empty_array      = calloc(144UL,  sizeof(* empty_array));
-	empty_imbue      = calloc(144UL,  sizeof(* empty_imbue));
-	empty_store      = calloc(144UL,  sizeof(* empty_store));
+	text_sector_byte = calloc(4096UL, sizeof(* text_sector_byte));
+	empty_array      = calloc(1024UL, sizeof(* empty_array));
+	empty_imbue      = calloc(1024UL, sizeof(* empty_imbue));
+	empty_store      = calloc(1024UL, sizeof(* empty_store));
 
 	if (!assemble_clean_up_queued) {
 		atexit(assemble_clean_up);
@@ -443,9 +449,15 @@ void assemble(unsigned int   count,
 			build_move(array[index + 1], array[index + 2],
 			           array[index + 3], array[index + 4],
 			           array[index + 5]);
+			printf ("MOV %i %i %i %i %i\n",
+			        array[index + 1], array[index + 2],
+			        array[index + 3], array[index + 4],
+			        array[index + 5]);
 			index += 5;
 		} else if (array[index] == CALL) {
 			build_call(array[index + 1], array[index + 2]);
+			printf ("CALL %i %i\n",
+			        array[index + 1], array[index + 2]);
 			index += 2;
 		} else if (array[index] == ENTER) {
 			build_enter(array[index + 1], array[index + 2]);
@@ -473,6 +485,8 @@ void assemble(unsigned int   count,
 
 	index = 0;
 
+	printf ("holes: %u\n", empty_holes);
+
 	while (index < empty_holes) {
 		unsigned int set = 0;
 		unsigned int get = empty_array[index];
@@ -481,7 +495,11 @@ void assemble(unsigned int   count,
 		        & text_sector_byte[get],
 		        sizeof (set));
 
+		printf (">> %08x ", set);
+
 		set += empty_store[empty_imbue[index]];
+
+		printf (">> %08x\n", set);
 
 		replace(& text_sector_byte[get],
 		        (unsigned char *) & set,
