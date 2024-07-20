@@ -1,135 +1,30 @@
-unix program heyo_world
-	s8 <> heyo = "Heyo world!\n"
-	s8 <> cyaa = "Cyaa world!\n"
+fast procedure heyo
+	s8 <> heyo_data = "Heyo world!\n"
 begin
 	nop mov eax 1
 	nop mov edi 1
-	nop mov esi heyo
+	nop mov esi heyo_data
 	nop mov edx 12
 	nop syscall
+end procedure
+
+fast procedure cyaa
+	s8 <> cyaa_data = "Cyaa world!\n"
+begin
 	nop mov eax 1
 	nop mov edi 1
-	nop mov esi cyaa
+	nop mov esi cyaa_data
 	nop mov edx 12
 	nop syscall
-	nop mov eax 60
-	nop mov edi 60
-	nop syscall
+end procedure
+
+unix program main
+begin
+	nop mov rg10d 0x11223344
+	nop fastcall heyo
+	nop fastcall cyaa
+	nop fastcall heyo
+	nop fastcall cyaa
+	nop exit 60
 	nop
 end program
-
-/*
-Variable 't_array' expected:
-Decimal: | Hexadecimal: | Mnemo:
-20         14             NOP
-53         35             MOV
-2          02             D32
-1          01             REG
-0          00             R0
-3          03             IMM
-1          01             1
-20         14             NOP
-53         35             MOV
-2          02             D32
-1          01             REG
-7          07             R7
-3          03             IMM
-1          01             1
-20         14             NOP
-53         35             MOV
-2          02             D32
-1          01             REG
-6          06             R6
-0          00             REL
-0          00             0   -- heyo
-20         14             NOP
-53         35             MOV
-2          02             D32
-1          01             REG
-2          02             R2
-3          03             IMM
-12         0c             12  -- sizeof (heyo)
-20         14             NOP
-28         1c             SYSCALL
-20         14             NOP
-53         35             MOV
-2          02             D32
-1          01             REG
-0          00             R0
-3          03             IMM
-1          01             1
-20         14             NOP
-53         35             MOV
-2          02             D32
-1          01             REG
-7          07             R7
-3          03             IMM
-1          01             1
-20         14             NOP
-53         35             MOV
-2          02             D32
-1          01             REG
-6          06             R6
-0          00             REL
-1          01             1   -- cyaa
-20         14             NOP
-53         35             MOV
-2          02             D32
-1          01             REG
-2          02             R2
-3          03             IMM
-12         0c             12  -- sizeof (cyaa)
-20         14             NOP
-28         1c             SYSCALL
-20         14             NOP
-53         35             MOV
-2          02             D32
-1          01             REG
-0          00             R0
-3          03             IMM
-60         3c             60
-20         14             NOP
-53         35             MOV
-2          02             D32
-1          01             REG
-7          07             R7
-3          03             IMM
-60         3c             60
-20         14             NOP
-28         1c             SYSCALL
-20         14             NOP
-0          ||             ASMDIRMEM
-0          ||             0 -- heyo:
-2          ||             ASMDIRIMM
-0          ||             D8 -- typeof (heyo)
-12         ||             12 -- sizeof (heyo)
-72         ||             'H'
-101        ||             'e'
-121        ||             'y'
-111        ||             'o'
-32         ||             ' '
-119        ||             'w'
-111        ||             'o'
-114        ||             'r'
-108        ||             'l'
-100        ||             'd'
-33         ||             '!'
-10         ||             '\n'
-0          ||             ASMDIRMEM
-1          ||             1 -- cyaa:
-2          ||             ASMDIRIMM
-0          ||             D8 -- typeof (cyaa)
-12         ||             12 -- sizeof (cyaa)
-67         ||             'C'
-121        ||             'y'
-97         ||             'a'
-97         ||             'a'
-32         ||             ' '
-119        ||             'w'
-111        ||             'o'
-114        ||             'r'
-108        ||             'l'
-100        ||             'd'
-33         ||             '!'
-10         ||             '\n'
-*/

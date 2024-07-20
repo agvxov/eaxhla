@@ -240,7 +240,7 @@ dereference: '[' IDENTIFIER ']' { $$ = 0; /* XXX: how the fuck do i dereference?
 
 relative: IDENTIFIER {
         symbol_t * relative = get_symbol($1);
-        breakpoint();
+        /*breakpoint();*/
         $$ = relative->_id;
     }
     ;
@@ -255,7 +255,7 @@ value: artimetric_block
     ;
 
 anon_variable: ARRAY_LITERAL {
-        $$.array_value = $1.data; 
+        $$.array_value = $1.data;
         $$.elements    = $1.len;
         int ignore = asprintf(&$$.name, "_anon_%llu", anon_variable_counter++);
         (void)ignore;
