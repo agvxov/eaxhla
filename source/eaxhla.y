@@ -463,7 +463,7 @@ instruction: INOP { append_instructions(NOP); }
     | ITPAUSE { append_instructions(PAUSE); }
     | ITHLT { append_instructions(HLT); }
     | ITLOCK { append_instructions(LOCK); }
-    | ITJMP relative { append_instructions( JMP, D32, REL, 0 ); }
+    | ITJMP relative { append_instructions( JMP, D32, REL, $2 ); }
     | ITINC register { append_instructions( INC, $2.size, REG, $2.number ); }
     | ITDEC register { append_instructions( DEC, $2.size, REG, $2.number ); }
     | ITNOT register { append_instructions( NOT, $2.size, REG, $2.number ); }
