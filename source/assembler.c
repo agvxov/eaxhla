@@ -298,10 +298,10 @@ static void build_move(unsigned int size,
 	input((to == MEM) && (from == IMM), 0xc6 + (size != D8));
 	input((to == MEM) && (from == IMM), 0x05);
 
-	input_at((to == REG) && (from == MEM), D32,  source, 0);
+	input_at((to == REG) && (from == MEM), D32,  source, 0x1000);
 	input_by((to == REG) && (from == IMM), size, source);
-	input_at((to == MEM) && (from == REG), D32,  ~0x0u, ~0x0u);
-	input_at((to == MEM) && (from == IMM), D32,  ~0x0u, ~0x0u);
+	input_at((to == MEM) && (from == REG), D32,  destination, 0x1000);
+	input_at((to == MEM) && (from == IMM), D32,  destination, 0x1000);
 	input_by((to == MEM) && (from == IMM), size, source);
 	input_at((to == REG) && (from == REL), D32,  source, 0x4010b0);
 }
@@ -418,16 +418,19 @@ void assemble(unsigned int   count,
 
 	while (index < count) {
 		if (array[index] == ASMDIRREL) {
-			asmdirrel(1, array[index + 1]);
+			asmdirrel(1,
+			          array[index + 1]);
 			index += 1;
 		} else if (array[index] == ASMDIRMEM) {
-			asmdirmem(1, array[index + 1]);
+			asmdirmem(1,
+			          array[index + 1]);
 			index += 1;
 		} else if (array[index] == ASMDIRIMM) {
 			unsigned int repeat = 0;
 			while (repeat < array[index + 2]) {
-				asmdirimm(1, array[index + 1],
-				             array[index + 3 + repeat]);
+				asmdirimm(1,
+				          array[index + 1],
+				          array[index + 3 + repeat]);
 				++repeat;
 			}
 			index += array[index + 2] + 2;
