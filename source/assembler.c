@@ -35,37 +35,47 @@ static void replace(unsigned char * destination,
 	destination [size] = source [size];
 }
 
-static void input(int when, unsigned int data) {
+static void input(         int when,
+                  unsigned int data) {
 	text_sector_byte[text_sector_size] = (unsigned char) data;
 
 	text_sector_size += (unsigned int) when;
 }
 
-static void input_by(int when, unsigned int size, unsigned int data) {
+static void input_by(         int when,
+                     unsigned int size,
+                     unsigned int data) {
 	input((when),                  (data >>  0) & 0xff);
 	input((when) && (size >= D16), (data >>  8) & 0xff);
 	input((when) && (size >= D32), (data >> 16) & 0xff);
 	input((when) && (size >= D32), (data >> 24) & 0xff);
 }
 
-static void asmdirrel(int when, unsigned int data) {
+static void asmdirrel(         int when,
+                      unsigned int data) {
 	empty_array[empty_holes] = text_sector_size;
 	empty_imbue[empty_holes] = data;
 
 	empty_holes += (unsigned int) when;
 }
 
-static void asmdirmem(int when, unsigned int code) {
+static void asmdirmem(         int when,
+                      unsigned int code) {
 	empty_store[code] = text_sector_size;
 
 	empty_count += (unsigned int) when;
 }
 
-static void asmdirimm(int when, unsigned int size, unsigned int data) {
+static void asmdirimm(         int when,
+                      unsigned int size,
+                      unsigned int data) {
 	input_by(when, size, data);
 }
 
-static void input_at(int when, unsigned int size, unsigned int data, unsigned int base) {
+static void input_at(         int when,
+                     unsigned int size,
+                     unsigned int data,
+                     unsigned int base) {
 	asmdirrel(when, data);
 
 	input((when),                  (base >>  0) & 0xff);
@@ -74,36 +84,55 @@ static void input_at(int when, unsigned int size, unsigned int data, unsigned in
 	input((when) && (size >= D32), (base >> 24) & 0xff);
 }
 
-static int front(unsigned int data) { return ((data >= 4) && (data <=  7)); }
-static int lower(unsigned int data) { return (               (data <=  7)); }
-static int upper(unsigned int data) { return ((data >= 8) && (data <= 15)); }
+static int front(unsigned int data) {
+	return ((data >= 4) && (data <= 7));
+}
 
-static int far(unsigned int label)  { return (label && 1); }
-static int near(unsigned int label) { return (label && 0); }
+static int lower(unsigned int data) {
+	return (data <= 7);
+}
+
+static int upper(unsigned int data) {
+	return ((data >= 8) && (data <= 15));
+}
+
+static int far(unsigned int label) {
+	return (label && 1);
+}
+
+static int near(unsigned int label) {
+	return (label && 0);
+}
 
 static void build_short (int when) {
 	input(when, 0x66);
 }
 
-static void build_long(int registers, unsigned int to, unsigned int from) {
+static void build_long(         int registers,
+                       unsigned int to,
+                       unsigned int from) {
 	input(registers || to || from, 0x40
 	      + 0x01 * (unsigned int) to
 	      + 0x04 * (unsigned int) from
 	      + 0x08 * (unsigned int) registers);
 }
 
-static void build_co(int when, unsigned int destination, unsigned int source) {
+static void build_co(         int when,
+                     unsigned int destination,
+                     unsigned int source) {
 	input(when, 0xc0
 	      + 0x01 * (destination & 0x07)
 	      + 0x08 * (source      & 0x07));
 }
 
-static void build_at(int when, unsigned int direction) {
+static void build_at(         int when,
+                     unsigned int direction) {
 	input(when, 0x05
 	      + 0x08 * (direction & 0x07));
 }
 
-static void build_constant(int when, unsigned int size) {
+static void build_constant(         int when,
+                           unsigned int size) {
 	input(when, 0x80
 	      + 0x01 * (size != D8));
 }
@@ -120,17 +149,19 @@ static void build_regular(unsigned int operation,
 	          (to   == REG) && (upper(destination)),
 	          (from == REG) && (upper(source)));
 
-	input((size == D8) && (to == REG) && ((from == REG) || (from == IMM))
+	input((size == D8) && (to == REG)
+	      && ((from == REG) || (from == IMM))
 	      && (((front(destination) && lower(source))
-	        || (lower(destination) && front(source)))
-	        || ((to == REG) && (from == IMM) && front(destination))),
+	      || (lower(destination) && front(source)))
+	      || ((to == REG) && (from == IMM) && front(destination))),
 	      0x40);
 
 	input((from == IMM) && (to == REG) && (destination == 0), 0x05
 	      + 0x08 * (operation & 0x07)
 	      - 0x01 * (size == D8));
 
-	build_constant((from == IMM) && ! ((to == REG) && (destination == 0)),
+	build_constant((from == IMM)
+	               && ! ((to == REG) && (destination == 0)),
 	               size);
 
 	input(! ((from == IMM) && (to == REG) && (destination == 0)),
@@ -179,31 +210,24 @@ static void build_irregular(unsigned int operation,
 }
 
 static void build_special_1(unsigned int operation) {
-	const unsigned char data [9] = {
-		0x90, 0xc3, 0xcb, 0xc9, 0xf0, 0xf4, 0x9d, 0x9c,
-		0x9b
+	const unsigned char data [] = {
+		0x90, 0xc3, 0xcb, 0xc9, 0xf0, 0xf4, 0x9d, 0x9c, 0x9b
 	};
 
 	input(1, data[operation - SPECIAL_1_BEGIN]);
 }
 
 static void build_special_2(unsigned int operation) {
-	const unsigned short data [72] = {
-		0x0f, 0x0f, 0x0f, 0x0f, 0xf3, 0x0f, 0x0f, 0x0f,
-		0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9,
-		0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9,
-		0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9, 0xd9,
-		0xd9, 0xd9, 0xd9, 0xd9,
-		0x34, 0x35, 0x05, 0x07, 0x90, 0xa2, 0x77, 0xaa,
-		0xd0, 0xe0, 0xe1, 0xe4, 0xe5, 0xe8, 0xe9, 0xea,
-		0xeb, 0xec, 0xed, 0xee, 0xf0, 0xf1, 0xf2, 0xf3,
-		0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb,
-		0xfc, 0xfd, 0xfe, 0xff
+	const unsigned short data [] = {
+		0x340f, 0x350f, 0x050f, 0x070f, 0x90f3, 0xa20f, 0x770f,
+		0xaa0f, 0xd0d9, 0xe0d9, 0xe1d9, 0xe4d9, 0xe5d9, 0xe8d9,
+		0xe9d9, 0xead9, 0xebd9, 0xecd9, 0xedd9, 0xeed9, 0xf0d9,
+		0xf1d9, 0xf2d9, 0xf3d9, 0xf4d9, 0xf5d9, 0xf6d9, 0xf7d9,
+		0xf8d9, 0xf9d9, 0xfad9, 0xfbd9, 0xfcd9, 0xfdd9, 0xfed9,
+		0xffd9
 	};
 
-	//~input_by(1, D16, data[operation - SPECIAL_2_BEGIN]);
-	input(1, data[operation - SPECIAL_2_BEGIN]);
-	input(1, data[operation - SPECIAL_2_BEGIN + 36]);
+	input_by(1, D16, data[operation - SPECIAL_2_BEGIN]);
 }
 
 static void build_jump_if(unsigned int operation,
@@ -409,14 +433,19 @@ void assemble(unsigned int   count,
 			index += array[index + 2] + 2;
 		} else if ((array[index] >= REGULAR_BEGIN)
 		       &&  (array[index] <= REGULAR_END)) {
-			build_regular(array[index + 0], array[index + 1],
-			              array[index + 2], array[index + 3],
-			              array[index + 4], array[index + 5]);
+			build_regular(array[index + 0],
+			              array[index + 1],
+			              array[index + 2],
+			              array[index + 3],
+			              array[index + 4],
+			              array[index + 5]);
 			index += 5;
 		} else if ((array[index] >= IRREGULAR_BEGIN)
 		       &&  (array[index] <= IRREGULAR_END)) {
-			build_irregular(array[index + 0], array[index + 1],
-			                array[index + 2], array[index + 3]);
+			build_irregular(array[index + 0],
+			                array[index + 1],
+			                array[index + 2],
+			                array[index + 3]);
 			index += 3;
 		} else if ((array[index] >= SPECIAL_1_BEGIN)
 		       &&  (array[index] <= SPECIAL_1_END)) {
@@ -428,45 +457,61 @@ void assemble(unsigned int   count,
 			index += 0;
 		} else if ((array[index] >= JUMP_IF_BEGIN)
 		       &&  (array[index] <= JUMP_IF_END)) {
-			build_jump_if(array[index + 0], array[index + 1],
+			build_jump_if(array[index + 0],
+			              array[index + 1],
 			              array[index + 2]);
 			index += 2;
 		} else if ((array[index] >= MOVE_IF_BEGIN)
 		       &&  (array[index] <= MOVE_IF_END)) {
-			build_move_if(array[index + 0], array[index + 1],
-			              array[index + 2], array[index + 3],
-			              array[index + 4], array[index + 5]);
+			build_move_if(array[index + 0],
+			              array[index + 1],
+			              array[index + 2],
+			              array[index + 3],
+			              array[index + 4],
+			              array[index + 5]);
 			index += 5;
 		} else if ((array[index] >= FLOAT_BEGIN)
 		       &&  (array[index] <= FLOAT_END)) {
-			build_float(array[index + 0], array[index + 1],
-			            array[index + 2], array[index + 3]);
+			build_float(array[index + 0],
+			            array[index + 1],
+			            array[index + 2],
+			            array[index + 3]);
 			index += 3;
 		} else if (array[index] == JMP) {
-			build_jump(array[index + 1], array[index + 2],
+			build_jump(array[index + 1],
+			           array[index + 2],
 			           array[index + 3]);
 			index += 3;
 		} else if (array[index] == MOV) {
-			build_move(array[index + 1], array[index + 2],
-			           array[index + 3], array[index + 4],
+			build_move(array[index + 1],
+			           array[index + 2],
+			           array[index + 3],
+			           array[index + 4],
 			           array[index + 5]);
 			index += 5;
 		} else if (array[index] == CALL) {
-			build_call(array[index + 1], array[index + 2]);
+			build_call(array[index + 1],
+			           array[index + 2]);
 			index += 2;
 		} else if (array[index] == ENTER) {
-			build_enter(array[index + 1], array[index + 2]);
+			build_enter(array[index + 1],
+			            array[index + 2]);
 			index += 2;
-		} else if ((array[index] == IN) || (array[index] == OUT)) {
-			build_in_out(array[index + 0], array[index + 1],
-			             array[index + 2], array[index + 3]);
+		} else if ((array[index] == IN)
+		       ||  (array[index] == OUT)) {
+			build_in_out(array[index + 0],
+			             array[index + 1],
+			             array[index + 2],
+			             array[index + 3]);
 			index += 3;
 		} else if (array[index] == POP) {
-			build_pop(array[index + 1], array[index + 2],
+			build_pop(array[index + 1],
+			          array[index + 2],
 			          array[index + 3]);
 			index += 3;
 		} else if (array[index] == PUSH) {
-			build_push(array[index + 1], array[index + 2],
+			build_push(array[index + 1],
+			           array[index + 2],
 			           array[index + 3]);
 			index += 3;
 		} else {
