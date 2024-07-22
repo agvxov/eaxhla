@@ -25,146 +25,112 @@ static unsigned int * empty_array = NULL;
 static unsigned int * empty_imbue = NULL;
 static unsigned int * empty_store = NULL;
 
-static void replace(unsigned char * destination,
-                    unsigned char * source,
-                    unsigned long   size) {
-	while (--size) {
-		destination [size] = source [size];
+static void replace (unsigned char * destination, unsigned char * source, unsigned long size) {
+	for (--size; size != (unsigned long) -1; --size) {
+		destination  [size] = source  [size];
 	}
-
-	destination [size] = source [size];
 }
 
-static void input(         int when,
-                  unsigned int data) {
-	text_sector_byte[text_sector_size] = (unsigned char) data;
+static void input (int when, unsigned int data) {
+	text_sector_byte [text_sector_size] = (unsigned char) data;
 
 	text_sector_size += (unsigned int) when;
 }
 
-static void input_by(         int when,
-                     unsigned int size,
-                     unsigned int data) {
-	input((when),                  (data >>  0) & 0xff);
-	input((when) && (size >= D16), (data >>  8) & 0xff);
-	input((when) && (size >= D32), (data >> 16) & 0xff);
-	input((when) && (size >= D32), (data >> 24) & 0xff);
+static void input_by (int when, unsigned int size, unsigned int data) {
+	input ((when),                  (data >>  0) & 0xff);
+	input ((when) && (size >= D16), (data >>  8) & 0xff);
+	input ((when) && (size >= D32), (data >> 16) & 0xff);
+	input ((when) && (size >= D32), (data >> 24) & 0xff);
 }
 
-static void asmdirrel(         int when,
-                      unsigned int data) {
-	empty_array[empty_holes] = text_sector_size;
-	empty_imbue[empty_holes] = data;
+static void asmdirrel (int when, unsigned int data) {
+	empty_array [empty_holes] = text_sector_size;
+	empty_imbue [empty_holes] = data;
 
 	empty_holes += (unsigned int) when;
 }
 
-static void asmdirmem(         int when,
-                      unsigned int code) {
-	empty_store[code] = text_sector_size;
+static void asmdirmem (int when, unsigned int code) {
+	empty_store [code] = text_sector_size;
 
 	empty_count += (unsigned int) when;
 }
 
-static void asmdirimm(         int when,
-                      unsigned int size,
-                      unsigned int data) {
-	input_by(when, size, data);
+static void asmdirimm (int when, unsigned int size, unsigned int data) {
+	input_by (when, size, data);
 }
 
-static void input_at(         int when,
-                     unsigned int size,
-                     unsigned int data,
-                     unsigned int base) {
-	asmdirrel(when, data);
+static void input_at (int when, unsigned int size, unsigned int data, unsigned int base) {
+	asmdirrel (when, data);
 
-	input((when),                  (base >>  0) & 0xff);
-	input((when) && (size >= D16), (base >>  8) & 0xff);
-	input((when) && (size >= D32), (base >> 16) & 0xff);
-	input((when) && (size >= D32), (base >> 24) & 0xff);
+	input ((when),                  (base >>  0) & 0xff);
+	input ((when) && (size >= D16), (base >>  8) & 0xff);
+	input ((when) && (size >= D32), (base >> 16) & 0xff);
+	input ((when) && (size >= D32), (base >> 24) & 0xff);
 }
 
-static int front(unsigned int data) {
+static int front (unsigned int data) {
 	return ((data >= 4) && (data <= 7));
 }
 
-static int lower(unsigned int data) {
+static int lower (unsigned int data) {
 	return (data <= 7);
 }
 
-static int upper(unsigned int data) {
+static int upper (unsigned int data) {
 	return ((data >= 8) && (data <= 15));
 }
 
-static int far(unsigned int label) {
+static int far (unsigned int label) {
 	return (label && 1);
 }
 
-static int near(unsigned int label) {
+static int near (unsigned int label) {
 	return (label && 0);
 }
 
 static void build_short (int when) {
-	input(when, 0x66);
+	input (when, 0x66);
 }
 
-static void build_long(         int registers,
-                       unsigned int to,
-                       unsigned int from) {
-	input(registers || to || from, 0x40
-	      + 0x01 * (unsigned int) to
-	      + 0x04 * (unsigned int) from
-	      + 0x08 * (unsigned int) registers);
+static void build_long (unsigned int registers, unsigned int to, unsigned int from) {
+	input (registers || to || from, 0x40 + 0x01 * to + 0x04 * from + 0x08 * registers);
 }
 
-static void build_co(         int when,
-                     unsigned int destination,
-                     unsigned int source) {
-	input(when, 0xc0
-	      + 0x01 * (destination & 0x07)
-	      + 0x08 * (source      & 0x07));
+static void build_co (int when, unsigned int destination, unsigned int source) {
+	input (when, 0xc0 + 0x01 * (destination & 0x07) + 0x08 * (source      & 0x07));
 }
 
-static void build_at(         int when,
-                     unsigned int direction) {
-	input(when, 0x05
-	      + 0x08 * (direction & 0x07));
+static void build_at (int when, unsigned int direction) {
+	input (when, 0x05 + 0x08 * (direction & 0x07));
 }
 
-static void build_constant(         int when,
-                           unsigned int size) {
-	input(when, 0x80
-	      + 0x01 * (size != D8));
+static void build_constant (int when, unsigned int size) {
+	input (when, 0x80 + 0x01 * (size != D8));
 }
 
-static void build_regular(unsigned int operation,
-                          unsigned int size,
-                          unsigned int to,
-                          unsigned int destination,
-                          unsigned int from,
-                          unsigned int source) {
-	build_short(size == D16);
+static void build_regular (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
+	build_short (size == D16);
 
-	build_long(size == D64,
-	          (to   == REG) && (upper(destination)),
-	          (from == REG) && (upper(source)));
+	build_long (size == D64,
+	          (to   == REG) && (upper (destination)),
+	          (from == REG) && (upper (source)));
 
-	input((size == D8) && (to == REG)
+	input ((size == D8) && (to == REG)
 	      && ((from == REG) || (from == IMM))
-	      && (((front(destination) && lower(source))
-	      || (lower(destination) && front(source)))
-	      || ((to == REG) && (from == IMM) && front(destination))),
+	      && (( (front (destination) && lower (source))
+	      || (lower (destination) && front (source)))
+	      || ((to == REG) && (from == IMM) && front (destination))),
 	      0x40);
 
-	input((from == IMM) && (to == REG) && (destination == 0), 0x05
-	      + 0x08 * (operation & 0x07)
-	      - 0x01 * (size == D8));
+	input ((from == IMM) && (to == REG) && (destination == 0), 0x05 + 0x08 * (operation & 0x07) - 0x01 * (size == D8));
 
-	build_constant((from == IMM)
+	build_constant ((from == IMM)
 	               && ! ((to == REG) && (destination == 0)),
 	               size);
 
-	input(! ((from == IMM) && (to == REG) && (destination == 0)),
+	input (! ((from == IMM) && (to == REG) && (destination == 0)),
 	      (destination & 0x07) * ((to == REG) && (from == IMM))
 	      + 0x08 * (operation - REGULAR_BEGIN)
 	      + 0x01 * ((to   == MEM) && (from == IMM) && (size == D8))
@@ -174,210 +140,164 @@ static void build_regular(unsigned int operation,
 	      + 0x04 * ((to   == MEM) && (from == IMM))
 	      + 0xc0 * ((to   == REG) && (from == IMM)));
 
-	build_co((to == REG) && (from == REG), destination, source);
+	build_co ((to == REG) && (from == REG), destination, source);
 
-	build_at((to == REG) && (from == MEM), destination);
-	build_at((to == MEM) && (from == REG), source);
+	build_at ((to == REG) && (from == MEM), destination);
+	build_at ((to == MEM) && (from == REG), source);
 
-	input_by((to == REG) && (from == MEM), D32,  ~0x0u);
-	input_by((to == REG) && (from == IMM), size, source);
-	input_by((to == MEM) && (from == REG), D32,  ~0x0u);
-	input_by((to == MEM) && (from == IMM), D32,  ~0x0u);
-	input_by((to == MEM) && (from == IMM), size, source);
+	input_by ((to == REG) && (from == MEM), D32,  ~0x0u);
+	input_by ((to == REG) && (from == IMM), size, source);
+	input_by ((to == MEM) && (from == REG), D32,  ~0x0u);
+	input_by ((to == MEM) && (from == IMM), D32,  ~0x0u);
+	input_by ((to == MEM) && (from == IMM), size, source);
 }
 
-static void build_irregular(unsigned int operation,
-                            unsigned int size,
-                            unsigned int to,
-                            unsigned int destination) {
-	build_short(size == D16);
+static void build_irregular (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination) {
+	build_short (size == D16);
 
-	build_long(size == D64,
-	           (to == REG) && (upper(destination)), 0);
+	build_long (size == D64, (to == REG) && (upper (destination)), 0);
 
-	input((size == D8) && (to == REG) && front(destination), 0x40);
+	input ((size == D8) && (to == REG) && front (destination), 0x40);
 
-	input(1, 0xf7
-	      + 0x08 * ((operation == INC) || (operation == DEC))
-	      - 0x01 * (size       == D8));
+	input (1, 0xf7 + 0x08 * ((operation == INC) || (operation == DEC)) - 0x01 * (size == D8));
 
-	input(to == REG, 0xc0
-	      + 0x08 * (operation - IRREGULAR_BEGIN)
-	      + 0x01 * (destination & 0x07));
+	input (to == REG, 0xc0 + 0x08 * (operation - IRREGULAR_BEGIN) + 0x01 * (destination & 0x07));
 
-	input(to == MEM, 0x05
-	      + 0x08 * (operation - IRREGULAR_BEGIN));
+	input (to == MEM, 0x05 + 0x08 * (operation - IRREGULAR_BEGIN));
 }
 
-static void build_special_1(unsigned int operation) {
-	const unsigned char data [] = {
+static void build_special_1 (unsigned int operation) {
+	const unsigned char data  [] = {
 		0x90, 0xc3, 0xcb, 0xc9, 0xf0, 0xf4, 0x9d, 0x9c, 0x9b
 	};
 
-	input(1, data[operation - SPECIAL_1_BEGIN]);
+	input (1, data [operation - SPECIAL_1_BEGIN]);
 }
 
-static void build_special_2(unsigned int operation) {
-	const unsigned short data [] = {
-		0x340f, 0x350f, 0x050f, 0x070f, 0x90f3, 0xa20f, 0x770f,
-		0xaa0f, 0xd0d9, 0xe0d9, 0xe1d9, 0xe4d9, 0xe5d9, 0xe8d9,
-		0xe9d9, 0xead9, 0xebd9, 0xecd9, 0xedd9, 0xeed9, 0xf0d9,
-		0xf1d9, 0xf2d9, 0xf3d9, 0xf4d9, 0xf5d9, 0xf6d9, 0xf7d9,
-		0xf8d9, 0xf9d9, 0xfad9, 0xfbd9, 0xfcd9, 0xfdd9, 0xfed9,
-		0xffd9
+static void build_special_2 (unsigned int operation) {
+	const unsigned short data  [] = {
+		0x340f, 0x350f, 0x050f, 0x070f, 0x90f3, 0xa20f, 0x770f, 0xaa0f, 0xd0d9, 0xe0d9, 0xe1d9, 0xe4d9, 0xe5d9, 0xe8d9, 0xe9d9, 0xead9, 0xebd9, 0xecd9, 0xedd9, 0xeed9,
+		0xf0d9, 0xf1d9, 0xf2d9, 0xf3d9, 0xf4d9, 0xf5d9, 0xf6d9, 0xf7d9, 0xf8d9, 0xf9d9, 0xfad9, 0xfbd9, 0xfcd9, 0xfdd9, 0xfed9, 0xffd9
 	};
 
-	input_by(1, D16, data[operation - SPECIAL_2_BEGIN]);
+	input_by (1, D16, data [operation - SPECIAL_2_BEGIN]);
 }
 
-static void build_jump_if(unsigned int operation,
-                          unsigned int size,
-                          unsigned int location) {
-	input(far(location) && (size == D32), 0x0f);
+static void build_jump_if (unsigned int operation, unsigned int size, unsigned int location) {
+	input (far (location) && (size == D32), 0x0f);
 
-	input(far(location),  0x80 + operation - JUMP_IF_BEGIN);
-	input(near(location), 0x70 + operation - JUMP_IF_BEGIN);
+	input (far (location),  0x80 + operation - JUMP_IF_BEGIN);
+	input (near (location), 0x70 + operation - JUMP_IF_BEGIN);
 }
 
-static void build_move_if(unsigned int operation,
-                          unsigned int size,
-                          unsigned int to,
-                          unsigned int destination,
-                          unsigned int from,
-                          unsigned int source) {
-	build_short(size == D16);
+static void build_move_if (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
+	build_short (size == D16);
 
-	build_long(size == D64,
-	           (to   == REG) && (upper(destination)),
-	           (from == REG) && (upper(source)));
+	build_long (size == D64, (to   == REG) && (upper (destination)), (from == REG) && (upper (source)));
 
-	input(1, 0x0f);
-	input(1, 0x40 + operation - MOVE_IF_BEGIN);
+	input (1, 0x0f);
+	input (1, 0x40 + operation - MOVE_IF_BEGIN);
 
-	build_co((to == REG) && (from == REG), destination, source);
-	build_at((to == REG) && (from == MEM), destination);
+	build_co ((to == REG) && (from == REG), destination, source);
+	build_at ((to == REG) && (from == MEM), destination);
 }
 
-static void build_jump(unsigned int size,
-                       unsigned int to,
-                       unsigned int destination) {
-	input((to == REG) && upper(destination), 0X41);
+static void build_jump (unsigned int size, unsigned int to, unsigned int destination) {
+	input ((to == REG) && upper (destination), 0X41);
 
-	input(to == REL, 0xe9 + 0x02 * (size == D8));
-	input(to == REG, 0xff);
-	input(to == REG, 0xe0 + 0x01 * (destination & 0x07));
-	input(to == MEM, 0xff);
-	input(to == MEM, 0x25);
+	input (to == REL, 0xe9 + 0x02 * (size == D8));
+	input (to == REG, 0xff);
+	input (to == REG, 0xe0 + 0x01 * (destination & 0x07));
+	input (to == MEM, 0xff);
+	input (to == MEM, 0x25);
 
-	input_at(to == REL, D32, destination, -(text_sector_size + 4));
+	input_at (to == REL, D32, destination, - (text_sector_size + 4));
 
-	input_at(to == MEM, D32, destination, 0x4010b0);
+	input_at (to == MEM, D32, destination, 0x4010b0);
 }
 
-static void build_move(unsigned int size,
-                       unsigned int to,
-                       unsigned int destination,
-                       unsigned int from,
-                       unsigned int source) {
-	build_short(size == D16);
+static void build_move (unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
+	build_short (size == D16);
 
-	build_long(size == D64,
-	           (to   == REG) && (upper(destination)),
-	           (from == REG) && (upper(source)));
+	build_long (size == D64, (to   == REG) && (upper (destination)), (from == REG) && (upper (source)));
 
-	input((to == REG) && (from == REG), 0x88 + (size != D8));
-	input((to == REG) && (from == MEM), 0x8a + (size != D8));
-	input((to == MEM) && (from == REG), 0x88 + (size != D8));
+	input ((to == REG) && (from == REG), 0x88 + (size != D8));
+	input ((to == REG) && (from == MEM), 0x8a + (size != D8));
+	input ((to == MEM) && (from == REG), 0x88 + (size != D8));
 
-	build_at((to == REG) && (from == MEM), destination);
-	build_at((to == MEM) && (from == REG), source);
+	build_at ((to == REG) && (from == MEM), destination);
+	build_at ((to == MEM) && (from == REG), source);
 
-	input((to == REG) && ((from == IMM) || (from == REL)), 0xb8
-	      + 0x01 * (destination & 0x07));
+	input ((to == REG) && ((from == IMM) || (from == REL)), 0xb8 + 0x01 * (destination & 0x07));
 
-	input((to == MEM) && (from == IMM), 0xc6 + (size != D8));
-	input((to == MEM) && (from == IMM), 0x05);
+	input ((to == MEM) && (from == IMM), 0xc6 + (size != D8));
+	input ((to == MEM) && (from == IMM), 0x05);
 
-	input_at((to == REG) && (from == MEM), D32,  source, 0x1000);
-	input_by((to == REG) && (from == IMM), size, source);
-	input_at((to == MEM) && (from == REG), D32,  destination, 0x1000);
-	input_at((to == MEM) && (from == IMM), D32,  destination, 0x1000);
-	input_by((to == MEM) && (from == IMM), size, source);
-	input_at((to == REG) && (from == REL), D32,  source, 0x4010b0);
+	input_at ((to == REG) && (from == MEM), D32,  source, 0x1000);
+	input_by ((to == REG) && (from == IMM), size, source);
+	input_at ((to == MEM) && (from == REG), D32,  destination, 0x1000);
+	input_at ((to == MEM) && (from == IMM), D32,  destination, 0x1000);
+	input_by ((to == MEM) && (from == IMM), size, source);
+	input_at ((to == REG) && (from == REL), D32,  source, 0x4010b0);
 }
 
-static void build_call(unsigned int from,
-                       unsigned int source) {
-	input((from == REG) && (upper(source)), 0x41);
+static void build_call (unsigned int from, unsigned int source) {
+	input ((from == REG) && (upper (source)), 0x41);
 
-	input(from == REL, 0xe8);
-	input(from == REG, 0xff);
+	input (from == REL, 0xe8);
+	input (from == REG, 0xff);
 
-	input_at(from == REL, D32, source, -(text_sector_size + 4));
+	input_at (from == REL, D32, source, - (text_sector_size + 4));
 
-	input(from == REG, (0xd0 + 0x01 * (source & 0x07)));
+	input (from == REG, (0xd0 + 0x01 * (source & 0x07)));
 }
 
-static void build_enter(unsigned int dynamic_storage,
-                        unsigned int nesting_level) {
-	input(1, 0xc8);
+static void build_enter (unsigned int dynamic_storage, unsigned int nesting_level) {
+	input (1, 0xc8);
 
-	input_by(1, D16, dynamic_storage);
-	input_by(1, D8,  nesting_level & 0x1f);
+	input_by (1, D16, dynamic_storage);
+	input_by (1, D8,  nesting_level & 0x1f);
 }
 
-static void build_in_out(unsigned int move,
-                         unsigned int size,
-                         unsigned int type,
-                         unsigned int port) {
-	build_short(size == D16);
+static void build_in_out (unsigned int move, unsigned int size, unsigned int type, unsigned int port) {
+	build_short (size == D16);
 
-	input(1, 0xe4
-	      + 0x01 * (size != D8)
-	      + 0x02 * (move != OUT)
-	      + 0x08 * (type == REG));
+	input (1, 0xe4 + 0x01 * (size != D8) + 0x02 * (move != OUT) + 0x08 * (type == REG));
 
-	input_by(type == IMM, D8, port);
+	input_by (type == IMM, D8, port);
 }
 
-static void build_pop(unsigned int size,
-                      unsigned int to,
-                      unsigned int destination) {
-	build_short(size == D16);
+static void build_pop (unsigned int size, unsigned int to, unsigned int destination) {
+	build_short (size == D16);
 
-	input((to == REG) && (upper(destination)), 0x41);
+	input ((to == REG) && (upper (destination)), 0x41);
 
-	input(to == REG, 0x58 + 0x01 * (destination & 0x07));
-	input(to == MEM, 0x8f);
-	input(to == MEM, 0x05);
+	input (to == REG, 0x58 + 0x01 * (destination & 0x07));
+	input (to == MEM, 0x8f);
+	input (to == MEM, 0x05);
 
-	input_at(to == MEM, D32, destination, 0);
+	input_at (to == MEM, D32, destination, 0);
 }
 
-static void build_push(unsigned int size,
-                       unsigned int from,
-                       unsigned int source) {
-	build_short(size == D16);
+static void build_push (unsigned int size, unsigned int from, unsigned int source) {
+	build_short (size == D16);
 
-	input((from == REG) && (upper(source)), 0x41);
+	input ((from == REG) && (upper (source)), 0x41);
 
-	input(from == REG, 0x50 + 0x01 * (source & 0x07));
-	input(from == MEM, 0xff);
-	input(from == MEM, 0x35);
-	input(from == IMM, 0x68 + 0x02 * (size == D8));
+	input (from == REG, 0x50 + 0x01 * (source & 0x07));
+	input (from == MEM, 0xff);
+	input (from == MEM, 0x35);
+	input (from == IMM, 0x68 + 0x02 * (size == D8));
 
-	input_at(from == MEM, D32,  source, 0);
-	input_by(from == IMM, size, source);
+	input_at (from == MEM, D32,  source, 0);
+	input_by (from == IMM, size, source);
 }
 
-static void build_float(unsigned int operation,
-                        unsigned int size,
-                        unsigned int from,
-                        unsigned int source) {
-	input(from == MEM, 0xd8 + 0x04 * (size == D64));
+static void build_float (unsigned int operation, unsigned int size, unsigned int from, unsigned int source) {
+	input (from == MEM, 0xd8 + 0x04 * (size == D64));
 
-	build_at(from == MEM, operation);
-	input_at(from == MEM, size, source, 0);
+	build_at (from == MEM, operation);
+	input_at (from == MEM, size, source, 0);
 }
 
 static void assemble_clean_up (void) {
@@ -385,20 +305,19 @@ static void assemble_clean_up (void) {
 		return;
 	}
 
-	free(text_sector_byte);
-	free(empty_array);
-	free(empty_imbue);
-	free(empty_store);
+	free (text_sector_byte);
+	free (empty_array);
+	free (empty_imbue);
+	free (empty_store);
 }
 
 unsigned int    text_sector_size = 0;
 unsigned char * text_sector_byte = NULL;
 
-         int was_instruction_array_empty = 0;
+          int was_instruction_array_empty = 0;
 unsigned int text_entry_point            = 0;
 
-void assemble(unsigned int   count,
-              unsigned int * array) {
+void assemble (unsigned int count, unsigned int * array) {
 	unsigned int index = 0;
 
 	if ((count == 0) || (array == NULL)) {
@@ -406,116 +325,71 @@ void assemble(unsigned int   count,
 		return;
 	}
 
-	text_sector_byte = calloc(4096UL, sizeof(* text_sector_byte));
-	empty_array      = calloc(1024UL, sizeof(* empty_array));
-	empty_imbue      = calloc(1024UL, sizeof(* empty_imbue));
-	empty_store      = calloc(1024UL, sizeof(* empty_store));
+	text_sector_byte = calloc (4096UL, sizeof (* text_sector_byte));
+	empty_array      = calloc (1024UL, sizeof (* empty_array));
+	empty_imbue      = calloc (1024UL, sizeof (* empty_imbue));
+	empty_store      = calloc (1024UL, sizeof (* empty_store));
 
 	if (!assemble_clean_up_queued) {
-		atexit(assemble_clean_up);
+		atexit (assemble_clean_up);
 		assemble_clean_up_queued = !assemble_clean_up_queued;
 	}
 
 	while (index < count) {
-		if (array[index] == ASMDIRREL) {
-			asmdirrel(1,
-			          array[index + 1]);
+		if (array [index] == ASMDIRREL) {
+			asmdirrel (1, array [index + 1]);
 			index += 1;
-		} else if (array[index] == ASMDIRMEM) {
-			asmdirmem(1,
-			          array[index + 1]);
+		} else if (array [index] == ASMDIRMEM) {
+			asmdirmem (1, array [index + 1]);
 			index += 1;
-		} else if (array[index] == ASMDIRIMM) {
+		} else if (array [index] == ASMDIRIMM) {
 			unsigned int repeat = 0;
-			while (repeat < array[index + 2]) {
-				asmdirimm(1,
-				          array[index + 1],
-				          array[index + 3 + repeat]);
+			while (repeat < array [index + 2]) {
+				asmdirimm (1, array [index + 1], array [index + 3 + repeat]);
 				++repeat;
 			}
-			index += array[index + 2] + 2;
-		} else if ((array[index] >= REGULAR_BEGIN)
-		       &&  (array[index] <= REGULAR_END)) {
-			build_regular(array[index + 0],
-			              array[index + 1],
-			              array[index + 2],
-			              array[index + 3],
-			              array[index + 4],
-			              array[index + 5]);
+			index += array [index + 2] + 2;
+		} else if ((array [index] >= REGULAR_BEGIN) && (array [index] <= REGULAR_END)) {
+			build_regular (array [index + 0], array [index + 1], array [index + 2], array [index + 3], array [index + 4], array [index + 5]);
 			index += 5;
-		} else if ((array[index] >= IRREGULAR_BEGIN)
-		       &&  (array[index] <= IRREGULAR_END)) {
-			build_irregular(array[index + 0],
-			                array[index + 1],
-			                array[index + 2],
-			                array[index + 3]);
+		} else if ((array [index] >= IRREGULAR_BEGIN) && (array [index] <= IRREGULAR_END)) {
+			build_irregular (array [index + 0], array [index + 1], array [index + 2], array [index + 3]);
 			index += 3;
-		} else if ((array[index] >= SPECIAL_1_BEGIN)
-		       &&  (array[index] <= SPECIAL_1_END)) {
-			build_special_1(array[index + 0]);
+		} else if ((array [index] >= SPECIAL_1_BEGIN) && (array [index] <= SPECIAL_1_END)) {
+			build_special_1 (array [index + 0]);
 			index += 0;
-		} else if ((array[index] >= SPECIAL_2_BEGIN)
-		       &&  (array[index] <= SPECIAL_2_END)) {
-			build_special_2(array[index + 0]);
+		} else if ((array [index] >= SPECIAL_2_BEGIN) && (array [index] <= SPECIAL_2_END)) {
+			build_special_2 (array [index + 0]);
 			index += 0;
-		} else if ((array[index] >= JUMP_IF_BEGIN)
-		       &&  (array[index] <= JUMP_IF_END)) {
-			build_jump_if(array[index + 0],
-			              array[index + 1],
-			              array[index + 2]);
+		} else if ((array [index] >= JUMP_IF_BEGIN) && (array [index] <= JUMP_IF_END)) {
+			build_jump_if (array [index + 0], array [index + 1], array [index + 2]);
 			index += 2;
-		} else if ((array[index] >= MOVE_IF_BEGIN)
-		       &&  (array[index] <= MOVE_IF_END)) {
-			build_move_if(array[index + 0],
-			              array[index + 1],
-			              array[index + 2],
-			              array[index + 3],
-			              array[index + 4],
-			              array[index + 5]);
+		} else if ((array [index] >= MOVE_IF_BEGIN) && (array [index] <= MOVE_IF_END)) {
+			build_move_if (array [index + 0], array [index + 1], array [index + 2], array [index + 3], array [index + 4], array [index + 5]);
 			index += 5;
-		} else if ((array[index] >= FLOAT_BEGIN)
-		       &&  (array[index] <= FLOAT_END)) {
-			build_float(array[index + 0],
-			            array[index + 1],
-			            array[index + 2],
-			            array[index + 3]);
+		} else if ((array [index] >= FLOAT_BEGIN) && (array [index] <= FLOAT_END)) {
+			build_float (array [index + 0], array [index + 1], array [index + 2], array [index + 3]);
 			index += 3;
-		} else if (array[index] == JMP) {
-			build_jump(array[index + 1],
-			           array[index + 2],
-			           array[index + 3]);
+		} else if (array [index] == JMP) {
+			build_jump (array [index + 1], array [index + 2], array [index + 3]);
 			index += 3;
-		} else if (array[index] == MOV) {
-			build_move(array[index + 1],
-			           array[index + 2],
-			           array[index + 3],
-			           array[index + 4],
-			           array[index + 5]);
+		} else if (array [index] == MOV) {
+			build_move (array [index + 1], array [index + 2], array [index + 3], array [index + 4], array [index + 5]);
 			index += 5;
-		} else if (array[index] == CALL) {
-			build_call(array[index + 1],
-			           array[index + 2]);
+		} else if (array [index] == CALL) {
+			build_call (array [index + 1], array [index + 2]);
 			index += 2;
-		} else if (array[index] == ENTER) {
-			build_enter(array[index + 1],
-			            array[index + 2]);
+		} else if (array [index] == ENTER) {
+			build_enter (array [index + 1], array [index + 2]);
 			index += 2;
-		} else if ((array[index] == IN)
-		       ||  (array[index] == OUT)) {
-			build_in_out(array[index + 0],
-			             array[index + 1],
-			             array[index + 2],
-			             array[index + 3]);
+		} else if ((array [index] == IN) || (array [index] == OUT)) {
+			build_in_out (array [index + 0], array [index + 1], array [index + 2], array [index + 3]);
 			index += 3;
-		} else if (array[index] == POP) {
-			build_pop(array[index + 1],
-			          array[index + 2],
-			          array[index + 3]);
+		} else if (array [index] == POP) {
+			build_pop (array [index + 1], array [index + 2], array [index + 3]);
 			index += 3;
-		} else if (array[index] == PUSH) {
-			build_push(array[index + 1],
-			           array[index + 2],
-			           array[index + 3]);
+		} else if (array [index] == PUSH) {
+			build_push (array [index + 1], array [index + 2], array [index + 3]);
 			index += 3;
 		} else {
 			return;
@@ -524,23 +398,19 @@ void assemble(unsigned int   count,
 		++index;
 	}
 
-	text_entry_point = empty_store [0];
+	text_entry_point = empty_store  [0];
 
 	index = 0;
 
 	while (index < empty_holes) {
 		unsigned int set = 0;
-		unsigned int get = empty_array[index];
+		unsigned int get = empty_array [index];
 
-		replace((unsigned char *) & set,
-		        & text_sector_byte[get],
-		        sizeof (set));
+		replace ((unsigned char *) & set, & text_sector_byte [get], sizeof (set));
 
-		set += empty_store[empty_imbue[index]];
+		set += empty_store [empty_imbue [index]];
 
-		replace(& text_sector_byte[get],
-		        (unsigned char *) & set,
-		        sizeof (set));
+		replace (& text_sector_byte [get], (unsigned char *) & set, sizeof (set));
 
 		++index;
 	}
