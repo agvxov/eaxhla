@@ -1,4 +1,5 @@
 #ifndef ASSEMBLER_H
+#define ASSEMBLER_H
 
 enum {
 	D8,  // 8-bit
@@ -183,5 +184,4 @@ extern int was_instruction_array_empty;
 
 extern void assemble (unsigned int count, unsigned int * array);
 
-#define ASSEMBLER_H
 #endif

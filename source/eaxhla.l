@@ -1,6 +1,7 @@
 %{
     #include <stdlib.h>
     #include "sds/sds.h"
+    #include "eaxhla.h"
     #include "eaxhla.tab.h"
 
     sds string_literal_buffer;
@@ -253,13 +254,13 @@ library        { BEGIN INITIAL; return END_LIBRARY; }
 <IN_COMMENT>{
 \n      { BEGIN INITIAL; }
 .*      { ; }
-<<EOF>> { yytext = strdup("<EOF>"); issue_error("unterminated comment"); yyterminate(); }
+<<EOF>> { issue_error("unterminated comment"); yyterminate(); }
 }
 
 <IN_MULTILINE_COMMENT>{
 \*\/    { BEGIN INITIAL; }
 .|\n    { ; }
-<<EOF>> { yytext = strdup("<EOF>"); issue_error("unterminated comment"); yyterminate(); }
+<<EOF>> { issue_error("unterminated comment"); yyterminate(); }
 }
 
 <INITIAL,IN_ARTIMETRIC_BLOCK>{
@@ -285,7 +286,7 @@ library        { BEGIN INITIAL; return END_LIBRARY; }
 }
 
 <IN_ARTIMETRIC_BLOCK>{
-<<EOF>> { yytext = strdup("<EOF>"); issue_error("unterminated artimetric block"); yyterminate(); }
+<<EOF>> { issue_error("unterminated artimetric block"); yyterminate(); }
 }
 
 {identifier}  { yylval.strval = strdup(yytext); return IDENTIFIER; }

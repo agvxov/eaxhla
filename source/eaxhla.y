@@ -1,14 +1,21 @@
+/* EAXHLA parser
+ * This source file has minimal knowledge about highlevel constructs.
+ * The only time it interacts with the assembler interface directly is when
+ *  instructions are encountered or processing a machine code block,
+ *  everything else is delegated to eaxhla.c
+ */
 %code requires {
     #include "eaxhla.h"
 }
 %{
     #include <stdio.h>
     #include <math.h>
+    #include <stdbool.h>
 
+    #include "eaxhla.h"
     #include "eaxhla.yy.h"
     #include "assembler.h"
     #include "compile.h"
-    #include "eaxhla.h"
     #include "debug.h"
 
     extern void yyfree_leftovers(void);
@@ -70,7 +77,7 @@
 %token U8 U16 U32 U64
 %type<intval> type
 %type<varval> declaration
-%type<varval> anon_variable
+%type<varval> stored_literal
 
 // Registers
 %type<regval> register register64s register32s register16s register8s
@@ -94,6 +101,9 @@
 %token EXIT BREAK
 %%
 
+document: hla { fin_hla(); }
+    ;
+
 hla: %empty
     // | library  hla
     | declaration hla // tmp
@@ -102,11 +112,11 @@ hla: %empty
     ;
 
 program: program_head declaration_section MYBEGIN code END_PROGRAM {
-        empty_out_scope();
     }
     ;
 
 program_head: program_specifier PROGRAM IDENTIFIER {
+        add_scope($3);
         add_program($3);
         free($3);
     };
@@ -121,17 +131,14 @@ system_specifier: UNIX { system_type = UNIX; }
 
     // XXX: end procedure thing
 function: function_head declaration_section MYBEGIN code END_PROCEDURE {
-        append_instructions(RETN);
-        empty_out_scope();
+        fin_procedure();
     }
     ;
 
 function_head: function_specifier PROCEDURE IDENTIFIER {
-        scope = strdup($3);
-
-        symbol_t procedure;
-        procedure.name = $3;
-        add_procedure(procedure);
+        add_scope($3);
+        add_procedure($3);
+        free($3);
     }
     ;
 
@@ -146,58 +153,23 @@ declaration_section: %empty
 
 declaration:
       variable_specifier type IDENTIFIER {
-        $$.type = $2;
-        $$.name = make_scoped_name(scope, $3);
-        $$.elements = 1;
-        add_variable($$);
-
+        add_variable($2, $3);
         free($3);
     }
     | variable_specifier type IDENTIFIER '=' LITERAL {
-        $$.type = $2;
-        $$.name = make_scoped_name(scope, $3);
-        if (!can_fit($2, $5)) {
-            issue_warning("the value \033[1m'%lld'\033[0m will overflow in assignement", $5);
-        }
-        $$.elements = 1;
-        $$.value = $5;
-        add_variable($$);
-
+        add_variable_with_value($2, $3, $5);
         free($3);
     }
     | variable_specifier type '<' value '>' IDENTIFIER {
-        $$.type = $2;
-        if (validate_array_size($4)) {
-            break;
-        }
-        $$.name = make_scoped_name(scope, $6);
-        $$.elements = $4;
-        add_variable($$);
-
+        add_array_variable($2, $6, $4);
         free($6);
     }
     | variable_specifier type '<' value '>' IDENTIFIER '=' ARRAY_LITERAL {
-        $$.type = $2;
-        if (validate_array_size($4)) {
-            break;
-        }
-        if ((unsigned long long)$4 < $8.len) {
-            issue_warning("declared array size is smaller than assigned literal, this will cause truncation");
-        }
-        $$.name = make_scoped_name(scope, $6);
-        $$.elements = $4;
-        $$.array_value = $8.data;
-        add_variable($$);
-
+        add_array_variable_with_value($2, $6, $4, $8.data, $8.len);
         free($6);
     }
     | variable_specifier type '<' '>' IDENTIFIER '=' ARRAY_LITERAL {
-        $$.type = $2;
-        $$.name = make_scoped_name(scope, $5);
-        $$.elements = $7.len;
-        $$.array_value = $7.data;
-        add_variable($$);
-
+        add_array_variable_with_value($2, $5, $7.len, $7.data, $7.len);
         free($5);
     }
     ;
@@ -224,7 +196,6 @@ immediate: LITERAL {
         symbol_t * variable = get_variable($1);
         $$.type  = REL;
         $$.value = variable->_id;
-
         free($1);
     }
     ;
@@ -239,9 +210,8 @@ dereference: '[' IDENTIFIER ']' { $$ = 0; /* XXX: how the fuck do i dereference?
     ;
 
 relative: IDENTIFIER {
-        symbol_t * relative = get_symbol($1);
-        /*breakpoint();*/
-        $$ = relative->_id;
+        $$ = get_relative($1)->_id;
+        free($1);
     }
     ;
 
@@ -254,12 +224,8 @@ value: artimetric_block
     }
     ;
 
-anon_variable: ARRAY_LITERAL {
-        $$.array_value = $1.data;
-        $$.elements    = $1.len;
-        int ignore = asprintf(&$$.name, "_anon_%llu", anon_variable_counter++);
-        (void)ignore;
-        add_variable($$);
+stored_literal: ARRAY_LITERAL {
+        add_literal($1.data, $1.len);
     }
     ;
 
@@ -276,9 +242,7 @@ code: %empty
     ;
 
 label: LABEL {
-        symbol_t label;
-        label.name = make_scoped_name(scope, $1);
-        add_procedure(label);
+        add_label($1, true);
     }
     ;
 
@@ -337,7 +301,7 @@ arguments: %empty
     | LITERAL          arguments
     | register         arguments
     | artimetric_block arguments
-    | anon_variable    arguments
+    | stored_literal   arguments
     ;
 
 register: register64s { $$ = $1; $$.size = D64; }
@@ -436,7 +400,9 @@ artimetric_expression: %empty { $$ = 0; }
     ;
 
 artimetric_operand: LITERAL
-    | IDENTIFIER { $$ = 0; /*XXX*/ }
+    | IDENTIFIER {
+        $$ = get_variable($1)->value;
+    }
     ;
 
 exit: EXIT value { append_exit($2); }

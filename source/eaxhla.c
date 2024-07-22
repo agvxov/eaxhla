@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 #include "eaxhla.tab.h"
 
@@ -16,7 +17,14 @@
 #include "assembler.h"
 #include "compile.h"
 
-unsigned long long anon_variable_counter = 0;
+/* Used for naming variables constructed from literals
+ */
+size_t anon_variable_counter = 0;
+/* Used to check whether all labels without
+ *  previous declarations (forward jumps)
+ *  have been declared later in code
+ */
+size_t unresolved_label_counter = 0;
 
 static unsigned symbol_id = 1;
 tommy_hashtable symbol_table;
@@ -38,6 +46,15 @@ int eaxhla_init(void) {
     return 0;
 }
 
+symbol_t * new_symbol(const char * const name) {
+    symbol_t * r;
+
+    r = (symbol_t *)calloc(sizeof(symbol_t), 1);
+    r->name = strdup(name);
+
+    return r;
+}
+
 static
 void free_symbol(void * data) {
     symbol_t * variable = (symbol_t*)data;
@@ -46,96 +63,19 @@ void free_symbol(void * data) {
 }
 
 int eaxhla_deinit(void) {
+    empty_out_scope();
+
     tommy_hashtable_foreach(&symbol_table, free_symbol);
     tommy_hashtable_done(&symbol_table);
+
     return 0;
-}
-
-
-static
-int table_compare_unsigned(const void * arg, const void * obj) {
-  return *(const unsigned *) arg != ((const symbol_t*)obj)->_hash;
-}
-
-static
-void * symbol_lookup(const char * const name) {
-    unsigned lookup_hash = tommy_strhash_u32(0, name);
-    void * r = tommy_hashtable_search(&symbol_table,
-                                      table_compare_unsigned,
-                                      &lookup_hash,
-                                      lookup_hash
-                                    );
-    return r;
-}
-
-static
-void symbol_insert(symbol_t * symbol) {
-    symbol->_hash = tommy_strhash_u32(0, symbol->name);
-    tommy_hashtable_insert(&symbol_table,
-                           &symbol->_node,
-                            symbol,
-                            symbol->_hash
-                        );
-}
-
-void add_program(const char * const name) {
-    if (is_program_found) {
-        issue_error("only 1 entry point is allowed and a program block was already found");
-    }
-    is_program_found = 1;
-
-    append_instructions(ASMDIRMEM, 0);
-
-    scope = strdup(name);
-}
-
-void add_variable(symbol_t variable) {
-    if (get_variable(variable.name)) {
-        issue_error("symbol '%s' redeclared as new variable", variable.name);
-        return;
-    }
-
-    variable._id = symbol_id++;
-    variable.symbol_type = VARIABLE;
-
-    symbol_t * heap_variable = malloc(sizeof(variable));
-    memcpy(heap_variable, &variable, sizeof(variable));
-
-    symbol_insert(heap_variable);
-}
-
-void add_procedure(symbol_t procedure) {
-    if (get_symbol(procedure.name)) {
-        issue_error("symbol '%s' redeclared as new function", procedure.name);
-        return;
-    }
-
-    procedure._id = symbol_id++;
-    procedure.symbol_type = FUNCTION;
-
-    symbol_t * heap_procedure = malloc(sizeof(procedure));
-    memcpy(heap_procedure, &procedure, sizeof(procedure));
-
-    symbol_insert(heap_procedure);
-    //
-    append_instructions(ASMDIRMEM, procedure._id);
-}
-
-void add_fastcall(const char * const destination) {
-    symbol_t * function = get_function(destination);
-    if (!function) {
-        issue_error("can't fastcall '%s', no such known symbol", destination);
-        return;
-    }
-
-    append_instructions(CALL, REL, function->_id);
 }
 
 /* Are these literals ugly? yes.
  * However it would be much more painful to calculate the values inline.
  */
 int can_fit(const int type, const long long value) {
-    unsigned long long max = 0;
+    size_t max = 0;
     long long min = 0;
     switch (type) {
         case U8: {
@@ -167,9 +107,216 @@ int can_fit(const int type, const long long value) {
             max =  4294967295;
         } break;
     }
-    return value > 0 ? (unsigned long long)value <= max : value >= min;
+    return value > 0 ? (size_t)value <= max : value >= min;
 }
 
+int validate_array_size(const int size) {
+    if (size < 1) {
+        issue_error("cannot create an array of size '%d', because its less than 1", size);
+        return 1;
+    }
+    return 0;
+}
+
+static
+int table_compare_unsigned(const void * arg, const void * obj) {
+    return *(const unsigned *) arg != ((const symbol_t*)obj)->_hash;
+}
+
+static
+void * symbol_lookup(const char * const name) {
+    unsigned lookup_hash = tommy_strhash_u32(0, name);
+    void * r = tommy_hashtable_search(&symbol_table,
+                                      table_compare_unsigned,
+                                      &lookup_hash,
+                                      lookup_hash
+                                    );
+    return r;
+}
+
+static
+void symbol_insert(symbol_t * symbol) {
+    symbol->_hash = tommy_strhash_u32(0, symbol->name);
+    tommy_hashtable_insert(&symbol_table,
+                           &symbol->_node,
+                            symbol,
+                            symbol->_hash
+                        );
+}
+
+void add_scope(const char * const name){
+    free(scope);
+    scope = strdup(name);
+}
+
+// XXX: alternative version on the stack
+static
+char * make_scoped_name(const char * const scope, const char * const name) {
+    if (!scope) {
+        return (char*)name;
+    }
+
+    char * r;
+    const long scl = strlen(scope);
+    const long nml = strlen(name);
+    r = malloc(2 + scl + 1 + nml + 1);
+    r[0] = '_';
+    r[1] = '_';
+    memcpy(r + 2, scope, scl);
+    r[2 + scl] = '_';
+    memcpy(r + 2 + scl + 1, name, nml);
+    r[2 + scl + 1 + nml] = '\0';
+
+    return r;
+}
+
+symbol_t * get_symbol(const char * const name) {
+    symbol_t * r;
+    r = symbol_lookup(name);
+    if (r) {
+        return r;
+    }
+
+    char * alternative_name = make_scoped_name(scope, name);
+    r = symbol_lookup(alternative_name);
+    free(alternative_name);
+
+    return r;
+}
+
+void add_program(const char * const name) {
+    (void)name;
+
+    if (is_program_found) {
+        issue_error("only 1 entry point is allowed and a program block was already found");
+    }
+    is_program_found = 1;
+
+    append_instructions(ASMDIRMEM, 0);
+}
+
+static
+void _add_variable(unsigned type, const char * const name, size_t size, void * value) {
+    char * full_name = make_scoped_name(scope, name);
+    if (get_variable(full_name)) {
+        issue_error("symbol '%s' redeclared as new variable", full_name);
+        return;
+    }
+
+    symbol_t * variable = new_symbol(full_name);
+    variable->elements = size;
+    variable->type = type;
+
+    if (size == 1) {
+        variable->value = (long)value;
+        if (!can_fit(type, variable->value)) {
+            issue_warning("the value \033[1m'%lld'\033[0m will overflow in assignement",
+                            variable->value
+            );
+        }
+    } else {
+        variable->array_value = value;
+        validate_array_size(size);
+    }
+
+    variable->_id = symbol_id++;
+    variable->symbol_type = VARIABLE_SYMBOL;
+
+    symbol_insert(variable);
+
+}
+
+void add_variable(unsigned type, const char * const name) {
+    _add_variable(type, name, 1, 0);
+}
+
+void add_variable_with_value(unsigned type, const char * const name, size_t value) {
+    _add_variable(type, name, 1, (void *)value);
+}
+
+void add_array_variable(unsigned type, const char * const name, size_t size) {
+    _add_variable(type, name, size, 0);
+}
+
+void add_array_variable_with_value(unsigned type, const char * const name, size_t size, void * value, size_t value_size) {
+    if (size < value_size) {
+        issue_warning("declared array size is smaller than assigned literal, this will cause truncation");
+    }
+    _add_variable(type, name, size, value);
+}
+
+void add_procedure(const char * const name) {
+    if (get_symbol(name)) {
+        issue_error("symbol '%s' redeclared as new function", name);
+        return;
+    }
+
+    symbol_t * procedure = new_symbol(name);
+
+    procedure->_id = symbol_id++;
+    procedure->symbol_type = LABEL_SYMBOL;
+    procedure->is_resolved = true;
+
+    symbol_insert(procedure);
+
+    append_instructions(ASMDIRMEM, procedure->_id);
+}
+
+void add_literal(void * data, size_t size) {
+    char * name;
+    int ignore = asprintf(&name, "_anon_%lu", anon_variable_counter++);
+    (void)ignore;
+
+    symbol_t * literal = (symbol_t *)calloc(sizeof(symbol_t), 1);
+    literal->name = name;
+    literal->elements = size;
+    literal->array_value = data;
+}
+
+static
+symbol_t * _add_label(const char * const name, int is_resolved) {
+    char * full_name = make_scoped_name(scope, name);
+
+    symbol_t * label = get_symbol(full_name);
+    
+    if (label) {
+        if (label->is_resolved) {
+            issue_error("symbol '%s' redeclared as new label", name);
+        } else {
+            label->is_resolved = true;
+            --unresolved_label_counter;
+        }
+        return label;
+    }
+
+    label = new_symbol(full_name);
+
+    label->_id = symbol_id++;
+    label->symbol_type = LABEL_SYMBOL;
+    label->is_resolved = is_resolved;
+
+    if (!is_resolved) {
+        ++unresolved_label_counter;
+    }
+
+    symbol_insert(label);
+
+    return label;
+}
+
+void add_label(const char * const name, int is_resolved) {
+    _add_label(name, is_resolved);
+}
+
+void add_fastcall(const char * const destination) {
+    symbol_t * function = get_symbol(destination);
+    if (!function) {
+        issue_error("can't fastcall '%s', no such known symbol", destination);
+        return;
+    }
+
+    append_instructions(CALL, REL, function->_id);
+}
 int type2size(const int type) {
     switch (type) {
         case U8:
@@ -205,7 +352,7 @@ int size2bytes(const int size) {
 static
 void _variable_size_sum_iteration(void * i, void * data) {
     symbol_t * variable = (symbol_t*)data;
-    if (variable->symbol_type != VARIABLE) { return; }
+    if (variable->symbol_type != VARIABLE_SYMBOL) { return; }
 
     int * sum = i;
 
@@ -218,54 +365,13 @@ int variable_size_sum(void) {
     return r;
 }
 
-int validate_array_size(const int size) {
-    if (size < 1) {
-        issue_error("cannot create an array of size '%d', because its less than 1", size);
-        return 1;
-    }
-    return 0;
-}
-
-char * make_scoped_name(const char * const scope, const char * const name) {
-    if (!scope) {
-        return (char*)name;
-    }
-
-    char * r;
-    const long scl = strlen(scope);
-    const long nml = strlen(name);
-    r = malloc(2 + scl + 1 + nml + 1);
-    r[0] = '_';
-    r[1] = '_';
-    memcpy(r + 2, scope, scl);
-    r[2 + scl] = '_';
-    memcpy(r + 2 + scl + 1, name, nml);
-    r[2 + scl + 1 + nml] = '\0';
-
-    return r;
-}
-
-symbol_t * get_symbol(const char * const name) {
-    symbol_t * r;
-    r = symbol_lookup(name);
-    if (r) {
-        return r;
-    }
-
-    char * alternative_name = make_scoped_name(scope, name);
-    r = symbol_lookup(alternative_name);
-    free(alternative_name);
-
-    return r;
-}
-
 symbol_t * get_variable(const char * const name) {
     symbol_t * r;
     char * varname = make_scoped_name(scope, name);
 
     r = symbol_lookup(varname);
     if (r
-    &&  r->symbol_type != VARIABLE) {
+    &&  r->symbol_type != VARIABLE_SYMBOL) {
         issue_error("the symbol '%s' is not a variable", name);
         return NULL;
     }
@@ -276,13 +382,46 @@ symbol_t * get_function(const char * const name) {
     symbol_t * r;
     r = symbol_lookup(name);
     if (r
-    &&  r->symbol_type != FUNCTION) {
+    &&  r->symbol_type != LABEL_SYMBOL) {
         issue_error("the symbol '%s' is not a function", name);
         return NULL;
     }
     return r;
 }
 
+symbol_t * get_relative(const char * const name) {
+    symbol_t * r;
+
+    r = get_symbol(name);
+    if (r) {
+        return r;
+    }
+
+    r = _add_label(name, false);
+
+    return r;
+}
+
+void fin_procedure(void) {
+    append_instructions(RETN);
+}
+
+static
+void unresolved_check(void * data) {
+    symbol_t * label = (symbol_t*)data;
+    if (label->type != LABEL_SYMBOL) {
+        return;
+    }
+    if (!label->is_resolved) {
+        issue_error("the label '%s' was never resolved.", label->name);
+    }
+}
+
+void fin_hla(void) {
+    if (anon_variable_counter) {
+        tommy_hashtable_foreach(&symbol_table, unresolved_check);
+    }
+}
 
 void issue_warning(const char * const format, ...) {
     extern char * yyfilename;

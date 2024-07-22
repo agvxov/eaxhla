@@ -1,0 +1,14 @@
+program forward
+    s8 <> heyo_data = "Heyo world\n"
+begin
+    jmp lol
+
+    mov eax 1
+    mov edi 1
+    mov esi heyo_data
+    mov edx 12
+    syscall
+
+  lol:
+    exit 86
+end program

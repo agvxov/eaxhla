@@ -1,4 +1,4 @@
-; @BAKE fasm $@ $*
+; @BAKE fasm $@ $*.out
 format ELF64 executable 3
 
 segment readable executable

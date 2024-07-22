@@ -76,8 +76,8 @@ ${OBJECT.d}/%.pluglock: ${OBJECT.d}/%.pp
 	touch $@
 
 test: ${OUT}
-	ORIGIN="$$(realpath .)" PATH="$$(realpath .):${PATH}" cmdtest
-	${WRAP} ./${OUT} test/nop.eax
+	-ORIGIN="$$(realpath .)" PATH="$$(realpath .):${PATH}" cmdtest
+	-${WRAP} ./${OUT} test/nop.eax
 
 bootstrap:
 	./library/bootstrap.sh

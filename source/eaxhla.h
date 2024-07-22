@@ -1,27 +1,29 @@
 #ifndef EAXHLA_H
+#define EAXHLA_H
 
 #include <tommyds/tommyds/tommyhashtbl.h>
 
 #define WORD_SIZE_IN_BYTES (64/8)
 
+// XXX these should be private
 typedef enum {
-    VARIABLE,
-    FUNCTION,
+    VARIABLE_SYMBOL,
+    LABEL_SYMBOL,
 } symbol_type_t;
 
 typedef struct {
     symbol_type_t symbol_type;
     union {
-        struct { // VARIABLE
+        struct { // VARIABLE_SYMBOL
             int type;
-            unsigned long long elements;
+            size_t elements;
             union {
                 long   value;
                 void * array_value;
             };
         };
-        struct { // FUNCTION
-            void * unused;
+        struct { // LABEL_SYMBOL
+            int is_resolved;
         };
     };
     char *     name;
@@ -30,10 +32,12 @@ typedef struct {
     tommy_node _node;
 } symbol_t;
 
-extern tommy_hashtable symbol_table;
+symbol_t * new_symbol(const char * const name);
+/* private:
+void free_symbol(void * name);
+ */
 
-// Used for naming variables constructed from literals
-extern unsigned long long anon_variable_counter;
+extern tommy_hashtable symbol_table;
 
 typedef struct {
     unsigned number : 6;
@@ -42,39 +46,54 @@ typedef struct {
 
 extern int system_type;
 
+/* Used for error discovery
+ */
 extern int is_program_found;
 extern int has_encountered_error;
 
-extern char * scope;
-extern void empty_out_scope(void);
-
-// Used for error reporting
+/* Used for error reporting
+ */
 extern char * yyfilename;
 
 extern int eaxhla_init(void);
 extern int eaxhla_deinit(void);
 
-extern char * make_scoped_name(const char * const scope, const char * const name);
-extern int can_fit(const int type, const long long value);
-extern int validate_array_size(const int size);
-
-extern void add_variable(symbol_t variable);
-extern symbol_t * get_variable(const char * const name);
-
-extern symbol_t * get_symbol(const char * const name);
-//extern void add_function(symbol_t function);
-extern void add_procedure(symbol_t procedure);
-extern symbol_t * get_function(const char * const name);
-extern void add_program(const char * const name);
-
-extern void add_fastcall(const char * const destination);
-
-extern int type2size(int type);
-extern int size2bytes(const int size);
 extern int variable_size_sum(void);
 
+// Language constructs
+extern void add_program(const char * const name);
+extern void add_scope(const char * const name);
+extern void add_variable(unsigned type, const char * const name);
+extern void add_variable_with_value(unsigned type, const char * const name, size_t value);
+extern void add_array_variable(unsigned type, const char * const name, size_t size);
+extern void add_array_variable_with_value(unsigned type, const char * const name, size_t size, void * value, size_t value_size);
+extern void add_literal(void * data, size_t size);
+extern void add_label(const char * const name, int is_resolved);
+extern void add_procedure(const char * const name);
+extern void add_fastcall(const char * const destination);
+extern void fin_procedure(void);
+extern void fin_hla(void);
+/* Not implemented
+extern symbol_t * add_function(symbol_t function);
+extern symbol_t * get_function(const char * const name);
+*/
+
+// Asm value constructs
+/* These functions MUST return a valid symbol_t or
+ *  we segv and catch fire.
+ * Unresolved symbol errors are handled internally.
+ */
+extern symbol_t * get_relative(const char * const name);
+extern symbol_t * get_variable(const char * const name);
+
+// XXX: move to assembler.h,
+//  delete the switch bullshit, you can get away with artimetrics,
+//  also typedef the D\d+ type
+extern int type2size(int type);        // XXX: the return type is an anon enum
+extern int size2bytes(const int size); // XXX: size is an anon enum
+
+// Error reporting
 extern void issue_warning(const char * format, ...);
 extern void issue_error(const char * format, ...);
 
-#define EAXHLA_H
 #endif

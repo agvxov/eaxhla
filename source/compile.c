@@ -32,7 +32,7 @@ int compile_deinit(void) {
 static
 void dump_variable_to_assembler(void * data) {
     symbol_t * variable = (symbol_t*)data;
-    if (variable->symbol_type != VARIABLE) {
+    if (variable->symbol_type != VARIABLE_SYMBOL) {
         return;
     }
 
