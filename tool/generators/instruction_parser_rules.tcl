@@ -10,20 +10,20 @@ proc make_parser_rules {is} {
                 dict set r size  "\$$n.size"
             }
             "immediate" {
-                dict set r enum  "$$n.type"
-                dict set r value "$$n.value"
+                dict set r enum  "\$$n.type"
+                dict set r value "\$$n.value"
                 # XXX
                 dict set r size  "D32"
             }
             "relative"  {
                 dict set r enum  "REL"
-                dict set r value "$$n"
+                dict set r value "\$$n"
                 dict set r size  "D32"
             }
             "memory"    {
                 dict set r enum  "MEM"
-                dict set r value "0 /* ??? */"
-                dict set r size  "0 /* ??? */"
+                dict set r value "\$$n"
+                dict set r size  "D32"
             }
             default     { malformed_instruction $n }
         }

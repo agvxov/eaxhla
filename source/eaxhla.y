@@ -83,8 +83,8 @@
 %type<regval> register register64s register32s register16s register8s
 
 // #placeholder<register_token_list> BEGIN
-%token RAX RCX RDX RBX RSP RBP RSI RDI RG8 RG9 RG10 RG11 RG12 RG13 RG14 RG15
-%token EAX ECX EDX EBX ESP EBP ESI EDI RG8D RG9D RG10D RG11D RG12D RG13D RG14D RG15D
+%token RAX RCX RDX RBX RSP RBP RSI RDI R8 R9 R10 R11 R12 R13 R14 R15
+%token EAX ECX EDX EBX ESP EBP ESI EDI R8D R9D R10D R11D R12D R13D R14D R15D
 %token AX CX DX BX SP BP SI DI R8W R9W R10W R11W R12W R13W R14W R15W
 %token AL CL DL BL SPL BPL SIL DIL R8B R9B R10B R11B R12B R13B R14B R15B
 
@@ -93,7 +93,7 @@
 // Instructions
 %token INOP
 // #placeholder<instruction_token_list> BEGIN
-%token ITADC ITADD ITAND ITCMP ITDEC ITDIV ITHLT ITIDIV ITIMUL ITINC ITJMP ITLEAVE ITLOCK ITMOV ITMUL ITNEG ITNOT ITOR ITPAUSE ITRETF ITRETN ITSAR ITSBB ITSUB ITSYSCALL ITSYSENTER ITSYSEXIT ITSYSRET ITXOR
+%token ITADC ITADD ITAND ITCMP ITDEC ITDIV ITHLT ITIDIV ITIMUL ITINC ITJE ITJMP ITJNE ITLEAVE ITLOCK ITMOV ITMUL ITNEG ITNOT ITOR ITPAUSE ITPOP ITRETF ITRETN ITSAR ITSBB ITSUB ITSYSCALL ITSYSENTER ITSYSEXIT ITSYSRET ITXOR
 // #placeholder<instruction_token_list> END
 
 // Instruction-likes
@@ -204,7 +204,10 @@ memory: artimetric_block
     | dereference
     ;
 
-dereference: '[' IDENTIFIER ']' { $$ = 0; /* XXX: how the fuck do i dereference? */ }
+dereference: '[' IDENTIFIER ']' {
+        $$ = get_variable($2)->_id;
+        free($2);
+    }
     | '[' IDENTIFIER '+' value ']' { $$ = 0; /* XXX: how the fuck do i dereference? */ }
     | '[' IDENTIFIER '-' value ']' { $$ = 0; /* XXX: how the fuck do i dereference? */ }
     ;
@@ -312,76 +315,76 @@ register: register64s { $$ = $1; $$.size = D64; }
     ;
 
     // #placeholder<register_parser_rules> BEGIN
-register64s: RAX { $$.number = R0; }
-    | RCX   { $$.number = R1; }
-    | RDX   { $$.number = R2; }
-    | RBX   { $$.number = R3; }
-    | RSP   { $$.number = R4; }
-    | RBP   { $$.number = R5; }
-    | RSI   { $$.number = R6; }
-    | RDI   { $$.number = R7; }
-    | RG8   { $$.number = R8; }
-    | RG9   { $$.number = R9; }
-    | RG10  { $$.number = R10; }
-    | RG11  { $$.number = R11; }
-    | RG12  { $$.number = R12; }
-    | RG13  { $$.number = R13; }
-    | RG14  { $$.number = R14; }
-    | RG15  { $$.number = R15; }
+register64s: RAX { $$.number = GR0; }
+    | RCX   { $$.number = GR1; }
+    | RDX   { $$.number = GR2; }
+    | RBX   { $$.number = GR3; }
+    | RSP   { $$.number = GR4; }
+    | RBP   { $$.number = GR5; }
+    | RSI   { $$.number = GR6; }
+    | RDI   { $$.number = GR7; }
+    | R8    { $$.number = GR8; }
+    | R9    { $$.number = GR9; }
+    | R10   { $$.number = GR10; }
+    | R11   { $$.number = GR11; }
+    | R12   { $$.number = GR12; }
+    | R13   { $$.number = GR13; }
+    | R14   { $$.number = GR14; }
+    | R15   { $$.number = GR15; }
     ;
 
-register32s: EAX { $$.number = R0; }
-    | ECX   { $$.number = R1; }
-    | EDX   { $$.number = R2; }
-    | EBX   { $$.number = R3; }
-    | ESP   { $$.number = R4; }
-    | EBP   { $$.number = R5; }
-    | ESI   { $$.number = R6; }
-    | EDI   { $$.number = R7; }
-    | RG8D  { $$.number = R8; }
-    | RG9D  { $$.number = R9; }
-    | RG10D { $$.number = R10; }
-    | RG11D { $$.number = R11; }
-    | RG12D { $$.number = R12; }
-    | RG13D { $$.number = R13; }
-    | RG14D { $$.number = R14; }
-    | RG15D { $$.number = R15; }
+register32s: EAX { $$.number = GR0; }
+    | ECX   { $$.number = GR1; }
+    | EDX   { $$.number = GR2; }
+    | EBX   { $$.number = GR3; }
+    | ESP   { $$.number = GR4; }
+    | EBP   { $$.number = GR5; }
+    | ESI   { $$.number = GR6; }
+    | EDI   { $$.number = GR7; }
+    | R8D   { $$.number = GR8; }
+    | R9D   { $$.number = GR9; }
+    | R10D  { $$.number = GR10; }
+    | R11D  { $$.number = GR11; }
+    | R12D  { $$.number = GR12; }
+    | R13D  { $$.number = GR13; }
+    | R14D  { $$.number = GR14; }
+    | R15D  { $$.number = GR15; }
     ;
 
-register16s: AX { $$.number = R0; }
-    | CX    { $$.number = R1; }
-    | DX    { $$.number = R2; }
-    | BX    { $$.number = R3; }
-    | SP    { $$.number = R4; }
-    | BP    { $$.number = R5; }
-    | SI    { $$.number = R6; }
-    | DI    { $$.number = R7; }
-    | R8W   { $$.number = R8; }
-    | R9W   { $$.number = R9; }
-    | R10W  { $$.number = R10; }
-    | R11W  { $$.number = R11; }
-    | R12W  { $$.number = R12; }
-    | R13W  { $$.number = R13; }
-    | R14W  { $$.number = R14; }
-    | R15W  { $$.number = R15; }
+register16s: AX { $$.number = GR0; }
+    | CX    { $$.number = GR1; }
+    | DX    { $$.number = GR2; }
+    | BX    { $$.number = GR3; }
+    | SP    { $$.number = GR4; }
+    | BP    { $$.number = GR5; }
+    | SI    { $$.number = GR6; }
+    | DI    { $$.number = GR7; }
+    | R8W   { $$.number = GR8; }
+    | R9W   { $$.number = GR9; }
+    | R10W  { $$.number = GR10; }
+    | R11W  { $$.number = GR11; }
+    | R12W  { $$.number = GR12; }
+    | R13W  { $$.number = GR13; }
+    | R14W  { $$.number = GR14; }
+    | R15W  { $$.number = GR15; }
     ;
 
-register8s: AL { $$.number = R0; }
-    | CL    { $$.number = R1; }
-    | DL    { $$.number = R2; }
-    | BL    { $$.number = R3; }
-    | SPL   { $$.number = R4; }
-    | BPL   { $$.number = R5; }
-    | SIL   { $$.number = R6; }
-    | DIL   { $$.number = R7; }
-    | R8B   { $$.number = R8; }
-    | R9B   { $$.number = R9; }
-    | R10B  { $$.number = R10; }
-    | R11B  { $$.number = R11; }
-    | R12B  { $$.number = R12; }
-    | R13B  { $$.number = R13; }
-    | R14B  { $$.number = R14; }
-    | R15B  { $$.number = R15; }
+register8s: AL { $$.number = GR0; }
+    | CL    { $$.number = GR1; }
+    | DL    { $$.number = GR2; }
+    | BL    { $$.number = GR3; }
+    | SPL   { $$.number = GR4; }
+    | BPL   { $$.number = GR5; }
+    | SIL   { $$.number = GR6; }
+    | DIL   { $$.number = GR7; }
+    | R8B   { $$.number = GR8; }
+    | R9B   { $$.number = GR9; }
+    | R10B  { $$.number = GR10; }
+    | R11B  { $$.number = GR11; }
+    | R12B  { $$.number = GR12; }
+    | R13B  { $$.number = GR13; }
+    | R14B  { $$.number = GR14; }
+    | R15B  { $$.number = GR15; }
     ;
 
 
@@ -431,6 +434,8 @@ instruction: INOP { append_instructions(NOP); }
     | ITHLT { append_instructions(HLT); }
     | ITLOCK { append_instructions(LOCK); }
     | ITJMP relative { append_instructions( JMP, D32, REL, $2 ); }
+    | ITJE relative { append_instructions( JE, D32, REL, $2 ); }
+    | ITJNE relative { append_instructions( JNE, D32, REL, $2 ); }
     | ITINC register { append_instructions( INC, $2.size, REG, $2.number ); }
     | ITDEC register { append_instructions( DEC, $2.size, REG, $2.number ); }
     | ITNOT register { append_instructions( NOT, $2.size, REG, $2.number ); }
@@ -439,14 +444,15 @@ instruction: INOP { append_instructions(NOP); }
     | ITIMUL register { append_instructions( IMUL, $2.size, REG, $2.number ); }
     | ITDIV register { append_instructions( DIV, $2.size, REG, $2.number ); }
     | ITIDIV register { append_instructions( IDIV, $2.size, REG, $2.number ); }
-    | ITINC memory { append_instructions( INC, 0 /* ??? */, MEM, 0 /* ??? */ ); }
-    | ITDEC memory { append_instructions( DEC, 0 /* ??? */, MEM, 0 /* ??? */ ); }
-    | ITNOT memory { append_instructions( NOT, 0 /* ??? */, MEM, 0 /* ??? */ ); }
-    | ITNEG memory { append_instructions( NEG, 0 /* ??? */, MEM, 0 /* ??? */ ); }
-    | ITMUL memory { append_instructions( MUL, 0 /* ??? */, MEM, 0 /* ??? */ ); }
-    | ITIMUL memory { append_instructions( IMUL, 0 /* ??? */, MEM, 0 /* ??? */ ); }
-    | ITDIV memory { append_instructions( DIV, 0 /* ??? */, MEM, 0 /* ??? */ ); }
-    | ITIDIV memory { append_instructions( IDIV, 0 /* ??? */, MEM, 0 /* ??? */ ); }
+    | ITPOP register { append_instructions( POP, $2.size, REG, $2.number ); }
+    | ITINC memory { append_instructions( INC, D32, MEM, $2 ); }
+    | ITDEC memory { append_instructions( DEC, D32, MEM, $2 ); }
+    | ITNOT memory { append_instructions( NOT, D32, MEM, $2 ); }
+    | ITNEG memory { append_instructions( NEG, D32, MEM, $2 ); }
+    | ITMUL memory { append_instructions( MUL, D32, MEM, $2 ); }
+    | ITIMUL memory { append_instructions( IMUL, D32, MEM, $2 ); }
+    | ITDIV memory { append_instructions( DIV, D32, MEM, $2 ); }
+    | ITIDIV memory { append_instructions( IDIV, D32, MEM, $2 ); }
     | ITADD register register { append_instructions( ADD, $2.size, REG, $2.number, REG, $3.number ); }
     | ITOR register register { append_instructions( OR, $2.size, REG, $2.number, REG, $3.number ); }
     | ITADC register register { append_instructions( ADC, $2.size, REG, $2.number, REG, $3.number ); }
@@ -455,9 +461,12 @@ instruction: INOP { append_instructions(NOP); }
     | ITSUB register register { append_instructions( SUB, $2.size, REG, $2.number, REG, $3.number ); }
     | ITXOR register register { append_instructions( XOR, $2.size, REG, $2.number, REG, $3.number ); }
     | ITCMP register register { append_instructions( CMP, $2.size, REG, $2.number, REG, $3.number ); }
-    | ITSAR register immediate { append_instructions( SAR, $2.size, REG, $2.number, $3.type, $3.value ); }
+    | ITCMP register immediate { append_instructions( CMP, $2.size, REG, $2.number, $3.type, $3.value ); }
     | ITMOV register register { append_instructions( MOV, $2.size, REG, $2.number, REG, $3.number ); }
     | ITMOV register immediate { append_instructions( MOV, $2.size, REG, $2.number, $3.type, $3.value ); }
+    | ITMOV register memory { append_instructions( MOV, $2.size, REG, $2.number, MEM, $3 ); }
+    | ITMOV memory register { append_instructions( MOV, D32, MEM, $2, REG, $3.number ); }
+    | ITSAR register immediate { append_instructions( SAR, $2.size, REG, $2.number, $3.type, $3.value ); }
 
     // #placeholder<instruction_parser_rules> END
     ;

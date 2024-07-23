@@ -17,31 +17,34 @@
 #include "assembler.h"
 #include "compile.h"
 
+int has_encountered_error = 0;
+int is_program_found      = 0;
+
+char * yyfilename = "";
+
+static symbol_t * undeclared_symbol;
+
 /* Used for naming variables constructed from literals
  */
-size_t anon_variable_counter = 0;
+static size_t anon_variable_counter = 0;
 /* Used to check whether all labels without
  *  previous declarations (forward jumps)
  *  have been declared later in code
  */
-size_t unresolved_label_counter = 0;
+static size_t unresolved_label_counter = 0;
 
 static unsigned symbol_id = 1;
 tommy_hashtable symbol_table;
 
-int has_encountered_error = 0;
-int is_program_found      = 0;
-
-char * scope = NULL;
+static char * scope = NULL;
 void empty_out_scope(void) {
     free(scope);
     scope = NULL;
 }
 
-char * yyfilename = "";
-
 
 int eaxhla_init(void) {
+    undeclared_symbol = (symbol_t *)calloc(sizeof(symbol_t), 1);
     tommy_hashtable_init(&symbol_table, 256);
     return 0;
 }
@@ -74,6 +77,7 @@ void free_symbol(void * data) {
 int eaxhla_deinit(void) {
     empty_out_scope();
 
+    free(undeclared_symbol);
     tommy_hashtable_foreach(&symbol_table, free_symbol);
     tommy_hashtable_done(&symbol_table);
 
@@ -207,8 +211,8 @@ void add_program(const char * const name) {
 static
 void _add_variable(unsigned type, const char * const name, size_t size, void * value) {
     char * full_name = make_scoped_name(scope, name);
-    if (get_variable(full_name)) {
-        issue_error("symbol '%s' redeclared as new variable", full_name);
+    if (get_symbol(name)) {
+        issue_error("symbol '%s' redeclared as new variable", name);
         return;
     }
 
@@ -384,8 +388,12 @@ symbol_t * get_variable(const char * const name) {
     if (r
     &&  r->symbol_type != VARIABLE_SYMBOL) {
         issue_error("the symbol '%s' is not a variable", name);
-        r = NULL;
     }
+
+    if (!r) {
+        r = undeclared_symbol;
+    }
+
     free(varname);
     return r;
 }

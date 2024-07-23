@@ -1,0 +1,18 @@
+program basic_conditional
+begin
+    if 0 then
+        mov eax 1
+        mov edi 1
+        mov esi "nope\n"
+        mov edx 5
+        syscall
+    end if
+
+    if 1 then
+        mov eax 1
+        mov edi 1
+        mov esi "yup\n"
+        mov edx 4
+        syscall
+    end if
+end program

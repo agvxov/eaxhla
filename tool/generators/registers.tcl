@@ -1,14 +1,3 @@
-#    XXX
-#
-#    |       RGXMM0 { $$.number = 0; } /* XXX */
-#    |       RGXMM1 { $$.number = 0; }
-#    |       RGXMM2 { $$.number = 0; }
-#    |       RGXMM3 { $$.number = 0; }
-#    |       RGXMM4 { $$.number = 0; }
-#    |       RGXMM5 { $$.number = 0; }
-#    |       RGXMM6 { $$.number = 0; }
-#    |       RGXMM7 { $$.number = 0; }
-
 set register64s {
     rax 
     rcx 
@@ -18,14 +7,14 @@ set register64s {
     rbp 
     rsi 
     rdi 
-    rg8 
-    rg9 
-    rg10
-    rg11
-    rg12
-    rg13
-    rg14
-    rg15
+    r8 
+    r9 
+    r10
+    r11
+    r12
+    r13
+    r14
+    r15
 }
 
 set register32s {
@@ -37,14 +26,14 @@ set register32s {
     ebp  
     esi  
     edi  
-    rg8d 
-    rg9d 
-    rg10d
-    rg11d
-    rg12d
-    rg13d
-    rg14d
-    rg15d
+    r8d 
+    r9d 
+    r10d
+    r11d
+    r12d
+    r13d
+    r14d
+    r15d
 }
 
 set register16s {

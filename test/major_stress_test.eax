@@ -26,7 +26,7 @@ begin
 end procedure
 
 fast procedure write_space
-	s8 space = " "
+	s8 space = ' '
 begin
 	mov eax 1
 	mov edi 1
@@ -36,7 +36,7 @@ begin
 end procedure
 
 fast procedure write_line_feed
-	s8 line_feed = "\n"
+	s8 line_feed = '\n'
 begin
 	mov eax 1
 	mov edi 1
@@ -74,7 +74,7 @@ begin
 	main_loop:
 		mov r12d [file]
 		mov r13d byte
-		call read_character
+		fastcall read_character
 
 		mov r10d eax
 		mov r15b [byte]

@@ -33,8 +33,10 @@ typedef struct {
 } symbol_t;
 
 /* private:
+
 symbol_t * new_symbol(const char * const name);
 void free_symbol(void * name);
+
  */
 
 extern tommy_hashtable symbol_table;

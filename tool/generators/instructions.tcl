@@ -10,6 +10,8 @@ set instructions {
     {hlt}
     {lock}
     {jmp  relative}
+    {je   relative}
+    {jne  relative}
     {inc  register}
     {dec  register}
     {not  register}
@@ -18,6 +20,7 @@ set instructions {
     {imul register}
     {div  register}
     {idiv register}
+    {pop  register}
     {inc  memory}
     {dec  memory}
     {not  memory}
@@ -34,9 +37,12 @@ set instructions {
     {sub register register}
     {xor register register}
     {cmp register register}
-    {sar register immediate}
+    {cmp register immediate}
     {mov register register}
     {mov register immediate}
+    {mov register memory}
+    {mov memory   register}
+    {sar register immediate}
 }
     
 proc malformed_instruction {i} {

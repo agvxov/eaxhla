@@ -6,6 +6,8 @@
 
     sds string_literal_buffer;
 
+    long char_literal_buffer = 0;
+
     #define YY_USER_INIT \
         string_literal_buffer = sdsnew("");
 %}
@@ -18,7 +20,7 @@ hex        [0123456789abcdef]
 uhex       [0123456789ABCDEF]
 
 %x IN_COMMENT IN_MULTILINE_COMMENT
-%x IN_STRING
+%x IN_CHAR IN_STRING
 %x IN_END IN_UNKNOWN_END
 %x IN_ARTIMETRIC_BLOCK
 
@@ -48,11 +50,7 @@ end { BEGIN IN_END; }
 fast           { return FAST; }
 unix           { return UNIX; }
 
-    /* #placeholder<register_scanner_instructions> END
-    */
-
 in         { return TIN; }
-\=         { return '='; }
 
 s8         { return  S8; }
 s16        { return S16; }
@@ -63,6 +61,7 @@ u16        { return U16; }
 u32        { return U32; }
 u64        { return U64; }
 
+\'  { BEGIN IN_CHAR; }
 \"  { BEGIN IN_STRING; }
 
 \!\=       { return ITNEQ; }
@@ -71,7 +70,7 @@ u64        { return U64; }
 (\/\/)|\#  { BEGIN IN_COMMENT; }
 \/\*       { BEGIN IN_MULTILINE_COMMENT; }
 
-\[|\]|\{|\}|\+|\-|\*|\/|\%|\^|\:|\<|\> {
+\[|\]|\{|\}|\+|\-|\*|\/|\%|\^|\:|\<|\>|\= {
         return yytext[0];
     }
 
@@ -88,14 +87,14 @@ rsp       { return RSP; }
 rbp       { return RBP; }
 rsi       { return RSI; }
 rdi       { return RDI; }
-rg8       { return RG8; }
-rg9       { return RG9; }
-rg10      { return RG10; }
-rg11      { return RG11; }
-rg12      { return RG12; }
-rg13      { return RG13; }
-rg14      { return RG14; }
-rg15      { return RG15; }
+r8        { return R8; }
+r9        { return R9; }
+r10       { return R10; }
+r11       { return R11; }
+r12       { return R12; }
+r13       { return R13; }
+r14       { return R14; }
+r15       { return R15; }
 eax       { return EAX; }
 ecx       { return ECX; }
 edx       { return EDX; }
@@ -104,14 +103,14 @@ esp       { return ESP; }
 ebp       { return EBP; }
 esi       { return ESI; }
 edi       { return EDI; }
-rg8d      { return RG8D; }
-rg9d      { return RG9D; }
-rg10d     { return RG10D; }
-rg11d     { return RG11D; }
-rg12d     { return RG12D; }
-rg13d     { return RG13D; }
-rg14d     { return RG14D; }
-rg15d     { return RG15D; }
+r8d       { return R8D; }
+r9d       { return R9D; }
+r10d      { return R10D; }
+r11d      { return R11D; }
+r12d      { return R12D; }
+r13d      { return R13D; }
+r14d      { return R14D; }
+r15d      { return R15D; }
 ax        { return AX; }
 cx        { return CX; }
 dx        { return DX; }
@@ -163,7 +162,9 @@ hlt             { return ITHLT; }
 idiv            { return ITIDIV; }
 imul            { return ITIMUL; }
 inc             { return ITINC; }
+je              { return ITJE; }
 jmp             { return ITJMP; }
+jne             { return ITJNE; }
 leave           { return ITLEAVE; }
 lock            { return ITLOCK; }
 mov             { return ITMOV; }
@@ -172,6 +173,7 @@ neg             { return ITNEG; }
 not             { return ITNOT; }
 or              { return ITOR; }
 pause           { return ITPAUSE; }
+pop             { return ITPOP; }
 retf            { return ITRETF; }
 retn            { return ITRETN; }
 sar             { return ITSAR; }
@@ -202,12 +204,25 @@ library        { BEGIN INITIAL; return END_LIBRARY; }
 .*  { issue_error("unknown end-sequence \033[1m'%s'\033[0m", yytext); BEGIN INITIAL; return 0; }
 }
 
-<IN_STRING>{
-    /* XXX: the first WORD_SIZE_IN_BYTES bytes should be 0'd */
+<IN_CHAR>{
     /* XXX: i wanted short strings to be literals;
             this however clashes with with the sanity of machine blocks;
             those should be moved to '' (exactly like in Holy C)
     */
+    /* XXX: THIS CODE IS TOTAL DEATH
+    */
+.   { char_literal_buffer = yytext[0]; }
+\n  { char_literal_buffer = '\n'; }
+\'  {
+        yylval.intval = char_literal_buffer;
+        char_literal_buffer = 0;
+        return LITERAL;
+}
+\n  { issue_error("unterminated character literal sequence"); yyterminate(); }
+}
+
+<IN_STRING>{
+    /* XXX: the first WORD_SIZE_IN_BYTES bytes should be 0'd */
 \"  {
         BEGIN INITIAL;
         yylval.blobval.data = malloc(sdslen(string_literal_buffer));
