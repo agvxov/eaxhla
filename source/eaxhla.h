@@ -32,8 +32,8 @@ typedef struct {
     tommy_node _node;
 } symbol_t;
 
-symbol_t * new_symbol(const char * const name);
 /* private:
+symbol_t * new_symbol(const char * const name);
 void free_symbol(void * name);
  */
 

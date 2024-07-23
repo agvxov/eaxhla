@@ -46,11 +46,13 @@ int eaxhla_init(void) {
     return 0;
 }
 
-symbol_t * new_symbol(const char * const name) {
+/* NOTE: This function takes ownership of its `name` argument
+ */
+symbol_t * new_symbol(char * name) {
     symbol_t * r;
 
     r = (symbol_t *)calloc(sizeof(symbol_t), 1);
-    r->name = strdup(name);
+    r->name = name;
 
     return r;
 }
@@ -58,7 +60,14 @@ symbol_t * new_symbol(const char * const name) {
 static
 void free_symbol(void * data) {
     symbol_t * variable = (symbol_t*)data;
+
     free(variable->name);
+
+    if (variable->symbol_type == VARIABLE_SYMBOL
+    &&  variable->elements != 1) {
+        free(variable->array_value);
+    }
+
     free(variable);
 }
 
@@ -251,7 +260,7 @@ void add_procedure(const char * const name) {
         return;
     }
 
-    symbol_t * procedure = new_symbol(name);
+    symbol_t * procedure = new_symbol(strdup(name));
 
     procedure->_id = symbol_id++;
     procedure->symbol_type = LABEL_SYMBOL;
@@ -286,6 +295,7 @@ symbol_t * _add_label(const char * const name, int is_resolved) {
             label->is_resolved = true;
             --unresolved_label_counter;
         }
+        free(full_name);
         return label;
     }
 
@@ -374,8 +384,9 @@ symbol_t * get_variable(const char * const name) {
     if (r
     &&  r->symbol_type != VARIABLE_SYMBOL) {
         issue_error("the symbol '%s' is not a variable", name);
-        return NULL;
+        r = NULL;
     }
+    free(varname);
     return r;
 }
 

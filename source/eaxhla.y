@@ -243,6 +243,7 @@ code: %empty
 
 label: LABEL {
         add_label($1, true);
+        free($1);
     }
     ;
 
