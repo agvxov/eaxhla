@@ -68,15 +68,15 @@ static void input_at (int when, unsigned int size, unsigned int data, unsigned i
 }
 
 static int front (unsigned int data) {
-	return ((data >= 4) && (data <= 7));
+	return ((data >= GR4) && (data <= GR7));
 }
 
 static int lower (unsigned int data) {
-	return (data <= 7);
+	return (data <= GR7);
 }
 
 static int upper (unsigned int data) {
-	return ((data >= 8) && (data <= 15));
+	return ((data >= GR8) && (data <= GR15));
 }
 
 static int far (unsigned int label) {

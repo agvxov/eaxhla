@@ -146,7 +146,6 @@ enum {
 	POPCNT,    // Return count of bits set to 1 to register.
 	BSF,       // Bit scan forward on register or memory address.
 	BSR,       // Bit scan reverse on register or memory address.
-	BOUND,     // Check array index against bounds.
 	FADD,      // Add literal or FPU stack with st0.
 	FMUL,      // Multiply literal or FPU stack with st0.
 	FCOM,      // Cmopare literal or FPU stack with st0.
@@ -158,22 +157,22 @@ enum {
 };
 
 enum {
-	R0,  // Register: rax, eax, ax, al;
-	R1,  // Register: rcx, ecx, cx, cl;
-	R2,  // Register: rdx, edx, dx, dl;
-	R3,  // Register: rbx, ebx, bx, bl;
-	R4,  // Register: rsp, esp, sp, spl;
-	R5,  // Register: rbp, ebp, bp, bpl;
-	R6,  // Register: rsi, esi, si, sil;
-	R7,  // Register: rdi, edi, di, dil;
-	R8,  // Register: r8, r8d, r8w, r8b;
-	R9,  // Register: r9, r9d, r9w, r9b;
-	R10, // Register: r10, r10d, r10w, r10b;
-	R11, // Register: r11, r11d, r11w, r11b;
-	R12, // Register: r12, r12d, r12w, r12b;
-	R13, // Register: r13, r13d, r13w, r13b;
-	R14, // Register: r14, r14d, r14w, r14b;
-	R15  // Register: r15, r15d, r15w, r15b;
+	GR0,  // Register: rax, eax, ax, al;
+	GR1,  // Register: rcx, ecx, cx, cl;
+	GR2,  // Register: rdx, edx, dx, dl;
+	GR3,  // Register: rbx, ebx, bx, bl;
+	GR4,  // Register: rsp, esp, sp, spl;
+	GR5,  // Register: rbp, ebp, bp, bpl;
+	GR6,  // Register: rsi, esi, si, sil;
+	GR7,  // Register: rdi, edi, di, dil;
+	GR8,  // Register: r8, r8d, r8w, r8b;
+	GR9,  // Register: r9, r9d, r9w, r9b;
+	GR10, // Register: r10, r10d, r10w, r10b;
+	GR11, // Register: r11, r11d, r11w, r11b;
+	GR12, // Register: r12, r12d, r12w, r12b;
+	GR13, // Register: r13, r13d, r13w, r13b;
+	GR14, // Register: r14, r14d, r14w, r14b;
+	GR15  // Register: r15, r15d, r15w, r15b;
 };
 
 extern unsigned int    text_entry_point;
