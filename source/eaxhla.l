@@ -211,13 +211,14 @@ library        { BEGIN INITIAL; return END_LIBRARY; }
     */
     /* XXX: THIS CODE IS TOTAL DEATH
     */
-.   { char_literal_buffer = yytext[0]; }
 \n  { char_literal_buffer = '\n'; }
 \'  {
+        BEGIN INITIAL;
         yylval.intval = char_literal_buffer;
         char_literal_buffer = 0;
         return LITERAL;
 }
+.   { char_literal_buffer = yytext[0]; }
 \n  { issue_error("unterminated character literal sequence"); yyterminate(); }
 }
 

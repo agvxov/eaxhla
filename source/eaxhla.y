@@ -458,6 +458,7 @@ instruction: INOP { append_instructions(NOP); }
     | ITADC register register { append_instructions( ADC, $2.size, REG, $2.number, REG, $3.number ); }
     | ITSBB register register { append_instructions( SBB, $2.size, REG, $2.number, REG, $3.number ); }
     | ITAND register register { append_instructions( AND, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITAND register immediate { append_instructions( AND, $2.size, REG, $2.number, $3.type, $3.value ); }
     | ITSUB register register { append_instructions( SUB, $2.size, REG, $2.number, REG, $3.number ); }
     | ITXOR register register { append_instructions( XOR, $2.size, REG, $2.number, REG, $3.number ); }
     | ITCMP register register { append_instructions( CMP, $2.size, REG, $2.number, REG, $3.number ); }

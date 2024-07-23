@@ -20,7 +20,7 @@ end procedure
 
 unix program main
 begin
-	nop mov rg10d 0x11223344
+	nop mov r10d 0x11223344
 	nop fastcall heyo
 	nop fastcall cyaa
 	nop fastcall heyo

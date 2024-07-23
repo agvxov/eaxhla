@@ -34,6 +34,7 @@ set instructions {
     {adc register register}
     {sbb register register}
     {and register register}
+    {and register immediate}
     {sub register register}
     {xor register register}
     {cmp register register}

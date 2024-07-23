@@ -87,7 +87,7 @@ begin
 		mov r13d digits
 		sar r15d 4
 		add r13d r15d
-		call write_character
+		fastcall write_character
 
 		mov r12d 1
 		mov r13d digits
