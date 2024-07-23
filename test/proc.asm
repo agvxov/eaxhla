@@ -1,45 +1,23 @@
-fast procedure heyo
-	s8 <> h = "Heyo world!\n"
-begin
-	nop mov eax 1
-	nop mov edi 1
-	nop mov esi h
-	nop mov edx 12
-	nop syscall
-end procedure
+format ELF64 executable 3
 
-fast procedure lnao
-	s8 <> l = "Lnao world!!!!\n"
-begin
-	nop mov eax 1
-	nop mov edi 1
-	nop mov esi l
-	nop mov edx 15
-	nop syscall
-end procedure
+segment readable executable
 
-fast procedure cyaa
-	s8 <> c = "Cyaa world!!!\n"
-begin
-	nop mov eax 1
-	nop mov edi 1
-	nop mov esi c
-	nop mov edx 14
-	nop syscall
-end procedure
+entry $
 
-unix program main
-	s8 <> m = "Meme world!!\n"
-begin
-	nop fastcall heyo
-	nop mov eax 1
-	nop mov edi 1
-	nop mov esi m
-	nop mov edx 13
-	nop syscall
-	nop fastcall cyaa
-	nop fastcall lnao
-	nop mov eax 60
-	nop mov edi 60
-	nop syscall
-end program
+	jmp cyaa
+
+	mov eax, 1
+	mov edi, 1
+	mov esi, heyo
+	mov edx, 12
+	syscall
+
+	cyaa:
+
+	mov eax, 60
+	mov edi, 60
+	syscall
+
+segment readable writable
+
+heyo: db 'Heyo world!', 10
