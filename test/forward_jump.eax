@@ -8,7 +8,6 @@ begin
     mov esi heyo_data
     mov edx 12
     syscall
-
   lol:
-    exit 86
+    exit 255
 end program
