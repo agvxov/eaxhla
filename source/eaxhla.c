@@ -305,7 +305,8 @@ symbol_t * _add_label(const char * const name, int is_resolved) {
 }
 
 void add_label(const char * const name, int is_resolved) {
-    _add_label(name, is_resolved);
+    symbol_t * label = _add_label(name, is_resolved);
+    append_instructions(ASMDIRMEM, label->_id);
 }
 
 void add_fastcall(const char * const destination) {
