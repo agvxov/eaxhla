@@ -394,8 +394,6 @@ void assemble (unsigned int count, unsigned int * array) {
 
 		replace ((unsigned char *) & set, & text_sector_byte [get], sizeof (set));
 
-		printf ("@%08x :%08x <> %08x + %08x -> %08x\n", get, empty_imbue [index], set, empty_store [empty_imbue [index]], set + empty_store [empty_imbue [index]]);
-
 		set += empty_store [empty_imbue [index]];
 
 		replace (& text_sector_byte [get], (unsigned char *) & set, sizeof (set));
