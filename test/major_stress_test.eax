@@ -1,0 +1,110 @@
+fast procedure read_character
+begin
+	mov eax 0
+	mov edi r12d
+	mov esi r13d
+	mov edx 1
+	syscall
+end procedure
+
+fast procedure write_character
+begin
+	mov eax 1
+	mov edi r12d
+	mov esi r13d
+	mov edx 1
+	syscall
+end procedure
+
+fast procedure write_string
+begin
+	mov eax 1
+	mov edi r12d
+	mov esi r13d
+	mov edx r14d
+	syscall
+end procedure
+
+fast procedure write_space
+	s8 space = " "
+begin
+	mov eax 1
+	mov edi 1
+	mov esi space
+	mov edx 1
+	syscall
+end procedure
+
+fast procedure write_line_feed
+	s8 line_feed = "\n"
+begin
+	mov eax 1
+	mov edi 1
+	mov esi line_feed
+	mov edx 1
+	syscall
+end procedure
+
+unix program main
+	s8 <> failure = "> nop file\n\0"
+	s8 <> digits  = "0123456789abcdef"
+
+	s32 file   = 0
+	s8  byte   = 0
+begin
+	pop r11
+	cmp r11 2
+	je skip
+	mov r12d 1
+	mov r13d failure
+	mov r14d 12
+	fastcall write_string
+	exit 1
+	skip:
+
+	pop r11
+	pop r11
+	mov eax 2
+	mov edi r11d
+	xor esi esi
+	xor edx edx
+	syscall
+	mov [file] eax
+
+	main_loop:
+		mov r12d [file]
+		mov r13d byte
+		call read_character
+
+		mov r10d eax
+		mov r15b [byte]
+		cmp r15b 144
+		jne main_loop_skip
+		fastcall write_line_feed
+		main_loop_skip:
+
+		mov r12d 1
+		mov r13d digits
+		sar r15d 4
+		add r13d r15d
+		call write_character
+
+		mov r12d 1
+		mov r13d digits
+		mov r15b [byte]
+		and r15d 15
+		add r13d r15d
+		fastcall write_character
+
+		fastcall write_space
+	cmp r10d 0
+	jne main_loop
+
+	fastcall write_line_feed
+
+	mov eax 3
+	mov edi [file]
+	syscall
+
+	exit 0
+end program
