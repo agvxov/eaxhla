@@ -93,7 +93,7 @@
 // Instructions
 %token INOP
 // #placeholder<instruction_token_list> BEGIN
-%token ITADC ITADD ITAND ITCMP ITDEC ITDIV ITHLT ITIDIV ITIMUL ITINC ITJE ITJMP ITJNE ITLEAVE ITLOCK ITMOV ITMUL ITNEG ITNOT ITOR ITPAUSE ITPOP ITRETF ITRETN ITSAR ITSBB ITSUB ITSYSCALL ITSYSENTER ITSYSEXIT ITSYSRET ITXOR
+%token ITADC ITADD ITAND ITCBW ITCDQ ITCDQE ITCLC ITCLD ITCLI ITCLTS ITCMC ITCMP ITCPUID ITCQO ITCWD ITCWDE ITDEC ITDIV ITEMMS ITF2XM1 ITFABS ITFCHS ITFCOS ITFDECSTP ITFINCSTP ITFLD1 ITFLDL2E ITFLDL2T ITFLDLG2 ITFLDLN2 ITFLDPI ITFLDZ ITFNOP ITFPATAN ITFPREM ITFPREM1 ITFPTAN ITFRNDINT ITFSCALE ITFSIN ITFSINCOS ITFSQRT ITFTST ITFXAM ITFXTRACT ITFYL2X ITFYL2XP1 ITHLT ITIDIV ITIMUL ITINAL ITINAX ITINC ITINEAX ITINSB ITINSD ITINSW ITINT3 ITINVD ITIRETD ITIRETQ ITJE ITJMP ITJNE ITLEAVE ITLOCK ITLODSB ITLODSD ITLODSQ ITLODSW ITMOV ITMUL ITNEG ITNOP ITNOT ITOR ITOUTAL ITOUTAX ITOUTEAX ITOUTSB ITOUTSD ITOUTSW ITPAUSE ITPOP ITPOPF ITPUSHF ITRDMSR ITRDPMC ITRDTSC ITRETF ITRETN ITRSM ITSAR ITSBB ITSCASB ITSCASD ITSCASQ ITSCASW ITSTC ITSTD ITSTI ITSTOSB ITSTOSD ITSTOSQ ITSTOSW ITSUB ITSYSCALL ITSYSENTER ITSYSEXIT ITSYSRET ITUD2 ITWAIT ITWBINVD ITWRMSR ITXLATB ITXOR
 // #placeholder<instruction_token_list> END
 
 // Instruction-likes
@@ -423,16 +423,100 @@ library_code: %empty
 
 instruction: INOP { append_instructions(NOP); }
     // #placeholder<instruction_parser_rules> BEGIN
+    | ITNOP { append_instructions(NOP); }
+    | ITRETN { append_instructions(RETN); }
+    | ITRETF { append_instructions(RETF); }
+    | ITLEAVE { append_instructions(LEAVE); }
+    | ITLOCK { append_instructions(LOCK); }
+    | ITHLT { append_instructions(HLT); }
+    | ITPOPF { append_instructions(POPF); }
+    | ITPUSHF { append_instructions(PUSHF); }
+    | ITWAIT { append_instructions(WAIT); }
+    | ITCLC { append_instructions(CLC); }
+    | ITCLD { append_instructions(CLD); }
+    | ITCLI { append_instructions(CLI); }
+    | ITSTC { append_instructions(STC); }
+    | ITSTD { append_instructions(STD); }
+    | ITSTI { append_instructions(STI); }
+    | ITCMC { append_instructions(CMC); }
+    | ITINSB { append_instructions(INSB); }
+    | ITINSD { append_instructions(INSD); }
+    | ITOUTSB { append_instructions(OUTSB); }
+    | ITOUTSD { append_instructions(OUTSD); }
+    | ITCDQ { append_instructions(CDQ); }
+    | ITCWDE { append_instructions(CWDE); }
+    | ITINAL { append_instructions(INAL); }
+    | ITINEAX { append_instructions(INEAX); }
+    | ITINT3 { append_instructions(INT3); }
+    | ITIRETD { append_instructions(IRETD); }
+    | ITLODSB { append_instructions(LODSB); }
+    | ITLODSD { append_instructions(LODSD); }
+    | ITOUTAL { append_instructions(OUTAL); }
+    | ITOUTEAX { append_instructions(OUTEAX); }
+    | ITSCASB { append_instructions(SCASB); }
+    | ITSCASD { append_instructions(SCASD); }
+    | ITSTOSB { append_instructions(STOSB); }
+    | ITSTOSD { append_instructions(STOSD); }
+    | ITSYSENTER { append_instructions(SYSENTER); }
+    | ITSYSEXIT { append_instructions(SYSEXIT); }
     | ITSYSCALL { append_instructions(SYSCALL); }
     | ITSYSRET { append_instructions(SYSRET); }
-    | ITSYSEXIT { append_instructions(SYSEXIT); }
-    | ITSYSENTER { append_instructions(SYSENTER); }
-    | ITLEAVE { append_instructions(LEAVE); }
-    | ITRETF { append_instructions(RETF); }
-    | ITRETN { append_instructions(RETN); }
     | ITPAUSE { append_instructions(PAUSE); }
-    | ITHLT { append_instructions(HLT); }
-    | ITLOCK { append_instructions(LOCK); }
+    | ITCPUID { append_instructions(CPUID); }
+    | ITEMMS { append_instructions(EMMS); }
+    | ITRSM { append_instructions(RSM); }
+    | ITFNOP { append_instructions(FNOP); }
+    | ITFCHS { append_instructions(FCHS); }
+    | ITFABS { append_instructions(FABS); }
+    | ITFTST { append_instructions(FTST); }
+    | ITFXAM { append_instructions(FXAM); }
+    | ITFLD1 { append_instructions(FLD1); }
+    | ITFLDL2T { append_instructions(FLDL2T); }
+    | ITFLDL2E { append_instructions(FLDL2E); }
+    | ITFLDPI { append_instructions(FLDPI); }
+    | ITFLDLG2 { append_instructions(FLDLG2); }
+    | ITFLDLN2 { append_instructions(FLDLN2); }
+    | ITFLDZ { append_instructions(FLDZ); }
+    | ITF2XM1 { append_instructions(F2XM1); }
+    | ITFYL2X { append_instructions(FYL2X); }
+    | ITFPTAN { append_instructions(FPTAN); }
+    | ITFPATAN { append_instructions(FPATAN); }
+    | ITFXTRACT { append_instructions(FXTRACT); }
+    | ITFPREM1 { append_instructions(FPREM1); }
+    | ITFDECSTP { append_instructions(FDECSTP); }
+    | ITFINCSTP { append_instructions(FINCSTP); }
+    | ITFPREM { append_instructions(FPREM); }
+    | ITFYL2XP1 { append_instructions(FYL2XP1); }
+    | ITFSQRT { append_instructions(FSQRT); }
+    | ITFSINCOS { append_instructions(FSINCOS); }
+    | ITFRNDINT { append_instructions(FRNDINT); }
+    | ITFSCALE { append_instructions(FSCALE); }
+    | ITFSIN { append_instructions(FSIN); }
+    | ITFCOS { append_instructions(FCOS); }
+    | ITINSW { append_instructions(INSW); }
+    | ITOUTSW { append_instructions(OUTSW); }
+    | ITCWD { append_instructions(CWD); }
+    | ITCQO { append_instructions(CQO); }
+    | ITCBW { append_instructions(CBW); }
+    | ITCDQE { append_instructions(CDQE); }
+    | ITINVD { append_instructions(INVD); }
+    | ITWBINVD { append_instructions(WBINVD); }
+    | ITUD2 { append_instructions(UD2); }
+    | ITCLTS { append_instructions(CLTS); }
+    | ITINAX { append_instructions(INAX); }
+    | ITIRETQ { append_instructions(IRETQ); }
+    | ITLODSW { append_instructions(LODSW); }
+    | ITLODSQ { append_instructions(LODSQ); }
+    | ITOUTAX { append_instructions(OUTAX); }
+    | ITRDPMC { append_instructions(RDPMC); }
+    | ITRDMSR { append_instructions(RDMSR); }
+    | ITRDTSC { append_instructions(RDTSC); }
+    | ITSCASW { append_instructions(SCASW); }
+    | ITSCASQ { append_instructions(SCASQ); }
+    | ITSTOSW { append_instructions(STOSW); }
+    | ITSTOSQ { append_instructions(STOSQ); }
+    | ITWRMSR { append_instructions(WRMSR); }
+    | ITXLATB { append_instructions(XLATB); }
     | ITJMP relative { append_instructions( JMP, D32, REL, $2 ); }
     | ITJE relative { append_instructions( JE, D32, REL, $2 ); }
     | ITJNE relative { append_instructions( JNE, D32, REL, $2 ); }

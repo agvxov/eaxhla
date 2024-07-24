@@ -1,14 +1,98 @@
 set instructions {
+    {nop}
+    {retn}
+    {retf}
+    {leave}
+    {lock}
+    {hlt}
+    {popf}
+    {pushf}
+    {wait}
+    {clc}
+    {cld}
+    {cli}
+    {stc}
+    {std}
+    {sti}
+    {cmc}
+    {insb}
+    {insd}
+    {outsb}
+    {outsd}
+    {cdq}
+    {cwde}
+    {inal}
+    {ineax}
+    {int3}
+    {iretd}
+    {lodsb}
+    {lodsd}
+    {outal}
+    {outeax}
+    {scasb}
+    {scasd}
+    {stosb}
+    {stosd}
+    {sysenter}
+    {sysexit}
     {syscall}
     {sysret}
-    {sysexit}
-    {sysenter}
-    {leave}
-    {retf}
-    {retn}
     {pause}
-    {hlt}
-    {lock}
+    {cpuid}
+    {emms}
+    {rsm}
+    {fnop}
+    {fchs}
+    {fabs}
+    {ftst}
+    {fxam}
+    {fld1}
+    {fldl2t}
+    {fldl2e}
+    {fldpi}
+    {fldlg2}
+    {fldln2}
+    {fldz}
+    {f2xm1}
+    {fyl2x}
+    {fptan}
+    {fpatan}
+    {fxtract}
+    {fprem1}
+    {fdecstp}
+    {fincstp}
+    {fprem}
+    {fyl2xp1}
+    {fsqrt}
+    {fsincos}
+    {frndint}
+    {fscale}
+    {fsin}
+    {fcos}
+    {insw}
+    {outsw}
+    {cwd}
+    {cqo}
+    {cbw}
+    {cdqe}
+    {invd}
+    {wbinvd}
+    {ud2}
+    {clts}
+    {inax}
+    {iretq}
+    {lodsw}
+    {lodsq}
+    {outax}
+    {rdpmc}
+    {rdmsr}
+    {rdtsc}
+    {scasw}
+    {scasq}
+    {stosw}
+    {stosq}
+    {wrmsr}
+    {xlatb}
     {jmp  relative}
     {je   relative}
     {jne  relative}
@@ -45,7 +129,7 @@ set instructions {
     {mov memory   register}
     {sar register immediate}
 }
-    
+
 proc malformed_instruction {i} {
     error [format "Instruction {%s} is malformed" [join $i ", "]]
 }
