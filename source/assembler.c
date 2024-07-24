@@ -392,7 +392,7 @@ void assemble (unsigned int count, unsigned int * array) {
 		}
 	}
 
-	text_entry_point = empty_store  [0];
+	text_entry_point = empty_store [0];
 
 	for (index = 1; index < empty_holes; ++index) {
 		unsigned int set = 0;

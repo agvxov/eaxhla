@@ -2,7 +2,6 @@ fast procedure getchar
 begin
 	nop mov eax 0
 	nop mov edi 0
-	nop mov esi r13d
 	nop mov edx 1
 	nop syscall
 end procedure
@@ -11,7 +10,6 @@ fast procedure putchar
 begin
 	nop mov eax 1
 	nop mov edi 1
-	nop mov esi r13d
 	nop mov edx 1
 	nop syscall
 end procedure
@@ -23,30 +21,28 @@ unix program main
 	s8    line   = '\n'
 begin
 	main_loop:
-		nop mov r13d byte
+		nop mov esi byte
 		nop fastcall getchar
-		nop mov r10d eax // Store stop signal to r10.
-		nop mov r15b [byte] // Store byte data to r15b.
-			nop cmp r15b 144       // Compare byte to "nop" instruction.
+		nop cmp eax 0
+		nop je main_skip
+			nop cmp [byte] 144     // Compare byte to "nop" instruction.
 			nop jne main_loop_skip // Skip if not "nop" instruction.
-			nop mov r13d line
+			nop mov esi line
 			nop fastcall putchar
 			main_loop_skip:
-		nop mov r13d digits
-		nop machine 0x04ffc149 end machine
-		nop add r13d r15d
+		nop mov esi digits
+		# nop sar [byte] 4
+		# nop add esi [byte]
 		nop fastcall putchar
-		nop mov r13d digits
-		nop mov r15b [byte]
-		nop and r15d 15
-		nop add r13d r15d
+		nop mov esi digits
+		nop and [byte] 15
+		nop add esi [byte]
 		nop fastcall putchar
-		nop mov r13d space
+		nop mov esi space
 		nop fastcall putchar
-	nop cmp r10d 0     // Compare stop signal to 0.
-	nop jne main_loop // Loop back if not equal.
-	nop mov r12d 1
-	nop mov r13d line
+	nop jmp main_loop // Loop back if not equal.
+	main_skip:
+	nop mov esi line
 	nop fastcall putchar
 	nop exit 0
 end program
