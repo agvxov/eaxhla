@@ -87,30 +87,33 @@ static int near (unsigned int label) {
 	return (label && 0);
 }
 
-static void build_short_prefix (int when) {
-	input (when, 0x66);
+static void short_prefix (unsigned int size) {
+	input (size == D16, 0x66);
 }
 
-static void build_long_prefix (unsigned int registers, unsigned int to, unsigned int from) {
-	input (registers || to || from, 0x40 + 0x01 * to + 0x04 * from + 0x08 * registers);
+static void long_prefix (unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
+	int to_upper   = (to == REG) && (upper (destination));
+	int from_upper = (to == REG) && (upper (destination));
+
+	input ((size == D64) || (to_upper) || (from_upper), 0x40 + 0x01 * to_upper + 0x04 * from_upper + 0x08 * (size == D64));
 }
 
-static void build_co (int when, unsigned int destination, unsigned int source) {
-	input (when, 0xc0 + 0x01 * (destination & 0x07) + 0x08 * (source      & 0x07));
+static void modify_registers (unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
+	input ((to == REG) && (from == REG), 0xc0 + 0x01 * (destination & 0x07) + 0x08 * (source & 0x07));
 }
 
-static void build_at (int when, unsigned int direction) {
-	input (when, 0x05 + 0x08 * (direction & 0x07));
+static void modify_memory (unsigned int operation, unsigned int to, unsigned int from) {
+	input (((to == MEM) && (from == REG)) || ((to == REG) && (from == MEM)), 0x05 + 0x08 * operation * ((to == MEM) && (from == IMM)));
 }
 
-static void build_constant (int when, unsigned int size) {
-	input (when, 0x80 + 0x01 * (size != D8));
+static void modify_register_0 (unsigned int size) {
+	input (! ((to == REG) && (destination == 0)) && (from == IMM), 0x80 + 0x01 * (size != D8));
 }
 
 static void build_regular (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
-	build_short_prefix (size == D16);
+	short_prefix (size);
 
-	build_long_prefix (size == D64, (to == REG) && (upper (destination)), (from == REG) && (upper (source)));
+	long_prefix (size, to, destination, from, source);
 
 	input ((size == D8) && (to == REG)
 	      && ((from == REG) || (from == IMM))
@@ -121,7 +124,7 @@ static void build_regular (unsigned int operation, unsigned int size, unsigned i
 
 	input ((from == IMM) && (to == REG) && (destination == 0), 0x05 + 0x08 * (operation & 0x07) - 0x01 * (size == D8));
 
-	build_constant ((from == IMM) && ! ((to == REG) && (destination == 0)), size);
+	modify_register_0 (size);
 
 	input (! ((from == IMM) && (to == REG) && (destination == 0)),
 	      (destination & 0x07) * ((to == REG) && (from == IMM))
@@ -133,10 +136,10 @@ static void build_regular (unsigned int operation, unsigned int size, unsigned i
 	      + 0x04 * ((to   == MEM) && (from == IMM))
 	      + 0xc0 * ((to   == REG) && (from == IMM)));
 
-	build_co ((to == REG) && (from == REG), destination, source);
+	modify_registers (to, destination, from, source);
 
-	build_at ((to == REG) && (from == MEM), destination);
-	build_at ((to == MEM) && (from == REG), source);
+	modify_memory ((to == REG) && (from == MEM), destination);
+	modify_memory ((to == MEM) && (from == REG), source);
 
 	input_by ((to == REG) && (from == MEM), D32,  ~0x0u);
 	input_by ((to == REG) && (from == IMM), size, source);
@@ -146,9 +149,9 @@ static void build_regular (unsigned int operation, unsigned int size, unsigned i
 }
 
 static void build_irregular (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination) {
-	build_short_prefix (size == D16);
+	short_prefix (size);
 
-	build_long_prefix (size == D64, (to == REG) && (upper (destination)), 0);
+	long_prefix (size, to, destination, 0, 0);
 
 	input ((size == D8) && (to == REG) && front (destination), 0x40);
 
@@ -187,15 +190,15 @@ static void build_jump_if (unsigned int operation, unsigned int size, unsigned i
 }
 
 static void build_move_if (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
-	build_short_prefix (size == D16);
+	short_prefix (size);
 
-	build_long_prefix (size == D64, (to == REG) && (upper (destination)), (from == REG) && (upper (source)));
+	long_prefix (size, to, destination, from, source);
 
 	input (1, 0x0f);
 	input (1, 0x40 + operation - MOVE_IF_BEGIN);
 
-	build_co ((to == REG) && (from == REG), destination, source);
-	build_at ((to == REG) && (from == MEM), destination);
+	modify_registers (to, destination, from, source);
+	modify_memory ((to == REG) && (from == MEM), destination);
 }
 
 static void build_jump (unsigned int size, unsigned int to, unsigned int destination) {
@@ -212,18 +215,18 @@ static void build_jump (unsigned int size, unsigned int to, unsigned int destina
 }
 
 static void build_move (unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
-	build_short_prefix (size == D16);
+	short_prefix (size);
 
-	build_long_prefix (size == D64, (to == REG) && (upper (destination)), (from == REG) && (upper (source)));
+	long_prefix (size, to, destination, from, source);
 
 	input ((to == REG) && (from == REG), 0x88 + 0x01 * (size != D8));
 	input ((to == REG) && (from == MEM), 0x8a + 0x01 * (size != D8));
 	input ((to == MEM) && (from == REG), 0x88 + 0x01 * (size != D8));
 
-	build_at ((to == REG) && (from == MEM), destination);
-	build_at ((to == MEM) && (from == REG), source);
+	modify_memory ((to == REG) && (from == MEM), destination);
+	modify_memory ((to == MEM) && (from == REG), source);
 
-	build_co ((to == REG) && (from == REG), destination, source);
+	modify_registers (to, destination, from, source);
 
 	input ((to == REG) && ((from == IMM) || (from == REL)), 0xb8 + 0x01 * (destination & 0x07));
 
@@ -259,7 +262,7 @@ static void build_enter (unsigned int dynamic_storage, unsigned int nesting_leve
 }
 
 static void build_in_out (unsigned int move, unsigned int size, unsigned int type, unsigned int port) {
-	build_short_prefix (size == D16);
+	short_prefix (size);
 
 	input (1, 0xe4 + 0x01 * (size != D8) + 0x02 * (move != OUT) + 0x08 * (type == REG));
 
@@ -267,7 +270,7 @@ static void build_in_out (unsigned int move, unsigned int size, unsigned int typ
 }
 
 static void build_pop (unsigned int size, unsigned int to, unsigned int destination) {
-	build_short_prefix (size == D16);
+	short_prefix (size);
 
 	input ((to == REG) && (upper (destination)), 0x41);
 
@@ -279,7 +282,7 @@ static void build_pop (unsigned int size, unsigned int to, unsigned int destinat
 }
 
 static void build_push (unsigned int size, unsigned int from, unsigned int source) {
-	build_short_prefix (size == D16);
+	short_prefix (size);
 
 	input ((from == REG) && (upper (source)), 0x41);
 
@@ -295,7 +298,7 @@ static void build_push (unsigned int size, unsigned int from, unsigned int sourc
 static void build_float (unsigned int operation, unsigned int size, unsigned int from, unsigned int source) {
 	input (from == MEM, 0xd8 + 0x04 * (size == D64));
 
-	build_at (from == MEM, operation);
+	modify_memory (from == MEM, operation);
 	input_at (from == MEM, size, source, 0);
 }
 
