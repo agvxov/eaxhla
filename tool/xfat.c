@@ -13,11 +13,9 @@
 "};\n"                                                                             \
 "int main (void) {\n"                                                              \
 "	unsigned int index;\n"                                                     \
-"	text_sector_byte = malloc (144UL * sizeof (* text_sector_byte));\n"        \
 "	assemble ((unsigned int) (sizeof (array) / sizeof (array [0])), array);\n" \
 "	for (index = 0; index < text_sector_size; ++index)\n"                      \
 "		printf (\"%02X \", text_sector_byte [index]);\n"                   \
-"	free (text_sector_byte);\n"                                                \
 "	return (0);\n"                                                             \
 "}\n"
 

@@ -45,6 +45,31 @@ enum {
 	POPF,      // Pop stack into flags register (16/64 bit).
 	PUSHF,     // Push flags register onto stack (16/64 bit).
 	WAIT,      // Check for and handle pending float exceptions.
+	CLC,       // Clear carry flag.
+	CLD,       // Clear direction flag.
+	CLI,       // Clear interrupt flag.
+	STC,       // Set carry flag.
+	STD,       // Set direction flag.
+	STI,       // Set interrupt flag.
+	CMC,       // Complement carry flag.
+	INSB,      // Input 1 byte from IO port at DX to ES:(E)DI or RDI.
+	INSD,      // Input 4 bytes from IO port at DX to ES:(E)DI or RDI.
+	OUTSB,     // Output 1 byte from DS:(E)SI or RSI to IO port at DX.
+	OUTSD,     // Output 4 bytes from DS:(E)SI or RSI to IO port at DX.
+	CDQ,       // Sign-extend EAX into EDX:EAX.
+	CWDE,      // Sign-extend AX into EAX.
+	INAL,
+	INEAX,
+	INT3,
+	IRETD,
+	LODSB,
+	LODSD,
+	OUTAL,
+	OUTEAX,
+	SCASB,
+	SCASD,
+	STOSB,
+	STOSD,
 	SYSENTER,  // Execute fast call to ring 0 system procedure.
 	SYSEXIT,   // Execute fast return to ring 3 userland procedure.
 	SYSCALL,   // Execute OS system call handler at kernel.
@@ -81,6 +106,30 @@ enum {
 	FSCALE,    // Scale st0 by st1.
 	FSIN,      // Compute sin (st0).
 	FCOS,      // Compure cos (st0).
+	INSW,
+	OUTSW,
+	CWD,
+	CQO,
+	CBW,
+	CDQE,
+	INVD,
+	WBINVD,
+	UD2,
+	CLTS,
+	INAX,
+	IRETQ,
+	LODSW,
+	LODSQ,
+	OUTAX,
+	RDPMC,
+	RDMSR,
+	RDTSC,
+	SCASW,
+	SCASQ,
+	STOSW,
+	STOSQ,
+	WRMSR,
+	XLATB,
 	ENTER,     // Create a stack frame for procedure call.
 	CALL,      // Call near, relative or absolute procedure.
 	IN,        // Input byte from 8-bit IO port to r0.
