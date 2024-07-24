@@ -4,6 +4,30 @@ segment executable readable
 
 entry R_ENTRY_POINT
 
+R_F2_READ_CHARACTER:
+	mov rax, R_SYSTEM_CALL_READ
+	mov rdi, r12
+	mov rsi, r13
+	mov rdx, 1
+	syscall
+	ret
+
+R_F2_WRITE_CHARACTER:
+	mov rax, R_SYSTEM_CALL_WRITE
+	mov rdi, r12
+	mov rsi, r13
+	mov rdx, 1
+	syscall
+	ret
+
+R_F3_WRITE_STRING:
+	mov rax, R_SYSTEM_CALL_WRITE
+	mov rdi, r12
+	mov rsi, r13
+	mov rdx, r14
+	syscall
+	ret
+
 R_ENTRY_POINT:
 ; Main function start.
 	pop r11    ; Pop argument count from the stack to r13 register.
@@ -36,13 +60,7 @@ R_ENTRY_POINT:
 
 		; Write new line if byte equals "nop" instruction.
 		mov r10, rax          ; Store stop signal to r10.
-		nop
-		nop
-		nop
 		mov r15b, [R_D1_BYTE] ; Store byte data to r15b.
-		nop
-		nop
-		nop
 		cmp r15b, 144         ; Compare byte to "nop" instruction.
 		jne MAIN_LOOP_SKIP    ; Skip if not "nop" instruction.
 		mov r12, R_STANDARD_OUTPUT
@@ -58,13 +76,7 @@ R_ENTRY_POINT:
 
 		mov r12, R_STANDARD_OUTPUT
 		mov r13, R_A1_DIGITS
-		nop
-		nop
-		nop
 		mov r15b, [R_D1_BYTE]
-		nop
-		nop
-		nop
 		and r15, 15
 		add r13, r15
 		call R_F2_WRITE_CHARACTER
@@ -90,42 +102,12 @@ R_ENTRY_POINT:
 	syscall
 ; Main function end.
 
-R_F2_READ_CHARACTER:
-	mov rax, R_SYSTEM_CALL_READ
-	mov rdi, r12
-	mov rsi, r13
-	mov rdx, 1
-	syscall
-	ret
-
-R_F2_WRITE_CHARACTER:
-	mov rax, R_SYSTEM_CALL_WRITE
-	mov rdi, r12
-	mov rsi, r13
-	mov rdx, 1
-	syscall
-	ret
-
-R_F3_WRITE_STRING:
-	mov rax, R_SYSTEM_CALL_WRITE
-	mov rdi, r12
-	mov rsi, r13
-	mov rdx, r14
-	syscall
-	ret
-
 segment readable writable
 
 ; Program variables and constants.
 
 R_D8_FILE     dq 0
-nop
-nop
-nop
 R_D1_BYTE     db 0
-nop
-nop
-nop
 R_A1_DIGITS   db '0123456789ABCDEF', 0
 R_D1_SPACE    db 32
 R_D1_NEW_LINE db 10
@@ -151,25 +133,3 @@ R_STANDARD_OUTPUT = 1
 
 R_SUCCESS = 0
 R_FAILURE = 1
-
-;~90_
-;~90_
-;~90_41_80_FF_
-;~90_75_13_49_C7_C4_01_00_00_00_49_C7_C5_2E_12_40_00_E8_A8_00_00_00_49_C7_C4_01_00_00_00_49_C7_C5_1C_12_40_00_49_C1_FF_04_4D_01_FD_E8_8E_00_00_00_49_C7_C4_01_00_00_00_49_C7_C5_1C_12_40_00_
-;~90_
-;~90_
-;~90_44_8A_3D_AB_10_00_00_
-;~90_
-;~90_
-;~90_49_83_E7_0F_4D_01_FD_E8_67_00_00_00_49_C7_C4_01_00_00_00_49_C7_C5_2D_12_40_00_E8_54_00_00_00_49_83_FA_00_0F_85_66_FF_FF_FF_49_C7_C4_01_00_00_00_49_C7_C5_2E_12_40_00_E8_37_00_00_00_48_C7_C0_03_00_00_00_48_8B_3D_53_10_00_00_0F_05_48_C7_C0_3C_00_00_00_48_C7_C7_00_00_00_00_0F_05_48_C7_C0_00_00_00_00_4C_89_E7_4C_89_EE_48_C7_C2_01_00_00_00_0F_05_C3_48_C7_C0_01_00_00_00_4C_89_E7_4C_89_EE_48_C7_C2_01_00_00_00_0F_05_C3_48_C7_C0_01_00_00_00_4C_89_E7_4C_89_EE_4C_89_F2_0F_05_C3_00_00_00_00_00_00_00_00_
-;~90_
-;~90_
-;~90_
-;~[1:R_D1_BYTE]=249=F9
-;~90_
-;~90_
-;~90_49_83_E7_0F_4D_01_FD_E8_67_00_00_00_49_C7_C4_01_00_00_00_49_C7_C5_2D_12_40_00_E8_54_00_00_00_49_83_FA_00_0F_85_66_FF_FF_FF_49_C7_C4_01_00_00_00_49_C7_C5_2E_12_40_00_E8_37_00_00_00_48_C7_C0_03_00_00_00_48_8B_3D_53_10_00_00_0F_05_48_C7_C0_3C_00_00_00_48_C7_C7_00_00_00_00_0F_05_48_C7_C0_00_00_00_00_4C_89_E7_4C_89_EE_48_C7_C2_01_00_00_00_0F_05_C3_48_C7_C0_01_00_00_00_4C_89_E7_4C_89_EE_48_C7_C2_01_00_00_00_0F_05_C3_48_C7_C0_01_00_00_00_4C_89_E7_4C_89_EE_4C_89_F2_0F_05_C3_00_00_00_00_00_00_00_00_
-;~90_
-;~90_
-;~90_
-;~[1:R_D1_BYTE]=171=AB

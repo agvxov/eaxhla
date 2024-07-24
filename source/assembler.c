@@ -175,10 +175,12 @@ static void build_special_2 (unsigned int operation) {
 	input_by (1, D16, data [operation - SPECIAL_2_BEGIN]);
 }
 
-static void build_jump_if (unsigned int operation, unsigned int size, unsigned int location) {
+static void build_jump_if (unsigned int operation, unsigned int size, unsigned int ignore, unsigned int location) {
+	(void) ignore;
+
 	input (far (location) && (size == D32), 0x0f);
 
-	input (far (location),  0x80 + operation - JUMP_IF_BEGIN);
+	input (far  (location), 0x80 + operation - JUMP_IF_BEGIN);
 	input (near (location), 0x70 + operation - JUMP_IF_BEGIN);
 }
 
@@ -219,6 +221,8 @@ static void build_move (unsigned int size, unsigned int to, unsigned int destina
 	build_at ((to == REG) && (from == MEM), destination);
 	build_at ((to == MEM) && (from == REG), source);
 
+	build_co ((to == REG) && (from == REG), destination, source);
+
 	input ((to == REG) && ((from == IMM) || (from == REL)), 0xb8 + 0x01 * (destination & 0x07));
 
 	input ((to == MEM) && (from == IMM), 0xc6 + 0x01 * (size != D8));
@@ -230,6 +234,8 @@ static void build_move (unsigned int size, unsigned int to, unsigned int destina
 	input_at ((to == MEM) && (from == IMM), D32,  destination, 0x1000);
 	input_by ((to == MEM) && (from == IMM), size, source);
 	input_at ((to == REG) && (from == REL), D32,  source, 0x4010b0);
+
+	input_by ((to == REG) && (from == IMM) && (size == D64), D32, 0);
 }
 
 static void build_call (unsigned int from, unsigned int source) {
@@ -352,8 +358,8 @@ void assemble (unsigned int count, unsigned int * array) {
 			build_special_2 (array [index + 0]);
 			index += 0;
 		} else if ((array [index] >= JUMP_IF_BEGIN) && (array [index] <= JUMP_IF_END)) {
-			build_jump_if (array [index + 0], array [index + 1], array [index + 2]);
-			index += 2;
+			build_jump_if (array [index + 0], array [index + 1], array [index + 2], array [index + 3]);
+			index += 3;
 		} else if ((array [index] >= MOVE_IF_BEGIN) && (array [index] <= MOVE_IF_END)) {
 			build_move_if (array [index + 0], array [index + 1], array [index + 2], array [index + 3], array [index + 4], array [index + 5]);
 			index += 5;
@@ -382,7 +388,7 @@ void assemble (unsigned int count, unsigned int * array) {
 			build_push (array [index + 1], array [index + 2], array [index + 3]);
 			index += 3;
 		} else {
-			return;
+			exit (array [index]);
 		}
 	}
 
