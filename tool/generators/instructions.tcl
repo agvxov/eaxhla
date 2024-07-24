@@ -3,44 +3,10 @@ set instructions {
     {retn}
     {retf}
     {leave}
-    {lock}
-    {hlt}
     {popf}
     {pushf}
-    {wait}
-    {clc}
-    {cld}
-    {cli}
-    {stc}
-    {std}
-    {sti}
-    {cmc}
-    {insb}
-    {insd}
-    {outsb}
-    {outsd}
-    {cdq}
-    {cwde}
-    {inal}
-    {ineax}
-    {int3}
-    {iretd}
-    {lodsb}
-    {lodsd}
-    {outal}
-    {outeax}
-    {scasb}
-    {scasd}
-    {stosb}
-    {stosd}
-    {sysenter}
-    {sysexit}
     {syscall}
-    {sysret}
-    {pause}
     {cpuid}
-    {emms}
-    {rsm}
     {fnop}
     {fchs}
     {fabs}
@@ -69,30 +35,6 @@ set instructions {
     {fscale}
     {fsin}
     {fcos}
-    {insw}
-    {outsw}
-    {cwd}
-    {cqo}
-    {cbw}
-    {cdqe}
-    {invd}
-    {wbinvd}
-    {ud2}
-    {clts}
-    {inax}
-    {iretq}
-    {lodsw}
-    {lodsq}
-    {outax}
-    {rdpmc}
-    {rdmsr}
-    {rdtsc}
-    {scasw}
-    {scasq}
-    {stosw}
-    {stosq}
-    {wrmsr}
-    {xlatb}
     {jmp  relative}
     {je   relative}
     {jne  relative}

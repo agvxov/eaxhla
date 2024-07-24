@@ -7,9 +7,9 @@
 #define IRREGULAR_BEGIN (INC)
 #define IRREGULAR_END   (IDIV)
 #define SPECIAL_1_BEGIN (NOP)
-#define SPECIAL_1_END   (STOSD)
-#define SPECIAL_2_BEGIN (SYSENTER)
-#define SPECIAL_2_END   (XLATB)
+#define SPECIAL_1_END   (PUSHF)
+#define SPECIAL_2_BEGIN (SYSCALL)
+#define SPECIAL_2_END   (FCOS)
 #define JUMP_IF_BEGIN   (JO)
 #define JUMP_IF_END     (JG)
 #define MOVE_IF_BEGIN   (CMOVO)
@@ -92,8 +92,8 @@ static void short_prefix (unsigned int size) {
 }
 
 static void long_prefix (unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
-	int to_upper   = (to == REG) && (upper (destination));
-	int from_upper = (to == REG) && (upper (destination));
+	int to_upper   = (to   == REG) && (upper (destination));
+	int from_upper = (from == REG) && (upper (source));
 
 	input ((size == D64) || (to_upper) || (from_upper), 0x40 + 0x01 * to_upper + 0x04 * from_upper + 0x08 * (size == D64));
 }
@@ -104,10 +104,6 @@ static void modify_registers (unsigned int to, unsigned int destination, unsigne
 
 static void modify_memory (unsigned int operation, unsigned int to, unsigned int from) {
 	input (((to == MEM) && (from == REG)) || ((to == REG) && (from == MEM)), 0x05 + 0x08 * operation * ((to == MEM) && (from == IMM)));
-}
-
-static void modify_register_0 (unsigned int size) {
-	input (! ((to == REG) && (destination == 0)) && (from == IMM), 0x80 + 0x01 * (size != D8));
 }
 
 static void build_regular (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
@@ -124,8 +120,6 @@ static void build_regular (unsigned int operation, unsigned int size, unsigned i
 
 	input ((from == IMM) && (to == REG) && (destination == 0), 0x05 + 0x08 * (operation & 0x07) - 0x01 * (size == D8));
 
-	modify_register_0 (size);
-
 	input (! ((from == IMM) && (to == REG) && (destination == 0)),
 	      (destination & 0x07) * ((to == REG) && (from == IMM))
 	      + 0x08 * (operation - REGULAR_BEGIN)
@@ -138,8 +132,8 @@ static void build_regular (unsigned int operation, unsigned int size, unsigned i
 
 	modify_registers (to, destination, from, source);
 
-	modify_memory ((to == REG) && (from == MEM), destination);
-	modify_memory ((to == MEM) && (from == REG), source);
+	modify_memory (destination, to, from);
+	modify_memory (source,      to, from);
 
 	input_by ((to == REG) && (from == MEM), D32,  ~0x0u);
 	input_by ((to == REG) && (from == IMM), size, source);
@@ -163,8 +157,7 @@ static void build_irregular (unsigned int operation, unsigned int size, unsigned
 
 static void build_special_1 (unsigned int operation) {
 	const unsigned char data  [] = {
-		0x90, 0xc3, 0xcb, 0xc9, 0xf0, 0xf4, 0x9d, 0x9c, 0x9b, 0xf8, 0xfc, 0xfa, 0xf9, 0xfd, 0xfb, 0xf5, 0x6c, 0x6d, 0x6e, 0x6f, 0x99, 0x98, 0xec, 0xed, 0xcc, 0xcf, 0xac,
-		0xad, 0xee, 0xef, 0xae, 0xaf, 0xaa, 0xab
+		0x90, 0xc3, 0xcb, 0xc9, 0x9d, 0x9c
 	};
 
 	input (1, data [operation - SPECIAL_1_BEGIN]);
@@ -172,9 +165,10 @@ static void build_special_1 (unsigned int operation) {
 
 static void build_special_2 (unsigned int operation) {
 	const unsigned short data  [] = {
-		0x340f, 0x350f, 0x050f, 0x070f, 0x90f3, 0xa20f, 0x770f, 0xaa0f, 0xd0d9, 0xe0d9, 0xe1d9, 0xe4d9, 0xe5d9, 0xe8d9, 0xe9d9, 0xead9, 0xebd9, 0xecd9, 0xedd9, 0xeed9,
-		0xf0d9, 0xf1d9, 0xf2d9, 0xf3d9, 0xf4d9, 0xf5d9, 0xf6d9, 0xf7d9, 0xf8d9, 0xf9d9, 0xfad9, 0xfbd9, 0xfcd9, 0xfdd9, 0xfed9, 0xffd9, 0x6d66, 0x6f66, 0x9966, 0x9948,
-		0x9866, 0x9848, 0x080f, 0x090f, 0x0b0f, 0x060f, 0xed66, 0xcf48, 0xad66, 0xad48, 0xef66, 0x330f, 0x320f, 0x310f, 0xaf66, 0xaf48, 0xab66, 0xab48, 0x300f, 0xd748
+		0x050f, 0xa20f, 0xd0d9, 0xe0d9, 0xe1d9, 0xe4d9, 0xe5d9, 0xe8d9,
+		0xe9d9, 0xead9, 0xebd9, 0xecd9, 0xedd9, 0xeed9, 0xf0d9, 0xf1d9,
+		0xf2d9, 0xf3d9, 0xf4d9, 0xf5d9, 0xf6d9, 0xf7d9, 0xf8d9, 0xf9d9,
+		0xfad9, 0xfbd9, 0xfcd9, 0xfdd9, 0xfed9, 0xffd9
 	};
 
 	input_by (1, D16, data [operation - SPECIAL_2_BEGIN]);
@@ -198,7 +192,7 @@ static void build_move_if (unsigned int operation, unsigned int size, unsigned i
 	input (1, 0x40 + operation - MOVE_IF_BEGIN);
 
 	modify_registers (to, destination, from, source);
-	modify_memory ((to == REG) && (from == MEM), destination);
+	modify_memory (destination, to, from);
 }
 
 static void build_jump (unsigned int size, unsigned int to, unsigned int destination) {
@@ -223,8 +217,8 @@ static void build_move (unsigned int size, unsigned int to, unsigned int destina
 	input ((to == REG) && (from == MEM), 0x8a + 0x01 * (size != D8));
 	input ((to == MEM) && (from == REG), 0x88 + 0x01 * (size != D8));
 
-	modify_memory ((to == REG) && (from == MEM), destination);
-	modify_memory ((to == MEM) && (from == REG), source);
+	modify_memory (destination, to, from);
+	modify_memory (source,      to, from);
 
 	modify_registers (to, destination, from, source);
 
@@ -298,7 +292,8 @@ static void build_push (unsigned int size, unsigned int from, unsigned int sourc
 static void build_float (unsigned int operation, unsigned int size, unsigned int from, unsigned int source) {
 	input (from == MEM, 0xd8 + 0x04 * (size == D64));
 
-	modify_memory (from == MEM, operation);
+	modify_memory (operation, 0, from);
+
 	input_at (from == MEM, size, source, 0);
 }
 
