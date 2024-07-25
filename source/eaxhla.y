@@ -93,7 +93,7 @@
 // Instructions
 %token INOP
 // #placeholder<instruction_token_list> BEGIN
-%token ITADC ITADD ITAND ITCMP ITCPUID ITDEC ITDIV ITF2XM1 ITFABS ITFCHS ITFCOS ITFDECSTP ITFINCSTP ITFLD1 ITFLDL2E ITFLDL2T ITFLDLG2 ITFLDLN2 ITFLDPI ITFLDZ ITFNOP ITFPATAN ITFPREM ITFPREM1 ITFPTAN ITFRNDINT ITFSCALE ITFSIN ITFSINCOS ITFSQRT ITFTST ITFXAM ITFXTRACT ITFYL2X ITFYL2XP1 ITIDIV ITIMUL ITINC ITJE ITJMP ITJNE ITLEAVE ITMOV ITMUL ITNEG ITNOP ITNOT ITOR ITPOP ITPOPF ITPUSHF ITRETF ITRETN ITSAR ITSBB ITSUB ITSYSCALL ITXOR
+%token ITADC ITADD ITAND ITCMP ITCPUID ITDEC ITDIV ITF2XM1 ITFABS ITFCHS ITFCOS ITFDECSTP ITFINCSTP ITFLD1 ITFLDL2E ITFLDL2T ITFLDLG2 ITFLDLN2 ITFLDPI ITFLDZ ITFNOP ITFPATAN ITFPREM ITFPREM1 ITFPTAN ITFRNDINT ITFSCALE ITFSIN ITFSINCOS ITFSQRT ITFTST ITFXAM ITFXTRACT ITFYL2X ITFYL2XP1 ITIDIV ITIMUL ITINC ITJE ITJMP ITJNE ITLEAVE ITMOV ITMUL ITNEG ITNOP ITNOT ITOR ITPOP ITPOPF ITPUSHF ITRETF ITRETN ITSBB ITSUB ITSYSCALL ITXOR
 // #placeholder<instruction_token_list> END
 
 // Instruction-likes
@@ -484,16 +484,46 @@ instruction: INOP { append_instructions(NOP); }
     | ITADC register register { append_instructions( ADC, $2.size, REG, $2.number, REG, $3.number ); }
     | ITSBB register register { append_instructions( SBB, $2.size, REG, $2.number, REG, $3.number ); }
     | ITAND register register { append_instructions( AND, $2.size, REG, $2.number, REG, $3.number ); }
-    | ITAND register immediate { append_instructions( AND, $2.size, REG, $2.number, $3.type, $3.value ); }
     | ITSUB register register { append_instructions( SUB, $2.size, REG, $2.number, REG, $3.number ); }
     | ITXOR register register { append_instructions( XOR, $2.size, REG, $2.number, REG, $3.number ); }
     | ITCMP register register { append_instructions( CMP, $2.size, REG, $2.number, REG, $3.number ); }
+    | ITADD register immediate { append_instructions( ADD, $2.size, REG, $2.number, $3.type, $3.value ); }
+    | ITOR register immediate { append_instructions( OR, $2.size, REG, $2.number, $3.type, $3.value ); }
+    | ITADC register immediate { append_instructions( ADC, $2.size, REG, $2.number, $3.type, $3.value ); }
+    | ITSBB register immediate { append_instructions( SBB, $2.size, REG, $2.number, $3.type, $3.value ); }
+    | ITAND register immediate { append_instructions( AND, $2.size, REG, $2.number, $3.type, $3.value ); }
+    | ITSUB register immediate { append_instructions( SUB, $2.size, REG, $2.number, $3.type, $3.value ); }
+    | ITXOR register immediate { append_instructions( XOR, $2.size, REG, $2.number, $3.type, $3.value ); }
     | ITCMP register immediate { append_instructions( CMP, $2.size, REG, $2.number, $3.type, $3.value ); }
+    | ITADD register memory { append_instructions( ADD, $2.size, REG, $2.number, MEM, $3 ); }
+    | ITOR register memory { append_instructions( OR, $2.size, REG, $2.number, MEM, $3 ); }
+    | ITADC register memory { append_instructions( ADC, $2.size, REG, $2.number, MEM, $3 ); }
+    | ITSBB register memory { append_instructions( SBB, $2.size, REG, $2.number, MEM, $3 ); }
+    | ITAND register memory { append_instructions( AND, $2.size, REG, $2.number, MEM, $3 ); }
+    | ITSUB register memory { append_instructions( SUB, $2.size, REG, $2.number, MEM, $3 ); }
+    | ITXOR register memory { append_instructions( XOR, $2.size, REG, $2.number, MEM, $3 ); }
+    | ITCMP register memory { append_instructions( CMP, $2.size, REG, $2.number, MEM, $3 ); }
+    | ITADD memory register { append_instructions( ADD, D32, MEM, $2, REG, $3.number ); }
+    | ITOR memory register { append_instructions( OR, D32, MEM, $2, REG, $3.number ); }
+    | ITADC memory register { append_instructions( ADC, D32, MEM, $2, REG, $3.number ); }
+    | ITSBB memory register { append_instructions( SBB, D32, MEM, $2, REG, $3.number ); }
+    | ITAND memory register { append_instructions( AND, D32, MEM, $2, REG, $3.number ); }
+    | ITSUB memory register { append_instructions( SUB, D32, MEM, $2, REG, $3.number ); }
+    | ITXOR memory register { append_instructions( XOR, D32, MEM, $2, REG, $3.number ); }
+    | ITCMP memory register { append_instructions( CMP, D32, MEM, $2, REG, $3.number ); }
+    | ITADD memory immediate { append_instructions( ADD, D32, MEM, $2, $3.type, $3.value ); }
+    | ITOR memory immediate { append_instructions( OR, D32, MEM, $2, $3.type, $3.value ); }
+    | ITADC memory immediate { append_instructions( ADC, D32, MEM, $2, $3.type, $3.value ); }
+    | ITSBB memory immediate { append_instructions( SBB, D32, MEM, $2, $3.type, $3.value ); }
+    | ITAND memory immediate { append_instructions( AND, D32, MEM, $2, $3.type, $3.value ); }
+    | ITSUB memory immediate { append_instructions( SUB, D32, MEM, $2, $3.type, $3.value ); }
+    | ITXOR memory immediate { append_instructions( XOR, D32, MEM, $2, $3.type, $3.value ); }
+    | ITCMP memory immediate { append_instructions( CMP, D32, MEM, $2, $3.type, $3.value ); }
     | ITMOV register register { append_instructions( MOV, $2.size, REG, $2.number, REG, $3.number ); }
     | ITMOV register immediate { append_instructions( MOV, $2.size, REG, $2.number, $3.type, $3.value ); }
     | ITMOV register memory { append_instructions( MOV, $2.size, REG, $2.number, MEM, $3 ); }
     | ITMOV memory register { append_instructions( MOV, D32, MEM, $2, REG, $3.number ); }
-    | ITSAR register immediate { append_instructions( SAR, $2.size, REG, $2.number, $3.type, $3.value ); }
+    | ITMOV memory immediate { append_instructions( MOV, D32, MEM, $2, $3.type, $3.value ); }
 
     // #placeholder<instruction_parser_rules> END
     ;

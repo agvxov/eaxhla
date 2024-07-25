@@ -135,11 +135,12 @@ static void build_regular (unsigned int operation, unsigned int size, unsigned i
 	modify_memory (destination, to, from);
 	modify_memory (source,      to, from);
 
-	input_by ((to == REG) && (from == MEM), D32,  ~0x0u);
+	input_at ((to == REG) && (from == MEM), D32,  source, 0x1000);
 	input_by ((to == REG) && (from == IMM), size, source);
-	input_by ((to == MEM) && (from == REG), D32,  ~0x0u);
-	input_by ((to == MEM) && (from == IMM), D32,  ~0x0u);
+	input_at ((to == MEM) && (from == REG), D32,  destination, 0x1000);
+	input_at ((to == MEM) && (from == IMM), D32,  destination, 0x1000);
 	input_by ((to == MEM) && (from == IMM), size, source);
+	input_at ((to == REG) && (from == REL), D32,  source, 0x4010b0);
 }
 
 static void build_irregular (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination) {
@@ -153,6 +154,8 @@ static void build_irregular (unsigned int operation, unsigned int size, unsigned
 
 	input (to == REG, 0xc0 + 0x08 * (operation - IRREGULAR_BEGIN) + 0x01 * (destination & 0x07));
 	input (to == MEM, 0x05 + 0x08 * (operation - IRREGULAR_BEGIN));
+
+	input_at (to == MEM, D32, destination, 0x1000);
 }
 
 static void build_special_1 (unsigned int operation) {
@@ -181,6 +184,8 @@ static void build_jump_if (unsigned int operation, unsigned int size, unsigned i
 
 	input (far  (location), 0x80 + operation - JUMP_IF_BEGIN);
 	input (near (location), 0x70 + operation - JUMP_IF_BEGIN);
+
+	input_at (1, D32, location, -(text_sector_size + 4));
 }
 
 static void build_move_if (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {

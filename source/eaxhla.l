@@ -205,7 +205,6 @@ popf            { return ITPOPF; }
 pushf           { return ITPUSHF; }
 retf            { return ITRETF; }
 retn            { return ITRETN; }
-sar             { return ITSAR; }
 sbb             { return ITSBB; }
 sub             { return ITSUB; }
 syscall         { return ITSYSCALL; }
