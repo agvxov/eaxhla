@@ -118,6 +118,8 @@ static void build_regular (unsigned int operation, unsigned int size, unsigned i
 	      || ((to == REG) && (from == IMM) && front (destination))),
 	      0x40);
 
+	input ((from == IMM) && (to == REG), 0x81 - 0x01 * (size == D8));
+
 	input ((from == IMM) && (to == REG) && (destination == 0), 0x05 + 0x08 * (operation & 0x07) - 0x01 * (size == D8));
 
 	input (! ((from == IMM) && (to == REG) && (destination == 0)),
@@ -135,12 +137,12 @@ static void build_regular (unsigned int operation, unsigned int size, unsigned i
 	modify_memory (destination, to, from);
 	modify_memory (source,      to, from);
 
-	input_at ((to == REG) && (from == MEM), D32,  source, 0x1000);
+	input_at ((to == REG) && (from == MEM), D32,  source, 0x1000 - (text_sector_size + 4));
 	input_by ((to == REG) && (from == IMM), size, source);
-	input_at ((to == MEM) && (from == REG), D32,  destination, 0x1000);
-	input_at ((to == MEM) && (from == IMM), D32,  destination, 0x1000);
+	input_at ((to == MEM) && (from == REG), D32,  destination, 0x1000 - (text_sector_size + 4));
+	input_at ((to == MEM) && (from == IMM), D32,  destination, 0x1000 - (text_sector_size + 4));
 	input_by ((to == MEM) && (from == IMM), size, source);
-	input_at ((to == REG) && (from == REL), D32,  source, 0x4010b0);
+	input_at ((to == REG) && (from == REL), D32,  source, 0x4010b0 - (text_sector_size + 4));
 }
 
 static void build_irregular (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination) {
@@ -155,7 +157,7 @@ static void build_irregular (unsigned int operation, unsigned int size, unsigned
 	input (to == REG, 0xc0 + 0x08 * (operation - IRREGULAR_BEGIN) + 0x01 * (destination & 0x07));
 	input (to == MEM, 0x05 + 0x08 * (operation - IRREGULAR_BEGIN));
 
-	input_at (to == MEM, D32, destination, 0x1000);
+	input_at (to == MEM, D32, destination, 0x1000 - (text_sector_size + 4));
 }
 
 static void build_special_1 (unsigned int operation) {
@@ -232,10 +234,10 @@ static void build_move (unsigned int size, unsigned int to, unsigned int destina
 	input ((to == MEM) && (from == IMM), 0xc6 + 0x01 * (size != D8));
 	input ((to == MEM) && (from == IMM), 0x05);
 
-	input_at ((to == REG) && (from == MEM), D32,  source, 0x1000);
+	input_at ((to == REG) && (from == MEM), D32,  source, 0x1000 - (text_sector_size + 4));
 	input_by ((to == REG) && (from == IMM), size, source);
-	input_at ((to == MEM) && (from == REG), D32,  destination, 0x1000);
-	input_at ((to == MEM) && (from == IMM), D32,  destination, 0x1000);
+	input_at ((to == MEM) && (from == REG), D32,  destination, 0x1000 - (text_sector_size + 4));
+	input_at ((to == MEM) && (from == IMM), D32,  destination, 0x1000 - (text_sector_size + 4));
 	input_by ((to == MEM) && (from == IMM), size, source);
 	input_at ((to == REG) && (from == REL), D32,  source, 0x4010b0);
 
