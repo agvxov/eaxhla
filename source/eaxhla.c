@@ -6,6 +6,8 @@
  *  the storage of variables.
  */
 
+// XXX: we dont *actually* have to store names, do we?
+
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -33,8 +35,28 @@ static size_t anon_variable_counter = 0;
  */
 static size_t unresolved_label_counter = 0;
 
+/*
+static int control_block_stack[12];
+static size_t control_block_stack_top = 0;
+*/
+
 static unsigned symbol_id = 1;
 tommy_hashtable symbol_table;
+
+/*
+void add_if(void) {
+    control_block_stack[control_block_stack_top++] = symbol_id++;
+}
+
+void fin_if(void) {
+    append_instructions(ASMDIRMEM, control_block_stack[control_block_stack_top--]);
+}
+
+void add_logic_equals(cpuregister_t * c1, cpuregister_t * c2) {
+    append_instructions(CMP, c1->size, REG, c1->number, REG, c2->number);
+    append_instructions(JNE, D32, REL, control_block_stack[control_block_stack_top]);
+}
+*/
 
 static char * scope = NULL;
 void empty_out_scope(void) {
@@ -60,7 +82,6 @@ symbol_t * new_symbol(char * name) {
     return r;
 }
 
-static
 void free_symbol(void * data) {
     symbol_t * variable = (symbol_t*)data;
 
@@ -332,6 +353,7 @@ void add_fastcall(const char * const destination) {
 
     append_instructions(CALL, REL, function->_id);
 }
+
 int type2size(const int type) {
     switch (type) {
         case U8:

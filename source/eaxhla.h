@@ -75,6 +75,12 @@ extern void add_procedure(const char * const name);
 extern void add_fastcall(const char * const destination);
 extern void fin_procedure(void);
 extern void fin_hla(void);
+/*
+extern void add_if(void);
+extern void fin_if(void);
+extern void add_logic_equals();
+extern void add_logic_equals(cpuregister_t * c1, cpuregister_t * c2);
+*/
 /* Not implemented
 extern symbol_t * add_function(symbol_t function);
 extern symbol_t * get_function(const char * const name);

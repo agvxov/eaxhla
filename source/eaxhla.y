@@ -106,7 +106,6 @@ document: hla { fin_hla(); }
 
 hla: %empty
     // | library  hla
-    | declaration hla // tmp
     | program  hla
     | function hla
     ;
@@ -234,12 +233,12 @@ stored_literal: ARRAY_LITERAL {
 
 code: %empty
     | error   code { /*yyerrok;*/ }
-    | repeat  code
-    | if      code
+    /*| repeat  code */
+    /*| if      code */
     | call    code
     | label   code
     | machine code
-    | BREAK   code
+    /*| BREAK   code*/
     | exit    code
     | instruction code
     ;
@@ -250,15 +249,26 @@ label: LABEL {
     }
     ;
 
+    /*
 repeat: REPEAT code END_REPEAT
     | UNTIL logic REPEAT code END_REPEAT
     ;
 
-if: IF logic THEN code END_IF
+if_start: IF { add_if(); }
+    ;
+
+if_end: END_IF { fin_if(); }
+    ;
+
+if: if_start logic THEN code if_end
     | IF logic THEN code ELSE code END_IF
     ;
 
-logic: logical_operand ITAND logical_operand
+logic: register '=' register {
+        add_logic_equals(&$1, &$3);
+    }
+    ;
+    logical_operand ITAND logical_operand
     |  logical_operand ITOR  logical_operand
     |  logical_operand ITXOR logical_operand
     |  logical_operand '='   logical_operand
@@ -277,6 +287,7 @@ logical_operand: sublogic
 
 sublogic: '(' logic ')'
     ;
+    */
 
 machine: MACHINE machine_code END_MACHINE
     ;
