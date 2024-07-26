@@ -1,127 +1,73 @@
-$default_output_file = "test_me_please"
+$default_output_file = "a.out"
 
 class CMDTEST_error_batch < Cmdtest::Testcase
   def test_unknown_instruction
-    create_file "input.eax", <<-HEREDOC
-      procedure a
-          nop
-      end procedure
+    import_file "test/unknown_instruction.eax", "./"
 
-      unix
-      program main
-          wigglecall a
-      end program
-    HEREDOC
-
-    cmd "eaxhla input.eax" do
+    cmd "eaxhla unknown_instruction.eax" do
       stderr_equal /.+/
       exit_status 1
     end
   end
 
   def test_unclosed_comment
-    create_file "input.eax", <<-HEREDOC
-      /*
-          reeeeeeee
-          reeeeeeeee
-          reeeeee
-    HEREDOC
+    import_file "test/unclosed_comment.eax", "./"
 
-    cmd "eaxhla input.eax" do
+    cmd "eaxhla unclosed_comment.eax" do
       stderr_equal /.+/
       exit_status 1
     end
   end
 
   def test_unclosed_artimetric
-    create_file "input.eax", <<-HEREDOC
-      program a
-          u8 var = [
-    HEREDOC
+    import_file "test/unclosed_artimetric.eax", "./"
 
-    cmd "eaxhla input.eax" do
+    cmd "eaxhla unclosed_artimetric.eax" do
       stderr_equal /.+/
       exit_status 1
     end
   end
 
   def test_unclosed_program
-    create_file "input.eax", <<-HEREDOC
-      unix
-      program main
-      begin
-          exit 1
-      end rpogram
-    HEREDOC
+    import_file "test/unclosed_program.eax", "./"
 
-    cmd "eaxhla input.eax" do
+    cmd "eaxhla unclosed_program.eax" do
       stderr_equal /.+/
       exit_status 1
     end
   end
 
   def test_double_declare
-    create_file "input.eax", <<-HEREDOC
-      program main
-          u8 a
-          u8 a
-      begin
-      end program
-    HEREDOC
+    import_file "test/double_declare.eax", "./"
 
-    cmd "eaxhla input.eax" do
+    cmd "eaxhla double_declare.eax" do
       stderr_equal /.+/
       exit_status 1
     end
   end
 
   def test_double_program
-    create_file "input.eax", <<-HEREDOC
-      program a
-      begin
-      end program
+    import_file "test/double_program.eax", "./"
 
-      program b
-      begin
-      end program
-    HEREDOC
-
-    cmd "eaxhla input.eax" do
+    cmd "eaxhla double_program.eax" do
       stderr_equal /.+/
       exit_status 1
     end
   end
 
   def test_cut_string
-    create_file "input.eax", <<-HEREDOC
-      program main
-          u8 <> kek = "asd
-      begin
-      end program
-    HEREDOC
+    import_file "test/cut_string.eax", "./"
 
-    cmd "eaxhla input.eax" do
+    cmd "eaxhla cut_string.eax" do
       stderr_equal /.+\n(.|\n)+/m
       exit_status 1
     end
   end
 
   def test_multi_error
-    create_file "input.eax", <<-HEREDOC
-      program main
-          k8 kek
-      begin
-          wigglecall func
-          xor $rsp rsp
-          xor rsp rsp
-          poke rsp
-          xor rsp rsp
-          xor rsp rsp
-          xor rsp rsp
-      end program
-    HEREDOC
+    import_file "test/multi_error.eax", "./"
 
-    cmd "eaxhla input.eax" do
+    cmd "eaxhla multi_error.eax" do
       stderr_equal /.+\n(.|\n)+/m
       exit_status 1
     end
@@ -130,31 +76,31 @@ end
 
 class CMDTEST_warning_batch < Cmdtest::Testcase
   def test_overflows
-    create_file "input.eax", <<-HEREDOC
-      program main
-          u8 a = 10
-          u8 b = 10000
-          u8 c = -200
-      begin
-      end program
-    HEREDOC
+    import_file "test/overflows.eax", "./"
 
     ignore_file $default_output_file
 
-    cmd "eaxhla input.eax" do
-      created_files "a.out"
+    cmd "eaxhla overflows.eax" do
+      stderr_equal /.+/
+    end
+  end
+
+  def test_very_empty
+    import_file "test/very_empty.eax", "./"
+
+    ignore_file $default_output_file
+
+    cmd "eaxhla very_empty.eax" do
       stderr_equal /.+/
     end
   end
 
   def test_empty
-    create_file "input.eax", <<-HEREDOC
-    HEREDOC
+    import_file "test/empty.eax", "./"
 
     ignore_file $default_output_file
 
-    cmd "eaxhla input.eax" do
-      created_files "a.out"
+    cmd "eaxhla empty.eax" do
       stderr_equal /.+/
     end
   end

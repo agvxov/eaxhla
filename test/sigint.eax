@@ -1,0 +1,5 @@
+program sigint
+begin
+    my_loop:
+    jmp my_loop
+end program
