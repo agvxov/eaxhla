@@ -1,0 +1,15 @@
+unix program hello
+	s8 <> message = "Hello, world!"
+begin
+	mov ebx 0
+	mov edi 1
+	mov esi message
+	mov edx 13
+	india:
+		mov eax 1
+		syscall
+		inc ebx
+		cmp ebx 1000000
+		jne india
+	exit 0
+end program

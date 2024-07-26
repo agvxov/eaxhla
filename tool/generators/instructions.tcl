@@ -3,44 +3,10 @@ set instructions {
     {retn}
     {retf}
     {leave}
-    {lock}
-    {hlt}
     {popf}
     {pushf}
-    {wait}
-    {clc}
-    {cld}
-    {cli}
-    {stc}
-    {std}
-    {sti}
-    {cmc}
-    {insb}
-    {insd}
-    {outsb}
-    {outsd}
-    {cdq}
-    {cwde}
-    {inal}
-    {ineax}
-    {int3}
-    {iretd}
-    {lodsb}
-    {lodsd}
-    {outal}
-    {outeax}
-    {scasb}
-    {scasd}
-    {stosb}
-    {stosd}
-    {sysenter}
-    {sysexit}
     {syscall}
-    {sysret}
-    {pause}
     {cpuid}
-    {emms}
-    {rsm}
     {fnop}
     {fchs}
     {fabs}
@@ -69,30 +35,6 @@ set instructions {
     {fscale}
     {fsin}
     {fcos}
-    {insw}
-    {outsw}
-    {cwd}
-    {cqo}
-    {cbw}
-    {cdqe}
-    {invd}
-    {wbinvd}
-    {ud2}
-    {clts}
-    {inax}
-    {iretq}
-    {lodsw}
-    {lodsq}
-    {outax}
-    {rdpmc}
-    {rdmsr}
-    {rdtsc}
-    {scasw}
-    {scasq}
-    {stosw}
-    {stosq}
-    {wrmsr}
-    {xlatb}
     {jmp  relative}
     {je   relative}
     {jne  relative}
@@ -118,16 +60,46 @@ set instructions {
     {adc register register}
     {sbb register register}
     {and register register}
-    {and register immediate}
     {sub register register}
     {xor register register}
     {cmp register register}
+    {add register immediate}
+    {or  register immediate}
+    {adc register immediate}
+    {sbb register immediate}
+    {and register immediate}
+    {sub register immediate}
+    {xor register immediate}
     {cmp register immediate}
+    {add register memory}
+    {or  register memory}
+    {adc register memory}
+    {sbb register memory}
+    {and register memory}
+    {sub register memory}
+    {xor register memory}
+    {cmp register memory}
+    {add memory register}
+    {or  memory register}
+    {adc memory register}
+    {sbb memory register}
+    {and memory register}
+    {sub memory register}
+    {xor memory register}
+    {cmp memory register}
+    {add memory immediate}
+    {or  memory immediate}
+    {adc memory immediate}
+    {sbb memory immediate}
+    {and memory immediate}
+    {sub memory immediate}
+    {xor memory immediate}
+    {cmp memory immediate}
     {mov register register}
     {mov register immediate}
     {mov register memory}
     {mov memory   register}
-    {sar register immediate}
+    {mov memory   immediate}
 }
 
 proc malformed_instruction {i} {

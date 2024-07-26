@@ -1,0 +1,70 @@
+fast procedure char
+begin nop
+	nop mov eax 1 nop mov edi 1 nop mov edx 1 nop syscall
+end procedure
+
+unix program main
+	s8  <> f = "..#.....#.#.......##............................................"
+	s8  <> b = "..#.....#.#.......##............................................"
+	s8  <> c = ".#\n\e[H"
+	s32    y = 0
+	s32    x = 0
+	s32    p = 0
+	s32    q = 0
+	s32    n = 0
+begin nop
+	main_loop:
+		nop mov [y] 0
+		begin_loop_y:
+		nop cmp [y] 8
+		nop je end_loop_y
+			nop mov [x] 0
+			begin_loop_x:
+			nop cmp [x] 8
+			nop je end_loop_x
+				nop mov esi c
+				nop fastcall char
+			nop inc [x]
+			nop jmp begin_loop_x
+			end_loop_x:
+			nop mov esi c
+			nop add esi 2
+			nop fastcall char
+		nop inc [y]
+		nop jmp begin_loop_y
+		end_loop_y:
+		nop mov esi c
+		nop add esi 3
+		nop fastcall char
+		nop inc esi
+		nop fastcall char
+		nop inc esi
+		nop fastcall char
+	nop jmp main_loop
+	nop exit 0
+end program
+/*
+x,y,p,q,f[12][24],b[12][24],n;
+
+main(){
+	f[0][1]=f[1][2]=f[2][0]=f[2][1]=f[2][2]=1;
+	l:
+	for(y=0;y<12;++y){
+		for(x=0;x<24;++x){
+			n=0;
+			for(q=-1;q<2;++q)
+				for(p=-1;p<2;++p)
+					if(p!=0||q!=0)
+						if(f[((y+q)%12+12)%12][((x+p)%24+24)%24])
+							n+=1;
+					b[y][x]=f[y][x]?(n==2||n==3):n==3;
+					printf("%c",".#"[f[y][x]]);
+		}
+		printf("\012");
+	}
+	printf("\033[H");
+	memcpy(f,b,1152);
+	usleep(100000);
+	goto l;
+}
+*/
