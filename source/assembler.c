@@ -37,34 +37,34 @@ static void input (int when, unsigned int data) {
 	text_sector_size += (unsigned int) when;
 }
 
-static void input_by (int when, unsigned int size, unsigned int data) {
+static void insert_immediate (int when, unsigned int size, unsigned int data) {
 	input ((when),                  (data >>  0) & 0xff);
 	input ((when) && (size >= D16), (data >>  8) & 0xff);
 	input ((when) && (size >= D32), (data >> 16) & 0xff);
 	input ((when) && (size >= D32), (data >> 24) & 0xff);
 }
 
-static void asmdirrel (int when, unsigned int data) {
+static void append_directive_relative (int when, unsigned int data) {
 	empty_array [empty_holes] = text_sector_size;
 	empty_imbue [empty_holes] = data;
 
 	empty_holes += (unsigned int) when;
 }
 
-static void asmdirmem (int when, unsigned int code) {
+static void append_directive_memory (int when, unsigned int code) {
 	empty_store [code] = text_sector_size;
 
 	empty_count += (unsigned int) when;
 }
 
-static void asmdirimm (int when, unsigned int size, unsigned int data) {
-	input_by (when, size, data);
+static void aappend_directive_immediate (int when, unsigned int size, unsigned int data) {
+	insert_immediate (when, size, data);
 }
 
-static void input_at (int when, unsigned int size, unsigned int data, unsigned int base) {
-	asmdirrel (when, data);
+static void insert_memory (int when, unsigned int size, unsigned int data, unsigned int base) {
+	append_directive_relative (when, data);
 
-	input_by (when, size, base);
+	insert_immediate (when, size, base);
 }
 
 static int front (unsigned int data) {
@@ -137,12 +137,12 @@ static void build_regular (unsigned int operation, unsigned int size, unsigned i
 	modify_memory (destination, to, from);
 	modify_memory (source,      to, from);
 
-	input_at ((to == REG) && (from == MEM), D32,  source, 0x1000 - (text_sector_size + 4));
-	input_by ((to == REG) && (from == IMM), size, source);
-	input_at ((to == MEM) && (from == REG), D32,  destination, 0x1000 - (text_sector_size + 4));
-	input_at ((to == MEM) && (from == IMM), D32,  destination, 0x1000 - (text_sector_size + 4));
-	input_by ((to == MEM) && (from == IMM), size, source);
-	input_at ((to == REG) && (from == REL), D32,  source, 0x4010b0 - (text_sector_size + 4));
+	insert_memory ((to == REG) && (from == MEM), D32,  source, 0x1000 - (text_sector_size + 4));
+	insert_immediate ((to == REG) && (from == IMM), size, source);
+	insert_memory ((to == MEM) && (from == REG), D32,  destination, 0x1000 - (text_sector_size + 4));
+	insert_memory ((to == MEM) && (from == IMM), D32,  destination, 0x1000 - (text_sector_size + 4));
+	insert_immediate ((to == MEM) && (from == IMM), size, source);
+	insert_memory ((to == REG) && (from == REL), D32,  source, 0x4010b0 - (text_sector_size + 4));
 }
 
 static void build_irregular (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination) {
@@ -157,7 +157,7 @@ static void build_irregular (unsigned int operation, unsigned int size, unsigned
 	input (to == REG, 0xc0 + 0x08 * (operation - IRREGULAR_BEGIN) + 0x01 * (destination & 0x07));
 	input (to == MEM, 0x05 + 0x08 * (operation - IRREGULAR_BEGIN));
 
-	input_at (to == MEM, D32, destination, 0x1000 - (text_sector_size + 4));
+	insert_memory (to == MEM, D32, destination, 0x1000 - (text_sector_size + 4));
 }
 
 static void build_special_1 (unsigned int operation) {
@@ -176,7 +176,7 @@ static void build_special_2 (unsigned int operation) {
 		0xfad9, 0xfbd9, 0xfcd9, 0xfdd9, 0xfed9, 0xffd9
 	};
 
-	input_by (1, D16, data [operation - SPECIAL_2_BEGIN]);
+	insert_immediate (1, D16, data [operation - SPECIAL_2_BEGIN]);
 }
 
 static void build_jump_if (unsigned int operation, unsigned int size, unsigned int ignore, unsigned int location) {
@@ -187,7 +187,7 @@ static void build_jump_if (unsigned int operation, unsigned int size, unsigned i
 	input (far  (location), 0x80 + operation - JUMP_IF_BEGIN);
 	input (near (location), 0x70 + operation - JUMP_IF_BEGIN);
 
-	input_at (1, D32, location, -(text_sector_size + 4));
+	insert_memory (1, D32, location, -(text_sector_size + 4));
 }
 
 static void build_move_if (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
@@ -211,8 +211,8 @@ static void build_jump (unsigned int size, unsigned int to, unsigned int destina
 	input (to == MEM, 0xff);
 	input (to == MEM, 0x25);
 
-	input_at (to == REL, D32, destination, -(text_sector_size + 4));
-	input_at (to == MEM, D32, destination, 0x4010b0);
+	insert_memory (to == REL, D32, destination, -(text_sector_size + 4));
+	insert_memory (to == MEM, D32, destination, 0x4010b0);
 }
 
 static void build_move (unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
@@ -234,14 +234,14 @@ static void build_move (unsigned int size, unsigned int to, unsigned int destina
 	input ((to == MEM) && (from == IMM), 0xc6 + 0x01 * (size != D8));
 	input ((to == MEM) && (from == IMM), 0x05);
 
-	input_at ((to == REG) && (from == MEM), D32,  source, 0x1000 - (text_sector_size + 4));
-	input_by ((to == REG) && (from == IMM), size, source);
-	input_at ((to == MEM) && (from == REG), D32,  destination, 0x1000 - (text_sector_size + 4));
-	input_at ((to == MEM) && (from == IMM), D32,  destination, 0x1000 - (text_sector_size + 4));
-	input_by ((to == MEM) && (from == IMM), size, source);
-	input_at ((to == REG) && (from == REL), D32,  source, 0x4010b0);
+	insert_memory ((to == REG) && (from == MEM), D32,  source, 0x1000 - (text_sector_size + 4));
+	insert_immediate ((to == REG) && (from == IMM), size, source);
+	insert_memory ((to == MEM) && (from == REG), D32,  destination, 0x1000 - (text_sector_size + 4));
+	insert_memory ((to == MEM) && (from == IMM), D32,  destination, 0x1000 - (text_sector_size + 4));
+	insert_immediate ((to == MEM) && (from == IMM), size, source);
+	insert_memory ((to == REG) && (from == REL), D32,  source, 0x4010b0);
 
-	input_by ((to == REG) && (from == IMM) && (size == D64), D32, 0);
+	insert_immediate ((to == REG) && (from == IMM) && (size == D64), D32, 0);
 }
 
 static void build_call (unsigned int from, unsigned int source) {
@@ -250,7 +250,7 @@ static void build_call (unsigned int from, unsigned int source) {
 	input (from == REL, 0xe8);
 	input (from == REG, 0xff);
 
-	input_at (from == REL, D32, source, -(text_sector_size + 4));
+	insert_memory (from == REL, D32, source, -(text_sector_size + 4));
 
 	input (from == REG, (0xd0 + 0x01 * (source & 0x07)));
 }
@@ -258,8 +258,8 @@ static void build_call (unsigned int from, unsigned int source) {
 static void build_enter (unsigned int dynamic_storage, unsigned int nesting_level) {
 	input (1, 0xc8);
 
-	input_by (1, D16, dynamic_storage);
-	input_by (1, D8,  nesting_level & 0x1f);
+	insert_immediate (1, D16, dynamic_storage);
+	insert_immediate (1, D8,  nesting_level & 0x1f);
 }
 
 static void build_in_out (unsigned int move, unsigned int size, unsigned int type, unsigned int port) {
@@ -267,7 +267,7 @@ static void build_in_out (unsigned int move, unsigned int size, unsigned int typ
 
 	input (1, 0xe4 + 0x01 * (size != D8) + 0x02 * (move != OUT) + 0x08 * (type == REG));
 
-	input_by (type == IMM, D8, port);
+	insert_immediate (type == IMM, D8, port);
 }
 
 static void build_pop (unsigned int size, unsigned int to, unsigned int destination) {
@@ -279,7 +279,7 @@ static void build_pop (unsigned int size, unsigned int to, unsigned int destinat
 	input (to == MEM, 0x8f);
 	input (to == MEM, 0x05);
 
-	input_at (to == MEM, D32, destination, 0);
+	insert_memory (to == MEM, D32, destination, 0);
 }
 
 static void build_push (unsigned int size, unsigned int from, unsigned int source) {
@@ -292,8 +292,8 @@ static void build_push (unsigned int size, unsigned int from, unsigned int sourc
 	input (from == MEM, 0x35);
 	input (from == IMM, 0x68 + 0x02 * (size == D8));
 
-	input_at (from == MEM, D32,  source, 0);
-	input_by (from == IMM, size, source);
+	insert_memory (from == MEM, D32,  source, 0);
+	insert_immediate (from == IMM, size, source);
 }
 
 static void build_float (unsigned int operation, unsigned int size, unsigned int from, unsigned int source) {
@@ -301,7 +301,7 @@ static void build_float (unsigned int operation, unsigned int size, unsigned int
 
 	modify_memory (operation, 0, from);
 
-	input_at (from == MEM, size, source, 0);
+	insert_memory (from == MEM, size, source, 0);
 }
 
 static void assemble_clean_up (void) {
@@ -315,11 +315,12 @@ static void assemble_clean_up (void) {
 	free (empty_store);
 }
 
+unsigned int    nopification     = 1;
+unsigned int    text_entry_point = 0;
 unsigned int    text_sector_size = 0;
 unsigned char * text_sector_byte = NULL;
 
-         int was_instruction_array_empty = 0;
-unsigned int text_entry_point            = 0;
+int was_instruction_array_empty = 0;
 
 void assemble (unsigned int count, unsigned int * array) {
 	unsigned int index;
@@ -336,20 +337,22 @@ void assemble (unsigned int count, unsigned int * array) {
 
 	if (!assemble_clean_up_queued) {
 		atexit (assemble_clean_up);
-		assemble_clean_up_queued = !assemble_clean_up_queued;
+		assemble_clean_up_queued = ! assemble_clean_up_queued;
 	}
 
 	for (index = 0; index < count; ++index) {
+		input ((nopification != 0) && (array [index] > ASMDIRREP), 0x90);
+
 		if (array [index] == ASMDIRREL) {
-			asmdirrel (1, array [index + 1]);
+			append_directive_relative (1, array [index + 1]);
 			index += 1;
 		} else if (array [index] == ASMDIRMEM) {
-			asmdirmem (1, array [index + 1]);
+			append_directive_memory (1, array [index + 1]);
 			index += 1;
 		} else if (array [index] == ASMDIRIMM) {
 			unsigned int repeat;
 			for (repeat = 0; repeat < array [index + 2]; ++repeat) {
-				asmdirimm (1, array [index + 1], array [index + 3 + repeat]);
+				aappend_directive_immediate (1, array [index + 1], array [index + 3 + repeat]);
 			}
 			index += array [index + 2] + 2;
 		} else if ((array [index] >= REGULAR_BEGIN) && (array [index] <= REGULAR_END)) {

@@ -34,6 +34,7 @@ enum {
 	GR8,            GR9,            GR10,           GR11,           GR12,           GR13,           GR14,           GR15
 };
 
+extern unsigned int    nopification;
 extern unsigned int    text_entry_point;
 extern unsigned int    text_sector_size;
 extern unsigned char * text_sector_byte;
