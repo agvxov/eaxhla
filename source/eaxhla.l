@@ -42,6 +42,7 @@ machine                    { return MACHINE; }
 library                    { return LIBRARY; }
 
 break                      { return BREAK; }
+continue                   { return CONTINUE; }
 until                      { return UNTIL; }
 exit                       { return EXIT;  }
 

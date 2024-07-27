@@ -98,7 +98,7 @@
 
 // Instruction-likes
 %token FASTCALL
-%token EXIT BREAK
+%token EXIT BREAK CONTINUE
 %%
 
 document: hla { fin_hla(); }
@@ -244,9 +244,8 @@ code: %empty
     | call    code
     | label   code
     | machine code
-    /*| BREAK   code*/
-    | exit    code
-    | instruction code
+    | instruction      code
+    | instruction_like code
     ;
 
 label: LABEL {
@@ -434,6 +433,17 @@ artimetric_operand: LITERAL
     | IDENTIFIER {
         $$ = get_variable($1)->value;
     }
+    ;
+
+instruction_like: exit
+    | continue
+    | break
+    ;
+
+continue: CONTINUE { add_continue(); }
+    ;
+
+break: BREAK { ; }
     ;
 
 exit: EXIT value { append_exit($2); }

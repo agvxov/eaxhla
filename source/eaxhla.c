@@ -54,6 +54,9 @@ void add_logic_equals(cpuregister_t * c1, cpuregister_t * c2) {
     append_instructions(CMP, c1->size, REG, c1->number, REG, c2->number);
     append_instructions(JNE, D32, REL, control_block_stack[control_block_stack_top]);
 }
+void add_break(void) {
+    append_instructions(JMP, D32)
+}
 */
 
 void add_repeat(void) {
@@ -62,6 +65,9 @@ void add_repeat(void) {
 }
 void fin_repeat(void) {
     append_instructions(JMP, D32, REL, control_block_stack[control_block_stack_top--]);
+}
+void add_continue(void) {
+    append_instructions(JMP, D32, REL, control_block_stack[control_block_stack_top]);
 }
 
 static char * scope = NULL;
