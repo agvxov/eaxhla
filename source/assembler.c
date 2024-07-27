@@ -421,7 +421,7 @@ int assemble (unsigned int count, unsigned int * array) {
 
 	if ((count == 0) || (array == NULL)) {
 		was_instruction_array_empty = 1;
-		return;
+		return (EXIT_FAILURE);
 	}
 
 	text_sector_byte = calloc (4096UL, sizeof (* text_sector_byte));
