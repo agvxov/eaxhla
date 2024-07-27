@@ -1,0 +1,248 @@
+fast procedure output_text
+begin
+	mov rax, 1
+	mov rdi, 1
+	mov rsi, rbx
+	mov rdx, rbp
+	syscall
+end procedure
+
+fast procedure output_colour
+begin
+	mov [output_colour_format + 5], bl
+	mov [output_colour_format + 2], bpl
+	mov rbx, output_colour_format
+	mov rbp, 7
+	fastcall output_text
+end procedure
+
+fast procedure output_cancel
+begin
+	mov rbx, output_colour_cancel
+	mov rbp, 4
+	fastcall output_text
+end procedure
+
+fast procedure output_align
+begin
+	mov r15, rbx
+	mov r14, rbp
+	loop_statement:
+		mov rbx, r14
+		mov rbp, 1
+		fastcall output_text
+		dec r15
+	cmp r15, 0
+	jne loop_statement
+end procedure
+
+fast procedure output_bar
+begin
+	mov rbx, '0'
+	mov rbp, '1'
+	fastcall output_colour
+	mov rbx, align_bar
+	mov rbp, 3
+	fastcall output_text
+	fastcall output_cancel
+end procedure
+
+fast procedure offset_base
+begin
+	mov ax, bx
+	number_loop_statement:
+		div bpl
+		mov [output_quotient],  al
+		mov [output_remainder], ah
+		mov r14, output_format
+		add r14, [output_length]
+		mov r15, output_cypher
+		add r15b, [output_remainder]
+		mov r13b, BYTE [r15]
+		mov BYTE [r14], r13b
+		xor rax, rax
+		mov al, [output_quotient]
+		inc [output_length]
+	cmp rax, 0
+	jne number_loop_statement
+end procedure
+
+fast procedure output_base
+begin
+	output_loop_statement:
+		mov rbx, output_format
+		add rbx, [output_length]
+		dec rbx
+		mov rbp, 1
+		fastcall output_text
+		dec [output_length]
+	cmp [output_length], 0
+	jne output_loop_statement
+end procedure
+
+unix program main
+begin
+	main_loop:
+		#output_number [character_index],  2, 8, align_zero,  '7', '0'
+		#output_number [character_index],  8, 4, align_zero,  '6', '0'
+		#output_number [character_index], 10, 4, align_space, '6', '3'
+		#output_number [character_index], 16, 3, align_space, '6', '1'
+
+// number, base, offset, character, colour, effect
+		fastcall output_bar
+		mov rbx, colour
+		mov rbp, effect
+		fastcall output_colour
+		mov rbx, number
+		mov rbp, base
+		fastcall offset_base
+		mov rbx, offset
+		sub rbx, [output_length]
+		mov rbp, character
+		fastcall output_align
+		fastcall output_base
+		fastcall output_cancel
+
+		fastcall output_bar
+		mov rbx, colour
+		mov rbp, effect
+		fastcall output_colour
+		mov rbx, number
+		mov rbp, base
+		fastcall offset_base
+		mov rbx, offset
+		sub rbx, [output_length]
+		mov rbp, character
+		fastcall output_align
+		fastcall output_base
+		fastcall output_cancel
+
+		fastcall output_bar
+		mov rbx, colour
+		mov rbp, effect
+		fastcall output_colour
+		mov rbx, number
+		mov rbp, base
+		fastcall offset_base
+		mov rbx, offset
+		sub rbx, [output_length]
+		mov rbp, character
+		fastcall output_align
+		fastcall output_base
+		fastcall output_cancel
+
+		fastcall output_bar
+		mov rbx, colour
+		mov rbp, effect
+		fastcall output_colour
+		mov rbx, number
+		mov rbp, base
+		fastcall offset_base
+		mov rbx, offset
+		sub rbx, [output_length]
+		mov rbp, character
+		fastcall output_align
+		fastcall output_base
+		fastcall output_cancel
+
+		fastcall output_bar
+		mov rbx, '4'
+		mov rbp, '1'
+		fastcall output_colour
+		mov rax, [character_index]
+		mov rbx, 3
+		mul rbx
+		mov rbx, code_list
+		add rbx, rax
+		mov rbp, 3
+		fastcall output_text
+		fastcall output_cancel
+
+		fastcall output_bar
+		mov rbx, '5'
+		mov rbp, '0'
+		fastcall output_colour
+		mov rax, [character_index]
+		mov rbx, 24
+		mul rbx
+		mov rbx, name_list
+		add rbx, rax
+		mov rbp, 24
+		fastcall output_text
+		fastcall output_cancel
+
+		mov rax, [character_index]
+		and rax, 1
+		cmp rax, 0
+		je skip_line
+			mov rbx, align_line
+			mov rbp, 1
+			fastcall output_text
+		skip_line:
+
+		inc [character_index]
+	cmp [character_index], 128
+	jne main_loop
+
+	exit 0
+end program
+
+segment readable writable
+
+character_index dq 0
+
+align_zero  db '0'
+align_line  db 10
+align_space db ' '
+align_bar   db ' | '
+
+output_cypher    db '0123456789ABCDEF'
+output_format    db '                '
+output_length    dq 0
+output_quotient  db 0
+output_remainder db 0
+
+output_colour_format db 27, '[ ;3 m'
+output_colour_cancel db 27, '[0m'
+
+code_list db 'NUL', 'SOH', 'STX', 'ETX', 'EOT', 'ENQ', 'ACK', 'BEL', 'BS ', 'HT ', 'LF ', 'VT ', 'FF ', 'CR ', 'SO ', 'SI ', \
+             'DLE', 'DC1', 'DC2', 'DC3', 'DC4', 'NAK', 'SYN', 'ETB', 'CAN', 'EM ', 'SUB', 'ESC', 'FS ', 'GS ', 'RS ', 'US ', \
+             '   ', '!  ', '"  ', '#  ', '$  ', '%  ', '&  ',39,'  ','(  ', ')  ', '*  ', '+  ', ',  ', '-  ', '.  ', '/  ', \
+             '0  ', '1  ', '2  ', '3  ', '4  ', '5  ', '6  ', '7  ', '8  ', '9  ', ':  ', ';  ', '<  ', '=  ', '>  ', '?  ', \
+             '@  ', 'A  ', 'B  ', 'C  ', 'D  ', 'E  ', 'F  ', 'G  ', 'H  ', 'I  ', 'J  ', 'K  ', 'L  ', 'M  ', 'N  ', 'O  ', \
+             'P  ', 'Q  ', 'R  ', 'S  ', 'T  ', 'U  ', 'V  ', 'W  ', 'X  ', 'Y  ', 'Z  ', '[  ', '\  ', ']  ', '^  ', '_  ', \
+             '`  ', 'a  ', 'b  ', 'c  ', 'd  ', 'e  ', 'f  ', 'g  ', 'h  ', 'i  ', 'j  ', 'k  ', 'l  ', 'm  ', 'n  ', 'o  ', \
+             'p  ', 'q  ', 'r  ', 's  ', 't  ', 'u  ', 'v  ', 'w  ', 'x  ', 'y  ', 'z  ', '{  ', '|  ', '}  ', '~  ', 'DEL'
+
+name_list db 'Null                    ', 'Start of heading        ', 'Start of text           ', 'End of text             ', \
+             'End of transmission     ', 'Enquiry                 ', 'Acknowledge             ', 'Bell                    ', \
+             'Backspace               ', 'Horizontal tab          ', 'Line feed               ', 'Vertical tab            ', \
+             'Form feed               ', 'Carriage return         ', 'Shift out               ', 'Shift in                ', \
+             'Data link escape        ', 'Device control 1        ', 'Device control 2        ', 'Device control 3        ', \
+             'Device control 4        ', 'Negative acknowledge    ', 'Synchronous idle        ', 'End transmission block  ', \
+             'Cancel                  ', 'End of medium           ', 'Substitute              ', 'Escape                  ', \
+             'File separator          ', 'Group separator         ', 'Record separator        ', 'Unit separator          ', \
+             'Space                   ', 'Exclamation mark        ', 'Speech mark             ', 'Number sign             ', \
+             'Dollar sign             ', 'Percent                 ', 'Ampersand               ', 'Quote                   ', \
+             'Open parenthesis        ', 'Close parenthesis       ', 'Asterisk                ', 'Plus                    ', \
+             'Comma                   ', 'Minus                   ', 'Period                  ', 'Slash                   ', \
+             'Zero                    ', 'One                     ', 'Two                     ', 'Three                   ', \
+             'Four                    ', 'Five                    ', 'Six                     ', 'Seven                   ', \
+             'Eight                   ', 'Nine                    ', 'Colon                   ', 'Semicolon               ', \
+             'Open angled bracket     ', 'Equal                   ', 'Close angled bracket    ', 'Question mark           ', \
+             'At sign                 ', 'Uppercase A             ', 'Uppercase B             ', 'Uppercase C             ', \
+             'Uppercase D             ', 'Uppercase E             ', 'Uppercase F             ', 'Uppercase G             ', \
+             'Uppercase H             ', 'Uppercase I             ', 'Uppercase J             ', 'Uppercase K             ', \
+             'Uppercase L             ', 'Uppercase M             ', 'Uppercase N             ', 'Uppercase O             ', \
+             'Uppercase P             ', 'Uppercase Q             ', 'Uppercase R             ', 'Uppercase S             ', \
+             'Uppercase T             ', 'Uppercase U             ', 'Uppercase V             ', 'Uppercase W             ', \
+             'Uppercase X             ', 'Uppercase Y             ', 'Uppercase Z             ', 'Opening bracket         ', \
+             'Backslash               ', 'Closing bracket         ', 'Caret                   ', 'Underscore              ', \
+             'Grave                   ', 'Lowercase a             ', 'Lowercase b             ', 'Lowercase c             ', \
+             'Lowercase d             ', 'Lowercase e             ', 'Lowercase f             ', 'Lowercase g             ', \
+             'Lowercase h             ', 'Lowercase i             ', 'Lowercase j             ', 'Lowercase k             ', \
+             'Lowercase l             ', 'Lowercase m             ', 'Lowercase n             ', 'Lowercase o             ', \
+             'Lowercase p             ', 'Lowercase q             ', 'Lowercase r             ', 'Lowercase s             ', \
+             'Lowercase t             ', 'Lowercase u             ', 'Lowercase v             ', 'Lowercase w             ', \
+             'Lowercase x             ', 'Lowercase y             ', 'Lowercase z             ', 'Opening brace           ', \
+             'Vertical bar            ', 'Closing brace           ', 'Tilde                   ', 'Delete                  '
