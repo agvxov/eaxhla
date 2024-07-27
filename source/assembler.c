@@ -168,7 +168,7 @@ static void build_special_2 (unsigned int operation) {
 }
 
 static void build_jump_if (unsigned int operation, unsigned int size, unsigned int ignore, unsigned int location) {
-	ignore = REL;
+	(void) ignore;
 
 	input (far (location) && (size == D32), 0x0f);
 
@@ -355,9 +355,7 @@ void assemble (unsigned int count, unsigned int * array) {
 		} else if ((array [index] == IN) || (array [index] == OUT)) {
 			build_in_out (array [index + 0], array [index + 1], array [index + 2], array [index + 3]);
 			index += 3;
-		}
-
-		switch (array [index]) {
+		} else switch (array [index]) {
 			case ASMDIRREL: {
 				append_directive_relative (1, array [index + 1]);
 				index += 1;
@@ -397,7 +395,7 @@ void assemble (unsigned int count, unsigned int * array) {
 				build_push (array [index + 1], array [index + 2], array [index + 3]);
 				index += 3;
 			} break;
-			default: return;
+			default: exit (array [index]);
 		}
 	}
 
