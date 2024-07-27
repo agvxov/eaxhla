@@ -467,7 +467,7 @@ void assemble (unsigned int count, unsigned int * array) {
 			default:        exit ((int) array [index]);
 		}
 	}
-printf ("holes = %u\ncount = %u\n", empty_holes, empty_count);
+
 	text_entry_point = empty_store [0];
 
 	for (index = 1; index < empty_holes; ++index) {
