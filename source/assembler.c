@@ -44,21 +44,31 @@ static void insert_immediate (int when, unsigned int size, unsigned int data) {
 	input ((when) && (size >= D32), (data >> 24) & 0xff);
 }
 
-static void append_directive_relative (int when, unsigned int data) {
+static unsigned int append_directive_relative (int when, unsigned int data) {
 	empty_array [empty_holes] = text_sector_size;
 	empty_imbue [empty_holes] = data;
 
 	empty_holes += (unsigned int) when;
+
+	return (1);
 }
 
-static void append_directive_memory (int when, unsigned int code) {
+static unsigned int append_directive_memory (int when, unsigned int code) {
 	empty_store [code] = text_sector_size;
 
 	empty_count += (unsigned int) when;
+
+	return (1);
 }
 
-static void append_directive_immediate (int when, unsigned int size, unsigned int data) {
-	insert_immediate (when, size, data);
+static unsigned int append_directive_immediate (int when, unsigned int size, unsigned int amount, unsigned int * data) {
+	unsigned int index;
+
+	for (index = 0; index < amount; ++index) {
+		insert_immediate (when, size, data [index]);
+	}
+
+	return (amount + 2);
 }
 
 static void insert_memory (int when, unsigned int size, unsigned int data, unsigned int base) {
@@ -107,7 +117,7 @@ static void modify_memory (unsigned int operation, unsigned int to, unsigned int
 }
 
 // REFACTORING IN PROGRESS
-static void build_regular (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
+static unsigned int build_regular (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
 	short_prefix (size);
 
 	long_prefix (size, to, destination, from, source);
@@ -131,9 +141,11 @@ static void build_regular (unsigned int operation, unsigned int size, unsigned i
 	insert_memory    ((to == MEM) && (from == IMM), D32,  destination, 0x1000 - (text_sector_size + 4));
 	insert_immediate ((to == MEM) && (from == IMM), size, source);
 	insert_memory    ((to == REG) && (from == REL), D32,  source, 0x4010b0 - (text_sector_size + 4));
+
+	return (5);
 }
 
-static void build_irregular (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination) {
+static unsigned int build_irregular (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination) {
 	short_prefix (size);
 
 	long_prefix (size, to, destination, 0, 0);
@@ -146,17 +158,21 @@ static void build_irregular (unsigned int operation, unsigned int size, unsigned
 	input (to == MEM, 0x05 + 0x08 * (operation - IRREGULAR_BEGIN));
 
 	insert_memory (to == MEM, D32, destination, 0x1000 - (text_sector_size + 4));
+
+	return (3);
 }
 
-static void build_special_1 (unsigned int operation) {
+static unsigned int build_special_1 (unsigned int operation) {
 	const unsigned char data  [] = {
 		0x90, 0xc3, 0xcb, 0xc9, 0x9d, 0x9c
 	};
 
 	input (1, data [operation - SPECIAL_1_BEGIN]);
+
+	return (0);
 }
 
-static void build_special_2 (unsigned int operation) {
+static unsigned int build_special_2 (unsigned int operation) {
 	const unsigned short data  [] = {
 		0x050f, 0xa20f, 0xd0d9, 0xe0d9, 0xe1d9, 0xe4d9, 0xe5d9, 0xe8d9,
 		0xe9d9, 0xead9, 0xebd9, 0xecd9, 0xedd9, 0xeed9, 0xf0d9, 0xf1d9,
@@ -165,9 +181,11 @@ static void build_special_2 (unsigned int operation) {
 	};
 
 	insert_immediate (1, D16, data [operation - SPECIAL_2_BEGIN]);
+
+	return (0);
 }
 
-static void build_jump_if (unsigned int operation, unsigned int size, unsigned int ignore, unsigned int location) {
+static unsigned int build_jump_if (unsigned int operation, unsigned int size, unsigned int ignore, unsigned int location) {
 	(void) ignore;
 
 	input (far (location) && (size == D32), 0x0f);
@@ -176,9 +194,11 @@ static void build_jump_if (unsigned int operation, unsigned int size, unsigned i
 	input (near (location), 0x70 + operation - JUMP_IF_BEGIN);
 
 	insert_memory (1, D32, location, -(text_sector_size + 4));
+
+	return (3);
 }
 
-static void build_move_if (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
+static unsigned int build_move_if (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
 	short_prefix (size);
 
 	long_prefix (size, to, destination, from, source);
@@ -188,9 +208,11 @@ static void build_move_if (unsigned int operation, unsigned int size, unsigned i
 
 	modify_registers (to, destination, from, source);
 	modify_memory (destination, to, from);
+
+	return (5);
 }
 
-static void build_jump (unsigned int size, unsigned int to, unsigned int destination) {
+static unsigned int build_jump (unsigned int size, unsigned int to, unsigned int destination) {
 	input ((to == REG) && upper (destination), 0X41);
 
 	input (to == REL, 0xe9 + 0x02 * (size == D8));
@@ -201,9 +223,11 @@ static void build_jump (unsigned int size, unsigned int to, unsigned int destina
 
 	insert_memory (to == REL, D32, destination, -(text_sector_size + 4));
 	insert_memory (to == MEM, D32, destination, 0x4010b0);
+
+	return (3);
 }
 
-static void build_move (unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
+static unsigned int build_move (unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
 	short_prefix (size);
 
 	long_prefix (size, to, destination, from, source);
@@ -230,9 +254,11 @@ static void build_move (unsigned int size, unsigned int to, unsigned int destina
 	insert_memory ((to == REG) && (from == REL), D32,  source, 0x4010b0);
 
 	insert_immediate ((to == REG) && (from == IMM) && (size == D64), D32, 0);
+
+	return (5);
 }
 
-static void build_call (unsigned int from, unsigned int source) {
+static unsigned int build_call (unsigned int from, unsigned int source) {
 	input ((from == REG) && (upper (source)), 0x41);
 
 	input (from == REL, 0xe8);
@@ -241,24 +267,30 @@ static void build_call (unsigned int from, unsigned int source) {
 	insert_memory (from == REL, D32, source, -(text_sector_size + 4));
 
 	input (from == REG, (0xd0 + 0x01 * (source & 0x07)));
+
+	return (2);
 }
 
-static void build_enter (unsigned int dynamic_storage, unsigned int nesting_level) {
+static unsigned int build_enter (unsigned int dynamic_storage, unsigned int nesting_level) {
 	input (1, 0xc8);
 
 	insert_immediate (1, D16, dynamic_storage);
 	insert_immediate (1, D8,  nesting_level & 0x1f);
+
+	return (2);
 }
 
-static void build_in_out (unsigned int move, unsigned int size, unsigned int type, unsigned int port) {
+static unsigned int build_in_out (unsigned int move, unsigned int size, unsigned int type, unsigned int port) {
 	short_prefix (size);
 
 	input (1, 0xe4 + 0x01 * (size != D8) + 0x02 * (move != OUT) + 0x08 * (type == REG));
 
 	insert_immediate (type == IMM, D8, port);
+
+	return (3);
 }
 
-static void build_pop (unsigned int size, unsigned int to, unsigned int destination) {
+static unsigned int build_pop (unsigned int size, unsigned int to, unsigned int destination) {
 	short_prefix (size);
 
 	input ((to == REG) && (upper (destination)), 0x41);
@@ -268,9 +300,10 @@ static void build_pop (unsigned int size, unsigned int to, unsigned int destinat
 	input (to == MEM, 0x05);
 
 	insert_memory (to == MEM, D32, destination, 0);
+
+	return (3);
 }
 
-// HIGHLY EXPERIMENTAL CODE
 static unsigned int build_push (unsigned int * array) {
 	unsigned int size   = array [0],
 	             from   = array [1],
@@ -290,26 +323,15 @@ static unsigned int build_push (unsigned int * array) {
 
 	return (3);
 }
-/*static void build_push (unsigned int size, unsigned int from, unsigned int source) {
-	short_prefix (size);
 
-	input ((from == REG) && (upper (source)), 0x41);
-
-	input (from == REG, 0x50 + 0x01 * (source & 0x07));
-	input (from == MEM, 0xff);
-	input (from == MEM, 0x35);
-	input (from == IMM, 0x68 + 0x02 * (size == D8));
-
-	insert_memory (from == MEM, D32,  source, 0);
-	insert_immediate (from == IMM, size, source);
-}*/
-
-static void build_float (unsigned int operation, unsigned int size, unsigned int from, unsigned int source) {
+static unsigned int build_float (unsigned int operation, unsigned int size, unsigned int from, unsigned int source) {
 	input (from == MEM, 0xd8 + 0x04 * (size == D64));
 
 	modify_memory (operation, 0, from);
 
 	insert_memory (from == MEM, size, source, 0);
+
+	return (3);
 }
 
 static void assemble_clean_up (void) {
@@ -349,76 +371,35 @@ void assemble (unsigned int count, unsigned int * array) {
 	}
 
 	for (index = 0; index < count; ++index) {
-		input ((nopification != 0) && (array [index] > ASMDIRREP), 0x90);
+		input ((nopification) && (array [index] > ASMDIRREP), 0x90);
 
 		if ((array [index] >= REGULAR_BEGIN) && (array [index] <= REGULAR_END)) {
-			build_regular (array [index + 0], array [index + 1], array [index + 2], array [index + 3], array [index + 4], array [index + 5]);
-			index += 5;
+			index += build_regular (array [index + 0], array [index + 1], array [index + 2], array [index + 3], array [index + 4], array [index + 5]);
 		} else if ((array [index] >= IRREGULAR_BEGIN) && (array [index] <= IRREGULAR_END)) {
-			build_irregular (array [index + 0], array [index + 1], array [index + 2], array [index + 3]);
-			index += 3;
+			index += build_irregular (array [index + 0], array [index + 1], array [index + 2], array [index + 3]);
 		} else if ((array [index] >= SPECIAL_1_BEGIN) && (array [index] <= SPECIAL_1_END)) {
-			build_special_1 (array [index + 0]);
-			index += 0;
+			index += build_special_1 (array [index + 0]);
 		} else if ((array [index] >= SPECIAL_2_BEGIN) && (array [index] <= SPECIAL_2_END)) {
-			build_special_2 (array [index + 0]);
-			index += 0;
+			index += build_special_2 (array [index + 0]);
 		} else if ((array [index] >= JUMP_IF_BEGIN) && (array [index] <= JUMP_IF_END)) {
-			build_jump_if (array [index + 0], array [index + 1], array [index + 2], array [index + 3]);
-			index += 3;
+			index += build_jump_if (array [index + 0], array [index + 1], array [index + 2], array [index + 3]);
 		} else if ((array [index] >= MOVE_IF_BEGIN) && (array [index] <= MOVE_IF_END)) {
-			build_move_if (array [index + 0], array [index + 1], array [index + 2], array [index + 3], array [index + 4], array [index + 5]);
-			index += 5;
+			index += build_move_if (array [index + 0], array [index + 1], array [index + 2], array [index + 3], array [index + 4], array [index + 5]);
 		} else if ((array [index] >= FLOAT_BEGIN) && (array [index] <= FLOAT_END)) {
-			build_float (array [index + 0], array [index + 1], array [index + 2], array [index + 3]);
-			index += 3;
+			index += build_float (array [index + 0], array [index + 1], array [index + 2], array [index + 3]);
 		} else if ((array [index] == IN) || (array [index] == OUT)) {
-			build_in_out (array [index + 0], array [index + 1], array [index + 2], array [index + 3]);
-			index += 3;
+			index += build_in_out (array [index + 0], array [index + 1], array [index + 2], array [index + 3]);
 		} else switch (array [index]) {
-			case ASMDIRREL: {
-				append_directive_relative (1, array [index + 1]);
-				index += 1;
-			} break;
-			case ASMDIRMEM: {
-				append_directive_memory (1, array [index + 1]);
-				index += 1;
-			} break;
-			case ASMDIRIMM: {
-				unsigned int repeat;
-				for (repeat = 0; repeat < array [index + 2]; ++repeat) {
-					append_directive_immediate (1, array [index + 1], array [index + 3 + repeat]);
-				}
-				index += array [index + 2] + 2;
-			} break;
-			case JMP: {
-				build_jump (array [index + 1], array [index + 2], array [index + 3]);
-				index += 3;
-			} break;
-			case MOV: {
-				build_move (array [index + 1], array [index + 2], array [index + 3], array [index + 4], array [index + 5]);
-				index += 5;
-			} break;
-			case CALL: {
-				build_call (array [index + 1], array [index + 2]);
-				index += 2;
-			} break;
-			case ENTER: {
-				build_enter (array [index + 1], array [index + 2]);
-				index += 2;
-			} break;
-			case POP: {
-				build_pop (array [index + 1], array [index + 2], array [index + 3]);
-				index += 3;
-			} break;
-			case PUSH: {
-				/*build_push (array [index + 1], array [index + 2], array [index + 3]);
-				index += 3;*/
-				index += build_push (& array [index + 1]);
-			} break;
-			default: {
-				exit (array [index]);
-			}
+			case ASMDIRREL: index += append_directive_relative (1, array [index + 1]); break;
+			case ASMDIRMEM: index += append_directive_memory (1, array [index + 1]); break;
+			case ASMDIRIMM: index += append_directive_immediate (1, array [index + 1], array [index + 2], & array [index + 3]); break;
+			case JMP:       index += build_jump (array [index + 1], array [index + 2], array [index + 3]); break;
+			case MOV:       index += build_move (array [index + 1], array [index + 2], array [index + 3], array [index + 4], array [index + 5]); break;
+			case CALL:      index += build_call (array [index + 1], array [index + 2]); break;
+			case ENTER:     index += build_enter (array [index + 1], array [index + 2]); break;
+			case POP:       index += build_pop (array [index + 1], array [index + 2], array [index + 3]); break;
+			case PUSH:      index += build_push (& array [index + 1]); break;
+			default:        exit ((int) array [index]);
 		}
 	}
 
