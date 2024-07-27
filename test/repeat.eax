@@ -1,0 +1,11 @@
+program my_repeat
+    u8 <> message = "Heyo\n"
+begin
+    repeat
+        mov eax 1
+        mov edi 1
+        mov esi message
+        mov edx 5
+        syscall
+    end repeat
+end program

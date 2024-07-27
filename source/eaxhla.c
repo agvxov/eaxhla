@@ -35,10 +35,8 @@ static size_t anon_variable_counter = 0;
  */
 static size_t unresolved_label_counter = 0;
 
-/*
 static int control_block_stack[12];
 static size_t control_block_stack_top = 0;
-*/
 
 static unsigned symbol_id = 1;
 tommy_hashtable symbol_table;
@@ -57,6 +55,14 @@ void add_logic_equals(cpuregister_t * c1, cpuregister_t * c2) {
     append_instructions(JNE, D32, REL, control_block_stack[control_block_stack_top]);
 }
 */
+
+void add_repeat(void) {
+    control_block_stack[control_block_stack_top++] = symbol_id++;
+    append_instructions(ASMDIRMEM, control_block_stack[control_block_stack_top]);
+}
+void fin_repeat(void) {
+    append_instructions(JMP, D32, REL, control_block_stack[control_block_stack_top--]);
+}
 
 static char * scope = NULL;
 void empty_out_scope(void) {

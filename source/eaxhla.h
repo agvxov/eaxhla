@@ -81,6 +81,8 @@ extern void fin_if(void);
 extern void add_logic_equals();
 extern void add_logic_equals(cpuregister_t * c1, cpuregister_t * c2);
 */
+extern void add_repeat(void);
+extern void fin_repeat(void);
 /* Not implemented
 extern symbol_t * add_function(symbol_t function);
 extern symbol_t * get_function(const char * const name);

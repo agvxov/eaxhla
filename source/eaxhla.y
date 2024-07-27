@@ -197,6 +197,12 @@ immediate: LITERAL {
         $$.value = variable->_id;
         free($1);
     }
+    /*
+    | stored_literal {
+        $$.type  = REL;
+        $$.value = $1
+    }
+    */
     ;
 
 memory: artimetric_block
@@ -233,7 +239,7 @@ stored_literal: ARRAY_LITERAL {
 
 code: %empty
     | error   code { /*yyerrok;*/ }
-    /*| repeat  code */
+    | repeat  code
     /*| if      code */
     | call    code
     | label   code
@@ -249,11 +255,21 @@ label: LABEL {
     }
     ;
 
-    /*
-repeat: REPEAT code END_REPEAT
-    | UNTIL logic REPEAT code END_REPEAT
+repeat_start: REPEAT {
+        add_repeat();
+    }
     ;
 
+repeat_end: END_REPEAT {
+        fin_repeat();
+    }
+    ;
+
+repeat: repeat_start code repeat_end
+    /*| UNTIL logic REPEAT code END_REPEAT*/
+    ;
+
+    /*
 if_start: IF { add_if(); }
     ;
 
