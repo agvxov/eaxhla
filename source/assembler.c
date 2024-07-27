@@ -270,7 +270,12 @@ static void build_pop (unsigned int size, unsigned int to, unsigned int destinat
 	insert_memory (to == MEM, D32, destination, 0);
 }
 
-static void build_push (unsigned int size, unsigned int from, unsigned int source) {
+// HIGHLY EXPERIMENTAL CODE
+static unsigned int build_push (unsigned int * array) {
+	unsigned int size   = array [0],
+	             from   = array [1],
+	             source = array [2];
+
 	short_prefix (size);
 
 	input ((from == REG) && (upper (source)), 0x41);
@@ -282,7 +287,22 @@ static void build_push (unsigned int size, unsigned int from, unsigned int sourc
 
 	insert_memory (from == MEM, D32,  source, 0);
 	insert_immediate (from == IMM, size, source);
+
+	return (3);
 }
+/*static void build_push (unsigned int size, unsigned int from, unsigned int source) {
+	short_prefix (size);
+
+	input ((from == REG) && (upper (source)), 0x41);
+
+	input (from == REG, 0x50 + 0x01 * (source & 0x07));
+	input (from == MEM, 0xff);
+	input (from == MEM, 0x35);
+	input (from == IMM, 0x68 + 0x02 * (size == D8));
+
+	insert_memory (from == MEM, D32,  source, 0);
+	insert_immediate (from == IMM, size, source);
+}*/
 
 static void build_float (unsigned int operation, unsigned int size, unsigned int from, unsigned int source) {
 	input (from == MEM, 0xd8 + 0x04 * (size == D64));
@@ -392,10 +412,13 @@ void assemble (unsigned int count, unsigned int * array) {
 				index += 3;
 			} break;
 			case PUSH: {
-				build_push (array [index + 1], array [index + 2], array [index + 3]);
-				index += 3;
+				/*build_push (array [index + 1], array [index + 2], array [index + 3]);
+				index += 3;*/
+				index += build_push (& array [index + 1]);
 			} break;
-			default: exit (array [index]);
+			default: {
+				exit (array [index]);
+			}
 		}
 	}
 
