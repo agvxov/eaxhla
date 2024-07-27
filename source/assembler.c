@@ -57,7 +57,7 @@ static void append_directive_memory (int when, unsigned int code) {
 	empty_count += (unsigned int) when;
 }
 
-static void aappend_directive_immediate (int when, unsigned int size, unsigned int data) {
+static void append_directive_immediate (int when, unsigned int size, unsigned int data) {
 	insert_immediate (when, size, data);
 }
 
@@ -92,8 +92,8 @@ static void short_prefix (unsigned int size) {
 }
 
 static void long_prefix (unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
-	int to_upper   = (to   == REG) && (upper (destination));
-	int from_upper = (from == REG) && (upper (source));
+	unsigned int to_upper   = (to   == REG) && (upper (destination));
+	unsigned int from_upper = (from == REG) && (upper (source));
 
 	input ((size == D64) || (to_upper) || (from_upper), 0x40 + 0x01 * to_upper + 0x04 * from_upper + 0x08 * (size == D64));
 }
@@ -106,43 +106,31 @@ static void modify_memory (unsigned int operation, unsigned int to, unsigned int
 	input (((to == MEM) && (from == REG)) || ((to == REG) && (from == MEM)), 0x05 + 0x08 * operation * ((to == MEM) && (from == IMM)));
 }
 
+// REFACTORING IN PROGRESS
 static void build_regular (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
 	short_prefix (size);
 
 	long_prefix (size, to, destination, from, source);
 
-	input ((size == D8) && (to == REG)
-	      && ((from == REG) || (from == IMM))
-	      && (( (front (destination) && lower (source))
-	      || (lower (destination) && front (source)))
-	      || ((to == REG) && (from == IMM) && front (destination))),
-	      0x40);
+	input ((size == D8) && (to == REG) && ((from == REG) || (from == IMM)) && (( (front (destination) && lower (source)) || (lower (destination) && front (source))) || ((to == REG) && (from == IMM) && front (destination))), 0x40);
 
 	input ((from == IMM) && (to == REG), 0x81 - 0x01 * (size == D8));
 
 	input ((from == IMM) && (to == REG) && (destination == 0), 0x05 + 0x08 * (operation & 0x07) - 0x01 * (size == D8));
 
-	input (! ((from == IMM) && (to == REG) && (destination == 0)),
-	      (destination & 0x07) * ((to == REG) && (from == IMM))
-	      + 0x08 * (operation - REGULAR_BEGIN)
-	      + 0x01 * ((to   == MEM) && (from == IMM) && (size == D8))
-	      - 0x01 * ((to   == REG) && (from == IMM) && (size != D8))
-	      + 0x01 * (size != D8)
-	      + 0x02 * ((to   == REG) && (from == MEM))
-	      + 0x04 * ((to   == MEM) && (from == IMM))
-	      + 0xc0 * ((to   == REG) && (from == IMM)));
+	input (! ((from == IMM) && (to == REG) && (destination == 0)), (destination & 0x07) * ((to == REG) && (from == IMM)) + 0x08 * (operation - REGULAR_BEGIN) + 0x01 * ((to == MEM) && (from == IMM) && (size == D8)) - 0x01 * ((to == REG) && (from == IMM) && (size != D8)) + 0x01 * (size != D8) + 0x02 * ((to == REG) && (from == MEM)) + 0x04 * ((to == MEM) && (from == IMM)) + 0xc0 * ((to == REG) && (from == IMM)));
 
 	modify_registers (to, destination, from, source);
 
 	modify_memory (destination, to, from);
 	modify_memory (source,      to, from);
 
-	insert_memory ((to == REG) && (from == MEM), D32,  source, 0x1000 - (text_sector_size + 4));
+	insert_memory    ((to == REG) && (from == MEM), D32,  source, 0x1000 - (text_sector_size + 4));
 	insert_immediate ((to == REG) && (from == IMM), size, source);
-	insert_memory ((to == MEM) && (from == REG), D32,  destination, 0x1000 - (text_sector_size + 4));
-	insert_memory ((to == MEM) && (from == IMM), D32,  destination, 0x1000 - (text_sector_size + 4));
+	insert_memory    ((to == MEM) && (from == REG), D32,  destination, 0x1000 - (text_sector_size + 4));
+	insert_memory    ((to == MEM) && (from == IMM), D32,  destination, 0x1000 - (text_sector_size + 4));
 	insert_immediate ((to == MEM) && (from == IMM), size, source);
-	insert_memory ((to == REG) && (from == REL), D32,  source, 0x4010b0 - (text_sector_size + 4));
+	insert_memory    ((to == REG) && (from == REL), D32,  source, 0x4010b0 - (text_sector_size + 4));
 }
 
 static void build_irregular (unsigned int operation, unsigned int size, unsigned int to, unsigned int destination) {
@@ -180,7 +168,7 @@ static void build_special_2 (unsigned int operation) {
 }
 
 static void build_jump_if (unsigned int operation, unsigned int size, unsigned int ignore, unsigned int location) {
-	(void) ignore;
+	ignore = REL;
 
 	input (far (location) && (size == D32), 0x0f);
 
@@ -343,19 +331,7 @@ void assemble (unsigned int count, unsigned int * array) {
 	for (index = 0; index < count; ++index) {
 		input ((nopification != 0) && (array [index] > ASMDIRREP), 0x90);
 
-		if (array [index] == ASMDIRREL) {
-			append_directive_relative (1, array [index + 1]);
-			index += 1;
-		} else if (array [index] == ASMDIRMEM) {
-			append_directive_memory (1, array [index + 1]);
-			index += 1;
-		} else if (array [index] == ASMDIRIMM) {
-			unsigned int repeat;
-			for (repeat = 0; repeat < array [index + 2]; ++repeat) {
-				aappend_directive_immediate (1, array [index + 1], array [index + 3 + repeat]);
-			}
-			index += array [index + 2] + 2;
-		} else if ((array [index] >= REGULAR_BEGIN) && (array [index] <= REGULAR_END)) {
+		if ((array [index] >= REGULAR_BEGIN) && (array [index] <= REGULAR_END)) {
 			build_regular (array [index + 0], array [index + 1], array [index + 2], array [index + 3], array [index + 4], array [index + 5]);
 			index += 5;
 		} else if ((array [index] >= IRREGULAR_BEGIN) && (array [index] <= IRREGULAR_END)) {
@@ -376,29 +352,52 @@ void assemble (unsigned int count, unsigned int * array) {
 		} else if ((array [index] >= FLOAT_BEGIN) && (array [index] <= FLOAT_END)) {
 			build_float (array [index + 0], array [index + 1], array [index + 2], array [index + 3]);
 			index += 3;
-		} else if (array [index] == JMP) {
-			build_jump (array [index + 1], array [index + 2], array [index + 3]);
-			index += 3;
-		} else if (array [index] == MOV) {
-			build_move (array [index + 1], array [index + 2], array [index + 3], array [index + 4], array [index + 5]);
-			index += 5;
-		} else if (array [index] == CALL) {
-			build_call (array [index + 1], array [index + 2]);
-			index += 2;
-		} else if (array [index] == ENTER) {
-			build_enter (array [index + 1], array [index + 2]);
-			index += 2;
 		} else if ((array [index] == IN) || (array [index] == OUT)) {
 			build_in_out (array [index + 0], array [index + 1], array [index + 2], array [index + 3]);
 			index += 3;
-		} else if (array [index] == POP) {
-			build_pop (array [index + 1], array [index + 2], array [index + 3]);
-			index += 3;
-		} else if (array [index] == PUSH) {
-			build_push (array [index + 1], array [index + 2], array [index + 3]);
-			index += 3;
-		} else {
-			exit (array [index]);
+		}
+
+		switch (array [index]) {
+			case ASMDIRREL: {
+				append_directive_relative (1, array [index + 1]);
+				index += 1;
+			} break;
+			case ASMDIRMEM: {
+				append_directive_memory (1, array [index + 1]);
+				index += 1;
+			} break;
+			case ASMDIRIMM: {
+				unsigned int repeat;
+				for (repeat = 0; repeat < array [index + 2]; ++repeat) {
+					append_directive_immediate (1, array [index + 1], array [index + 3 + repeat]);
+				}
+				index += array [index + 2] + 2;
+			} break;
+			case JMP: {
+				build_jump (array [index + 1], array [index + 2], array [index + 3]);
+				index += 3;
+			} break;
+			case MOV: {
+				build_move (array [index + 1], array [index + 2], array [index + 3], array [index + 4], array [index + 5]);
+				index += 5;
+			} break;
+			case CALL: {
+				build_call (array [index + 1], array [index + 2]);
+				index += 2;
+			} break;
+			case ENTER: {
+				build_enter (array [index + 1], array [index + 2]);
+				index += 2;
+			} break;
+			case POP: {
+				build_pop (array [index + 1], array [index + 2], array [index + 3]);
+				index += 3;
+			} break;
+			case PUSH: {
+				build_push (array [index + 1], array [index + 2], array [index + 3]);
+				index += 3;
+			} break;
+			default: return;
 		}
 	}
 
