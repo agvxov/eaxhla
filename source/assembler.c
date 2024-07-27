@@ -416,7 +416,7 @@ unsigned char * text_sector_byte = NULL;
 
 int was_instruction_array_empty = 0;
 
-void assemble (unsigned int count, unsigned int * array) {
+int assemble (unsigned int count, unsigned int * array) {
 	unsigned int index;
 
 	if ((count == 0) || (array == NULL)) {
@@ -463,8 +463,7 @@ void assemble (unsigned int count, unsigned int * array) {
 			case ENTER:     index += build_enter     (& array [index]); break;
 			case POP:       index += build_pop       (& array [index]); break;
 			case PUSH:      index += build_push      (& array [index]); break;
-			// IS IT BAD TO JUST QUIT?
-			default:        exit ((int) array [index]);
+			default:        return (EXIT_FAILURE);
 		}
 	}
 
@@ -480,4 +479,6 @@ void assemble (unsigned int count, unsigned int * array) {
 
 		replace (& text_sector_byte [get], (unsigned char *) & set, sizeof (set));
 	}
+
+	return (EXIT_SUCCESS);
 }

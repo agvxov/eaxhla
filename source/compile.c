@@ -96,13 +96,15 @@ int compile(void) {
 
     dump_variables_to_assembler();
 
-    assemble(token_count, token_array);
+    if (assemble(token_count, token_array)) {
+        return 1;
+    }
 
     create_header();
 
-	FILE * output_file = fopen(output_file_name, "w");
+    FILE * output_file = fopen(output_file_name, "w");
     check(write_output(output_file));
-	fclose(output_file);
+    fclose(output_file);
 
     make_executable(output_file_name);
 

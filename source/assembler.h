@@ -41,6 +41,6 @@ extern unsigned char * text_sector_byte;
 
 extern int was_instruction_array_empty;
 
-extern void assemble (unsigned int count, unsigned int * array);
+extern int assemble (unsigned int count, unsigned int * array);
 
 #endif
