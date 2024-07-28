@@ -1,8 +1,7 @@
-## EAXCC
-#### Emil, Anon, Xolatile C Compiler
+## EAXHLA
+#### Emil, Anon, Xolatile High level Assembly
 
-A reduced implementation of the C Programming Language.
-It utilizes a intermediary assembly called EAXHLA.
+Assembly language with high level constructs.
 
 #### Building
 
@@ -13,13 +12,13 @@ make bootstrap
 make
 ```
 
-You can add the `DEBUG=1` flag for debugging, see the Makefile for more options.
+You may set `DEBUG=1` in your environment to produce a debugging build,
+see the Makefile for more options.
 
 #### Licensing
 
 Copyright 2024 Emil Williams, Anon8697, Ognjen Milan Robovic
 
-EAXCC and its components are licensed under the GPLv3-only.
-Any output, such as an executable or object file, is excempt from any terms of the GPLv3.
-semantics 
-
+EAXHLA and its components are licensed under the GPLv3-only.
+Any output, such as an executable or object file,
+is exempt from any terms of the semantics GPLv3.
