@@ -240,7 +240,7 @@ stored_literal: ARRAY_LITERAL {
 code: %empty
     | error   code { /*yyerrok;*/ }
     | repeat  code
-    /*| if      code */
+    | if      code
     | call    code
     | label   code
     | machine code
@@ -268,7 +268,6 @@ repeat: repeat_start code repeat_end
     /*| UNTIL logic REPEAT code END_REPEAT*/
     ;
 
-    /*
 if_start: IF { add_if(); }
     ;
 
@@ -276,13 +275,23 @@ if_end: END_IF { fin_if(); }
     ;
 
 if: if_start logic THEN code if_end
-    | IF logic THEN code ELSE code END_IF
+    | if_start logic THEN code ELSE code END_IF
     ;
 
 logic: register '=' register {
-        add_logic_equals(&$1, &$3);
+        add_logic(&$1, &$3, EQUALS);
+    }
+    | register '!' '=' register {
+        add_logic(&$1, &$4, GREATER_THAN);
+    }
+    | register '<' register {
+        add_logic(&$1, &$3, LESSER_THAN);
+    }
+    | register '>' register {
+        add_logic(&$1, &$3, GREATER_THAN);
     }
     ;
+    /*
     logical_operand ITAND logical_operand
     |  logical_operand ITOR  logical_operand
     |  logical_operand ITXOR logical_operand

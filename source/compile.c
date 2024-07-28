@@ -97,6 +97,7 @@ int compile(void) {
     dump_variables_to_assembler();
 
     if (assemble(token_count, token_array)) {
+        issue_internal_error();
         return 1;
     }
 

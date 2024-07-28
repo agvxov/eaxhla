@@ -6,8 +6,6 @@
  *  the storage of variables.
  */
 
-// XXX: we dont *actually* have to store names, do we?
-
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -45,23 +43,38 @@ static size_t unresolved_label_counter = 0;
 static int    repeat_stack[MAX_REPEAT_NESTING];
 static size_t repeat_stack_empty_top = 0;
 
+static int    if_stack[MAX_IF_NESTING];
+static size_t if_stack_empty_top = 0;
+
 static unsigned symbol_id = 1;
 tommy_hashtable symbol_table;
 
-/*
 void add_if(void) {
-    control_block_stack[control_block_stack_top++] = symbol_id++;
+    if_stack[if_stack_empty_top] = symbol_id;
+    ++if_stack_empty_top;
+    ++symbol_id;
 }
 
 void fin_if(void) {
-    append_instructions(ASMDIRMEM, control_block_stack[control_block_stack_top--]);
+    append_instructions(ASMDIRMEM, if_stack[if_stack_empty_top]);
+    --if_stack_empty_top;
 }
 
-void add_logic_equals(cpuregister_t * c1, cpuregister_t * c2) {
+/* NOTE: this functions should accept any type and *probably* figure out combos that
+ *        are not asm valid
+ */
+void add_logic(cpuregister_t * c1, cpuregister_t * c2, logic_t logic) {
     append_instructions(CMP, c1->size, REG, c1->number, REG, c2->number);
-    append_instructions(JNE, D32, REL, control_block_stack[control_block_stack_top]);
+    int instrunction;
+    switch (logic) {
+        case EQUALS:       instrunction = JNE; break;
+        case NOT_EQUALS:   instrunction = JE;  break;
+        case LESSER_THAN:  instrunction = JNL; break;
+        case GREATER_THAN: instrunction = JNG; break;
+        default:           issue_internal_error();
+    }
+    append_instructions(instrunction, D32, REL, if_stack[if_stack_empty_top]);
 }
-*/
 
 void add_repeat(void) {
     if (repeat_stack_empty_top == MAX_REPEAT_NESTING) {
@@ -428,7 +441,7 @@ int type2size(const int type) {
             return D64;
     }
 
-    issue_error("internal error");
+    issue_internal_error();
     return -1;
 }
 
@@ -440,7 +453,7 @@ int size2bytes(const int size) {
         case D64: return 8;
     }
 
-    issue_error("internal error");
+    issue_internal_error();
     return -1;
 }
 
@@ -559,6 +572,10 @@ void issue_error(const char * const format, ...) {
                 msg
             );
     free(msg);
+}
+
+void issue_internal_error(void) {
+    issue_error("internal error");
 }
 
 int system_type =

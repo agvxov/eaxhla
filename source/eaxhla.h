@@ -6,6 +6,7 @@
 #define WORD_SIZE_IN_BYTES (64/8)
 
 #define MAX_REPEAT_NESTING 12
+#define MAX_IF_NESTING     12
 
 // XXX these should be private
 typedef enum {
@@ -77,20 +78,24 @@ extern void add_procedure(const char * const name);
 extern void add_fastcall(const char * const destination);
 extern void fin_procedure(void);
 extern void fin_hla(void);
-//     testing
 extern void add_repeat(void);
 extern void fin_repeat(void);
 extern void add_continue(unsigned i);
 extern void add_break(unsigned i);
-/* Not implemented
-
-extern symbol_t * add_function(symbol_t function);
-extern symbol_t * get_function(const char * const name);
-
+/* Partially implemented */
 extern void add_if(void);
 extern void fin_if(void);
+typedef enum {
+    EQUALS,
+    NOT_EQUALS,
+    LESSER_THAN,
+    GREATER_THAN,
+} logic_t;
+extern void add_logic(cpuregister_t * c1, cpuregister_t * c2, logic_t logic);
+/* Not implemented
+extern symbol_t * add_function(symbol_t function);
+extern symbol_t * get_function(const char * const name);
 extern void add_logic_equals();
-extern void add_logic_equals(cpuregister_t * c1, cpuregister_t * c2);
 */
 
 // Asm value constructs
@@ -110,5 +115,6 @@ extern int size2bytes(const int size); // XXX: size is an anon enum
 // Error reporting
 extern void issue_warning(const char * format, ...);
 extern void issue_error(const char * format, ...);
+extern void issue_internal_error(void);
 
 #endif
