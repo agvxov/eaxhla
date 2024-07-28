@@ -1,15 +1,12 @@
 unix program hello
-	s8 <> message = "Hello, world!\n"
 begin
-	mov ebx 0
-	mov edi 1
-	mov esi message
-	mov edx 14
-	india:
-		mov eax 1
-		syscall
-		inc ebx
-		cmp ebx 3
-		jne india
+	mov al  0x11
+	mov ax  0x1122
+	mov eax 0x11223344
+
+	mov cl  0x11
+	mov cx  0x1122
+	mov ecx 0x11223344
+
 	exit 0
 end program

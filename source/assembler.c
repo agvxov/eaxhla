@@ -16,6 +16,8 @@
 #define MOVE_IF_END     (CMOVG)
 #define FLOAT_BEGIN     (FADD)
 #define FLOAT_END       (FDIVR)
+#define SHIFTER_BEGIN   (ROL)
+#define SHIFTER_END     (SAR)
 
 static int assemble_clean_up_queued = 0;
 
@@ -270,7 +272,8 @@ static unsigned int build_move (unsigned int * array) {
 	             to          = array [2],
 	             destination = array [3],
 	             from        = array [4],
-	             source      = array [5];
+	             source      = array [5],
+	             extension   = array [6];
 
 	short_prefix (size);
 
@@ -285,21 +288,23 @@ static unsigned int build_move (unsigned int * array) {
 
 	modify_registers (to, destination, from, source);
 
-	inset ((to == REG) && ((from == IMM) || (from == REL)), 0xb8 + 0x01 * (destination & 0x07));
+	inset ((to == REG) && ((from == IMM) || (from == REL)), 0xb0 + 0x08 * (size != D8) + 0x01 * (destination & 0x07));
 
 	inset ((to == MEM) && (from == IMM), 0xc6 + 0x01 * (size != D8));
 	inset ((to == MEM) && (from == IMM), 0x05);
 
-	inset_memory    ((to == REG) && (from == MEM), D32,  source, 0x1000 - (text_sector_size + 4));
-	inset_immediate ((to == REG) && (from == IMM), size, source);
-	inset_memory    ((to == MEM) && (from == REG), D32,  destination, 0x1000 - (text_sector_size + 4));
-	inset_memory    ((to == MEM) && (from == IMM), D32,  destination, 0x1000 - (text_sector_size + 4));
-	inset_immediate ((to == MEM) && (from == IMM), size, source);
-	inset_memory    ((to == REG) && (from == REL), D32,  source, 0x4010b0);
+	inset_memory ((to == REG) && (from == MEM), D32, source,      0x1000 - (text_sector_size + 4));
+	inset_memory ((to == MEM) && (from == REG), D32, destination, 0x1000 - (text_sector_size + 4));
+	inset_memory ((to == MEM) && (from == IMM), D32, destination, 0x1000 - (text_sector_size + 4));
+	inset_memory ((to == REG) && (from == REL), D32, source,      0x4010b0);
 
-	inset_immediate ((to == REG) && (from == IMM) && (size == D64), D32, 0);
+	inset_immediate ((to == REG) && (from == IMM) && (size != D64), size, source);
+	inset_immediate ((to == MEM) && (from == IMM) && (size != D64), size, source);
+	inset_immediate ((to == REG) && (from == IMM) && (size == D64), D32,  source);
+	inset_immediate ((to == REG) && (from == IMM) && (size == D64), D32,  extension);
+	inset_immediate ((to == REG) && (from == IMM) && (size == D64), D32,  0);
 
-	return (5);
+	return (5 + (size == D64));
 }
 
 static unsigned int build_call (unsigned int * array) {
@@ -343,6 +348,28 @@ static unsigned int build_float (unsigned int * array) {
 	inset_memory (from == MEM, size, source, 0);
 
 	return (3);
+}
+
+static unsigned int build_shifter (unsigned int * array) {
+	unsigned int operation   = array [0],
+	             size        = array [1],
+	             to          = array [2],
+	             destination = array [3],
+	             offset      = array [5];
+
+	short_prefix (size);
+
+	long_prefix (size, to, destination, 0, 0);
+
+	inset (1, 0xc0 + 0x01 * (size != D8));
+
+	inset (to == REG, 0x05 + 0x08 * (operation & 7));
+	inset (to == MEM, 0xc0 + 0x08 * (operation & 7));
+
+	inset_memory    (to == MEM, D32, destination, 0x1000 - (text_sector_size + 4));
+	inset_immediate (1,         D8,  offset);
+
+	return (5);
 }
 
 static unsigned int build_in_out (unsigned int * array) {
@@ -451,6 +478,8 @@ int assemble (unsigned int count, unsigned int * array) {
 			index += build_move_if (& array [index]);
 		} else if ((array [index] >= FLOAT_BEGIN) && (array [index] <= FLOAT_END)) {
 			index += build_float (& array [index]);
+		} else if ((array [index] >= SHIFTER_BEGIN) && (array [index] <= SHIFTER_END)) {
+			index += build_shifter (& array [index]);
 		} else if ((array [index] == IN) || (array [index] == OUT)) {
 			index += build_in_out (& array [index]);
 		} else switch (array [index]) {
