@@ -440,10 +440,12 @@ instruction_like: exit
     | break
     ;
 
-continue: CONTINUE { add_continue(); }
+continue: CONTINUE         { add_continue(1);  }
+    |     CONTINUE LITERAL { add_continue($2); }
     ;
 
-break: BREAK { ; }
+break: BREAK         { add_break(1);  }
+    |  BREAK LITERAL { add_break($2); }
     ;
 
 exit: EXIT value { append_exit($2); }

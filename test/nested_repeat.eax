@@ -1,0 +1,22 @@
+program nested_repeat
+    u8 <> yeah = "yeah"
+    u8 <> nope = "nope"
+begin
+    repeat
+        mov eax 1
+        mov edi 1
+        mov esi yeah
+        mov edx 4
+        syscall
+
+        repeat 
+            continue 2
+
+            mov eax 1
+            mov edi 1
+            mov esi nope
+            mov edx 4
+            syscall
+        end repeat
+    end repeat
+end program
