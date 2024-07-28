@@ -100,6 +100,22 @@ set instructions {
     {mov register memory}
     {mov memory   register}
     {mov memory   immediate}
+    {rol register immediate}
+    {ror register immediate}
+    {rcl register immediate}
+    {rcr register immediate}
+    {sal register immediate}
+    {shr register immediate}
+    {shl register immediate}
+    {sar register immediate}
+    {rol memory   immediate}
+    {ror memory   immediate}
+    {rcl memory   immediate}
+    {rcr memory   immediate}
+    {sal memory   immediate}
+    {shr memory   immediate}
+    {shl memory   immediate}
+    {sar memory   immediate}
 }
 
 proc malformed_instruction {i} {

@@ -1,6 +1,28 @@
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
 
+#define JNPE JPO
+#define JNPO JPE
+#define JNB  JAE
+#define JNBE JA
+#define JNA  JBE
+#define JNAE JB
+#define JNL  JGE
+#define JNLE JG
+#define JNG  JLE
+#define JNGE JL
+
+#define CMOVNPE CMOVPO
+#define CMOVNPO CMOVPE
+#define CMOVNB  CMOVAE
+#define CMOVNBE CMOVA
+#define CMOVNA  CMOVBE
+#define CMOVNAE CMOVB
+#define CMOVNL  CMOVGE
+#define CMOVNLE CMOVG
+#define CMOVNG  CMOVLE
+#define CMOVNGE CMOVL
+
 enum {
 	D8,             D16,            D32,            D64
 };
@@ -14,6 +36,7 @@ enum {
 	ADD,            OR,             ADC,            SBB,            AND,            SUB,            XOR,            CMP,
 	INC,            DEC,            NOT,            NEG,            MUL,            IMUL,           DIV,            IDIV,
 	FADD,           FMUL,           FCOM,           FCOMP,          FSUB,           FSUBR,          FDIV,           FDIVR,
+	ROL,            ROR,            RCL,            RCR,            SAL,            SHR,            SHL,            SAR,
 	NOP,            RETN,           RETF,           LEAVE,          POPF,           PUSHF,
 	SYSCALL,        CPUID,          FNOP,           FCHS,           FABS,           FTST,           FXAM,           FLD1,
 	FLDL2T,         FLDL2E,         FLDPI,          FLDLG2,         FLDLN2,         FLDZ,           F2XM1,          FYL2X,
@@ -25,7 +48,6 @@ enum {
 	CMOVO,          CMOVNO,         CMOVB,          CMOVAE,         CMOVE,          CMOVNE,         CMOVBE,         CMOVA,
 	CMOVS,          CMOVNS,         CMOVPE,         CMOVPO,         CMOVL,          CMOVGE,         CMOVLE,         CMOVG,
 	BSWAP,          TEST,           XCHG,           LEA,            BSF,            BSR,
-	RCL,            RCR,            ROL,            ROR,            SHL,            SHR,            SAL,            SAR,
 	REP,            REPE,           REPNE,          REPZ,           REPNZ,          LOOP,           LOOPE,          LOOPNE
 };
 

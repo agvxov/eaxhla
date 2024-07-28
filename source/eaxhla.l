@@ -204,9 +204,17 @@ or              { return ITOR; }
 pop             { return ITPOP; }
 popf            { return ITPOPF; }
 pushf           { return ITPUSHF; }
+rcl             { return ITRCL; }
+rcr             { return ITRCR; }
 retf            { return ITRETF; }
 retn            { return ITRETN; }
+rol             { return ITROL; }
+ror             { return ITROR; }
+sal             { return ITSAL; }
+sar             { return ITSAR; }
 sbb             { return ITSBB; }
+shl             { return ITSHL; }
+shr             { return ITSHR; }
 sub             { return ITSUB; }
 syscall         { return ITSYSCALL; }
 xor             { return ITXOR; }
