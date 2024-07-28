@@ -24,6 +24,9 @@ int is_program_found      = 0;
 
 char * yyfilename = "";
 
+/* Used for ensuring that `get_*` calls recieve a valid symbol,
+ *  not segfaulting the parser in the process
+ */
 static symbol_t * undeclared_symbol;
 
 /* Used for naming variables constructed from literals
@@ -35,8 +38,9 @@ static size_t anon_variable_counter = 0;
  */
 static size_t unresolved_label_counter = 0;
 
-/* For each loop we allocate 2 ids. 1 for the start and 1 for the end,
- *  the second is implicitly the value stored in the stack + 1
+/* Used for storing `repeat` implicit label information
+ * For each loop we allocate 2 ids. 1 for the start and 1 for the end,
+ *  the second is implicitly ((the value stored in the stack) + 1)
 */
 static int    repeat_stack[MAX_REPEAT_NESTING];
 static size_t repeat_stack_empty_top = 0;
@@ -68,7 +72,6 @@ void add_repeat(void) {
         return;
     }
 
-    append_instructions(NOP, NOP, NOP, NOP, NOP);
     append_instructions(ASMDIRMEM, symbol_id);
     repeat_stack[repeat_stack_empty_top] = symbol_id;
     ++repeat_stack_empty_top;
@@ -76,7 +79,6 @@ void add_repeat(void) {
 }
 
 void fin_repeat(void) {
-    append_instructions(NOP, NOP, NOP, NOP, NOP);
     --repeat_stack_empty_top;
     append_instructions(JMP, D32, REL, repeat_stack[repeat_stack_empty_top]);
     append_instructions(ASMDIRMEM, repeat_stack[repeat_stack_empty_top]+1);
@@ -88,7 +90,7 @@ void add_continue(unsigned i) {
         return;
     }
     if (((int)repeat_stack_empty_top - (int)i) < 0) {
-        issue_error("'continue %u' is too deep inside %d level(s) of nesting",
+        issue_error("'continue %u' is too deep inside just %d level(s) of nesting",
                         i,
                         repeat_stack_empty_top
                 );
@@ -104,14 +106,13 @@ void add_break(unsigned i) {
         return;
     }
     if (((int)repeat_stack_empty_top - (int)i) < 0) {
-        issue_error("'break %u' is too deep inside %d level(s) of nesting",
+        issue_error("'break %u' is too deep inside just %d level(s) of nesting",
                         i,
                         repeat_stack_empty_top
                 );
         return;
     }
 
-    append_instructions(NOP, NOP, NOP, NOP, NOP);
     append_instructions(JMP, D32, REL, repeat_stack[repeat_stack_empty_top-i]+1);
 }
 

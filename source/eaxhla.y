@@ -440,6 +440,11 @@ instruction_like: exit
     | break
     ;
 
+    /* XXX: currently passing a negative is gramatically legal
+             we could either define a more abstract token
+             and only accept positives here or make eaxhla.c check.
+            as of now however, i do not care 
+    */
 continue: CONTINUE         { add_continue(1);  }
     |     CONTINUE LITERAL { add_continue($2); }
     ;
