@@ -88,6 +88,20 @@ void debug_token_dump(void) {
     fclose(o);
 }
 
+__attribute__((unused))
+static
+void debug_dump_tail(void) {
+    debug_dump_symbols();
+    debug_token_dump();
+
+    if (has_encountered_error) {
+        puts("###############################\n"
+             "### ERRORS WERE ENCOUNTERED ###\n"
+             "###############################"
+        );
+    }
+}
+
 #else
 
 # define debug_puts(msg)
@@ -96,6 +110,7 @@ void debug_token_dump(void) {
 # define debug_dump_functions() do {} while (0)
 # define debug_dump_symbols() do {} while (0)
 # define debug_token_dump() do {} while (0)
+# define debug_dump_tail() do {} while (0)
 
 #endif
 
