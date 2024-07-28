@@ -1,0 +1,5 @@
+program end_jmp
+begin
+    jmp my_label
+  my_label:
+end program

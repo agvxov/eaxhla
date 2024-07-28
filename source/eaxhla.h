@@ -5,6 +5,8 @@
 
 #define WORD_SIZE_IN_BYTES (64/8)
 
+#define MAX_REPEAT_NESTING 12
+
 // XXX these should be private
 typedef enum {
     VARIABLE_SYMBOL,
@@ -78,9 +80,9 @@ extern void fin_hla(void);
 //     testing
 extern void add_repeat(void);
 extern void fin_repeat(void);
-extern void add_continue(void);
+extern void add_continue(unsigned i);
+extern void add_break(unsigned i);
 /* Not implemented
-extern void add_break(void);
 
 extern symbol_t * add_function(symbol_t function);
 extern symbol_t * get_function(const char * const name);

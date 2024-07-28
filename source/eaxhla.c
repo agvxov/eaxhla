@@ -24,6 +24,9 @@ int is_program_found      = 0;
 
 char * yyfilename = "";
 
+/* Used for ensuring that `get_*` calls recieve a valid symbol,
+ *  not segfaulting the parser in the process
+ */
 static symbol_t * undeclared_symbol;
 
 /* Used for naming variables constructed from literals
@@ -35,8 +38,12 @@ static size_t anon_variable_counter = 0;
  */
 static size_t unresolved_label_counter = 0;
 
-static int control_block_stack[12];
-static size_t control_block_stack_top = 0;
+/* Used for storing `repeat` implicit label information
+ * For each loop we allocate 2 ids. 1 for the start and 1 for the end,
+ *  the second is implicitly ((the value stored in the stack) + 1)
+*/
+static int    repeat_stack[MAX_REPEAT_NESTING];
+static size_t repeat_stack_empty_top = 0;
 
 static unsigned symbol_id = 1;
 tommy_hashtable symbol_table;
@@ -54,20 +61,59 @@ void add_logic_equals(cpuregister_t * c1, cpuregister_t * c2) {
     append_instructions(CMP, c1->size, REG, c1->number, REG, c2->number);
     append_instructions(JNE, D32, REL, control_block_stack[control_block_stack_top]);
 }
-void add_break(void) {
-    append_instructions(JMP, D32)
-}
 */
 
 void add_repeat(void) {
-    control_block_stack[control_block_stack_top++] = symbol_id++;
-    append_instructions(ASMDIRMEM, control_block_stack[control_block_stack_top]);
+    if (repeat_stack_empty_top == MAX_REPEAT_NESTING) {
+        issue_error("this implementation only support a maximum"
+                    " number of %d levels of repeat nesting",
+                    MAX_REPEAT_NESTING
+                );
+        return;
+    }
+
+    append_instructions(ASMDIRMEM, symbol_id);
+    repeat_stack[repeat_stack_empty_top] = symbol_id;
+    ++repeat_stack_empty_top;
+    symbol_id += 2;
 }
+
 void fin_repeat(void) {
-    append_instructions(JMP, D32, REL, control_block_stack[control_block_stack_top--]);
+    --repeat_stack_empty_top;
+    append_instructions(JMP, D32, REL, repeat_stack[repeat_stack_empty_top]);
+    append_instructions(ASMDIRMEM, repeat_stack[repeat_stack_empty_top]+1);
 }
-void add_continue(void) {
-    append_instructions(JMP, D32, REL, control_block_stack[control_block_stack_top]);
+
+void add_continue(unsigned i) {
+    if (!repeat_stack_empty_top) {
+        issue_error("'continue' is only valid inside 'repeat'");
+        return;
+    }
+    if (((int)repeat_stack_empty_top - (int)i) < 0) {
+        issue_error("'continue %u' is too deep inside just %d level(s) of nesting",
+                        i,
+                        repeat_stack_empty_top
+                );
+        return;
+    }
+
+    append_instructions(JMP, D32, REL, repeat_stack[repeat_stack_empty_top-i]);
+}
+
+void add_break(unsigned i) {
+    if (!repeat_stack_empty_top) {
+        issue_error("'break' is only valid inside 'repeat'");
+        return;
+    }
+    if (((int)repeat_stack_empty_top - (int)i) < 0) {
+        issue_error("'break %u' is too deep inside just %d level(s) of nesting",
+                        i,
+                        repeat_stack_empty_top
+                );
+        return;
+    }
+
+    append_instructions(JMP, D32, REL, repeat_stack[repeat_stack_empty_top-i]+1);
 }
 
 static char * scope = NULL;
