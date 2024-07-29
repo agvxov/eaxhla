@@ -1,0 +1,12 @@
+program easier_if
+    u8 <> heyo = "heyo\n"
+begin
+    if eax = eax then
+        mov eax 1
+        mov edi 1
+        mov esi heyo
+        mov edx 5
+        syscall
+    end if
+    exit 0
+end program

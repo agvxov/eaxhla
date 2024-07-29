@@ -60,7 +60,7 @@ void fin_if(void) {
     --if_stack_empty_top;
 }
 
-/* NOTE: this functions should accept any type and *probably* figure out combos that
+/* NOTE: these functions should accept any type and *probably* figure out combos that
  *        are not asm valid
  */
 void add_logic(cpuregister_t * c1, cpuregister_t * c2, logic_t logic) {

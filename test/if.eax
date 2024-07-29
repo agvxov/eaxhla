@@ -2,9 +2,9 @@ program basic_conditional
     u8 <> nope = "nope\n"
     u8 <> yup  = "yup\n"
 begin
-    mov rax 0
-    mov rbx 1
-    if rax = rbx then
+    mov eax 0
+    mov ebx 1
+    if eax = ebx then
         mov eax 1
         mov edi 1
         mov esi nope
@@ -12,11 +12,14 @@ begin
         syscall
     end if
 
-    if rax = rax then
+    mov eax 0
+    if eax = eax then
         mov eax 1
         mov edi 1
         mov esi yup
         mov edx 4
         syscall
     end if
+
+    exit 0
 end program
