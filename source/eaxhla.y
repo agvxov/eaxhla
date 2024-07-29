@@ -275,7 +275,7 @@ if_end: END_IF { fin_if(); }
     ;
 
 if: if_start logic THEN code if_end
-    | if_start logic THEN code ELSE code END_IF
+    | if_start logic THEN code ELSE code if_end
     ;
 
 logic: register '=' register {

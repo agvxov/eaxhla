@@ -73,7 +73,7 @@ void add_logic(cpuregister_t * c1, cpuregister_t * c2, logic_t logic) {
         case GREATER_THAN: instrunction = JNG; break;
         default:           issue_internal_error();
     }
-    append_instructions(instrunction, D32, REL, if_stack[if_stack_empty_top]);
+    append_instructions(instrunction, D32, REL, if_stack[if_stack_empty_top-1]);
 }
 
 void add_repeat(void) {
