@@ -29,7 +29,7 @@ ifeq (${DEBUG}, 1)
   CFLAGS     += -O0 -ggdb -fno-inline
   CPPFLAGS   += -DDEBUG
   FLEXFLAGS  += --trace --debug
-  BISONFLAGS += --debug -Wcounterexamples
+  BISONFLAGS += --debug
 else
   CFLAGS += -O3 -flto=auto -fno-stack-protector
 endif
