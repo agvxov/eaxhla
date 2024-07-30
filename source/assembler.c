@@ -511,7 +511,7 @@ static unsigned int fault (unsigned int * array) {
 	return (0);
 }
 
-static const unsigned int (* build_instruction []) (unsigned int * array) = {
+static unsigned int (* build_instruction []) (unsigned int * array) = {
 	store_memory,   store_relative, store_immediate,
 	fault, // ASMDIRREP IS UNIMPLEMENTED CURRENTLY
 	build_double,   build_double,   build_double,   build_double,   build_double,   build_double,   build_double,   build_double,
@@ -547,10 +547,9 @@ int assemble (unsigned int count, unsigned int * array) {
 		return (EXIT_FAILURE);
 	}
 
-	text_sector_byte = calloc (4096UL, sizeof (* text_sector_byte));
-	empty_array      = calloc (1024UL, sizeof (* empty_array));
-	empty_imbue      = calloc (1024UL, sizeof (* empty_imbue));
-	empty_store      = calloc (1024UL, sizeof (* empty_store));
+	empty_array = calloc (1024UL, sizeof (* empty_array));
+	empty_imbue = calloc (1024UL, sizeof (* empty_imbue));
+	empty_store = calloc (1024UL, sizeof (* empty_store));
 
 	for (index = 0; index < count; ++index) {
 		unsigned int check_at;
@@ -584,7 +583,6 @@ int assemble (unsigned int count, unsigned int * array) {
 		replace (& text_sector_byte [get], (unsigned char *) & set, sizeof (set));
 	}
 
-	free (text_sector_byte);
 	free (empty_array);
 	free (empty_imbue);
 	free (empty_store);

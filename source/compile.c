@@ -100,6 +100,10 @@ int compile(void) {
     // Anon: Example usage, delete or modify it...
     printf2("[@yTest@-] Begining assembling @c%c%u@- process... @b@@%f@-\n", 'A', 6, 0.666);
 
+    // Anon: I moved memory management of text+data sections here.
+    // Assembler shouldn't control how much memory it has, user should!
+    text_sector_byte = calloc (4096UL, sizeof (* text_sector_byte));
+
     if (assemble(token_count, token_array)) {
         issue_internal_error();
         return 1;
@@ -112,6 +116,8 @@ int compile(void) {
     fclose(output_file);
 
     make_executable(output_file_name);
+
+    free (text_sector_byte);
 
     return 0;
 }
