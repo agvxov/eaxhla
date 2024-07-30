@@ -56,8 +56,8 @@ void add_if(void) {
 }
 
 void fin_if(void) {
-    append_instructions(ASMDIRMEM, if_stack[if_stack_empty_top]);
     --if_stack_empty_top;
+    append_instructions(ASMDIRMEM, if_stack[if_stack_empty_top]);
 }
 
 /* NOTE: these functions should accept any type and *probably* figure out combos that
