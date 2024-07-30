@@ -3,68 +3,66 @@
 
 #include <stdlib.h>
 
-#define REGULAR_BEGIN   (ADD)
-#define REGULAR_END     (CMP)
-#define IRREGULAR_BEGIN (INC)
-#define IRREGULAR_END   (IDIV)
-#define SPECIAL_1_BEGIN (NOP)
-#define SPECIAL_1_END   (PUSHF)
-#define SPECIAL_2_BEGIN (SYSCALL)
-#define SPECIAL_2_END   (FCOS)
-#define JUMP_IF_BEGIN   (JO)
-#define JUMP_IF_END     (JG)
-#define MOVE_IF_BEGIN   (CMOVO)
-#define MOVE_IF_END     (CMOVG)
-#define FLOAT_BEGIN     (FADD)
-#define FLOAT_END       (FDIVR)
-#define SHIFTER_BEGIN   (ROL)
-#define SHIFTER_END     (SAR)
+#define DOUBLE_BEGIN   (ADD)
+#define DOUBLE_END     (CMP)
+#define SINGLE_BEGIN   (INC)
+#define SINGLE_END     (IDIV)
+#define STATIC_1_BEGIN (NOP)
+#define STATIC_1_END   (PUSHF)
+#define STATIC_2_BEGIN (SYSCALL)
+#define STATIC_2_END   (FCOS)
+#define JUMP_IF_BEGIN  (JO)
+#define JUMP_IF_END    (JG)
+#define MOVE_IF_BEGIN  (CMOVO)
+#define MOVE_IF_END    (CMOVG)
+#define FLOAT_BEGIN    (FADD)
+#define FLOAT_END      (FDIVR)
+#define SHIFT_BEGIN    (ROL)
+#define SHIFT_END      (SAR)
 
 static const char * size_name [] = {
-	"\033[1;36md8 \033[0m",         "\033[1;36md16\033[0m",         "\033[1;36md32\033[0m",         "\033[1;36md64\033[0m"
+    "\033[1;36md8 \033[0m",         "\033[1;36md16\033[0m",         "\033[1;36md32\033[0m",         "\033[1;36md64\033[0m"
 };
 
 static const char * type_name [] = {
-	"\033[1;34mrel\033[0m",         "\033[1;34mreg\033[0m",         "\033[1;34mmem\033[0m",         "\033[1;34mimm\033[0m"
+    "\033[1;34mrel\033[0m",         "\033[1;34mreg\033[0m",         "\033[1;34mmem\033[0m",         "\033[1;34mimm\033[0m"
 };
 
 static const char * data_name [] = {
-	"\033[1;33masmdirmem\033[0m",   "\033[1;33masmdirrel\033[0m",   "\033[1;33masmdirimm\033[0m",   "\033[1;33masmdirrep\033[0m",
-	"\033[1;33madd\033[0m",         "\033[1;33mor\033[0m",          "\033[1;33madc\033[0m",         "\033[1;33msbb\033[0m",
-	"\033[1;33mand\033[0m",         "\033[1;33msub\033[0m",         "\033[1;33mxor\033[0m",         "\033[1;33mcmp\033[0m",
-	"\033[1;33minc\033[0m",         "\033[1;33mdec\033[0m",         "\033[1;33mnot\033[0m",         "\033[1;33mneg\033[0m",
-	"\033[1;33mmul\033[0m",         "\033[1;33mimul\033[0m",        "\033[1;33mdiv\033[0m",         "\033[1;33midiv\033[0m",
-	"\033[1;33mfadd\033[0m",        "\033[1;33mfmul\033[0m",        "\033[1;33mfcom\033[0m",        "\033[1;33mfcomp\033[0m",
-	"\033[1;33mfsub\033[0m",        "\033[1;33mfsubr\033[0m",       "\033[1;33mfdiv\033[0m",        "\033[1;33mfdivr\033[0m",
-	"\033[1;33mrol\033[0m",         "\033[1;33mror\033[0m",         "\033[1;33mrcl\033[0m",         "\033[1;33mrcr\033[0m",
-	"\033[1;33msal\033[0m",         "\033[1;33mshr\033[0m",         "\033[1;33mshl\033[0m",         "\033[1;33msar\033[0m",
-	"\033[1;33mnop\033[0m",         "\033[1;33mretn\033[0m",        "\033[1;33mretf\033[0m",        "\033[1;33mleave\033[0m",
-	"\033[1;33mpopf\033[0m",        "\033[1;33mpushf\033[0m",
-	"\033[1;33msyscall\033[0m",     "\033[1;33mcpuid\033[0m",       "\033[1;33mfnop\033[0m",        "\033[1;33mfchs\033[0m",
-	"\033[1;33mfabs\033[0m",        "\033[1;33mftst\033[0m",        "\033[1;33mfxam\033[0m",        "\033[1;33mfld1\033[0m",
-	"\033[1;33mfldl2t\033[0m",      "\033[1;33mfldl2e\033[0m",      "\033[1;33mfldpi\033[0m",       "\033[1;33mfldlg2\033[0m",
-	"\033[1;33mfldln2\033[0m",      "\033[1;33mfldz\033[0m",        "\033[1;33mf2xm1\033[0m",       "\033[1;33mfyl2x\033[0m",
-	"\033[1;33mfptan\033[0m",       "\033[1;33mfpatan\033[0m",      "\033[1;33mfxtract\033[0m",     "\033[1;33mfprem1\033[0m",
-	"\033[1;33mfdecstp\033[0m",     "\033[1;33mfincstp\033[0m",     "\033[1;33mfprem\033[0m",       "\033[1;33mfyl2xp1\033[0m",
-	"\033[1;33mfsqrt\033[0m",       "\033[1;33mfsincos\033[0m",     "\033[1;33mfrndint\033[0m",     "\033[1;33mfscale\033[0m",
-	"\033[1;33mfsin\033[0m",        "\033[1;33mfcos\033[0m",
-	"\033[1;33menter\033[0m",       "\033[1;33mcall\033[0m",        "\033[1;33min\033[0m",          "\033[1;33mout\033[0m",
-	"\033[1;33mjmp\033[0m",         "\033[1;33mmov\033[0m",         "\033[1;33mpop\033[0m",         "\033[1;33mpush\033[0m",
-	"\033[1;33mjo\033[0m",          "\033[1;33mjno\033[0m",         "\033[1;33mjb\033[0m",          "\033[1;33mjae\033[0m",
-	"\033[1;33mje\033[0m",          "\033[1;33mjne\033[0m",         "\033[1;33mjbe\033[0m",         "\033[1;33mja\033[0m",
-	"\033[1;33mjs\033[0m",          "\033[1;33mjns\033[0m",         "\033[1;33mjpe\033[0m",         "\033[1;33mjpo\033[0m",
-	"\033[1;33mjl\033[0m",          "\033[1;33mjge\033[0m",         "\033[1;33mjle\033[0m",         "\033[1;33mjg\033[0m",
-	"\033[1;33mcmovo\033[0m",       "\033[1;33mcmovno\033[0m",      "\033[1;33mcmovb\033[0m",       "\033[1;33mcmovae\033[0m",
-	"\033[1;33mcmove\033[0m",       "\033[1;33mcmovne\033[0m",      "\033[1;33mcmovbe\033[0m",      "\033[1;33mcmova\033[0m",
-	"\033[1;33mcmovs\033[0m",       "\033[1;33mcmovns\033[0m",      "\033[1;33mcmovpe\033[0m",      "\033[1;33mcmovpo\033[0m",
-	"\033[1;33mcmovl\033[0m",       "\033[1;33mcmovge\033[0m",      "\033[1;33mcmovle\033[0m",      "\033[1;33mcmovg\033[0m",
-	"\033[1;33mbswap\033[0m",       "\033[1;33mtest\033[0m",        "\033[1;33mxchg\033[0m",        "\033[1;33mlea\033[0m",
-	"\033[1;33mbsf\033[0m",         "\033[1;33mbsr\033[0m",
-	"\033[1;33mrep\033[0m",         "\033[1;33mrepe\033[0m",        "\033[1;33mrepne\033[0m",       "\033[1;33mrepz\033[0m",
-	"\033[1;33mrepnz\033[0m",       "\033[1;33mloop\033[0m",        "\033[1;33mloope\033[0m",       "\033[1;33mloopne\033[0m"
+    "\033[1;33masmdirmem\033[0m",   "\033[1;33masmdirrel\033[0m",   "\033[1;33masmdirimm\033[0m",   "\033[1;33masmdirrep\033[0m",
+    "\033[1;33madd\033[0m",         "\033[1;33mor\033[0m",          "\033[1;33madc\033[0m",         "\033[1;33msbb\033[0m",
+    "\033[1;33mand\033[0m",         "\033[1;33msub\033[0m",         "\033[1;33mxor\033[0m",         "\033[1;33mcmp\033[0m",
+    "\033[1;33minc\033[0m",         "\033[1;33mdec\033[0m",         "\033[1;33mnot\033[0m",         "\033[1;33mneg\033[0m",
+    "\033[1;33mmul\033[0m",         "\033[1;33mimul\033[0m",        "\033[1;33mdiv\033[0m",         "\033[1;33midiv\033[0m",
+    "\033[1;33mfadd\033[0m",        "\033[1;33mfmul\033[0m",        "\033[1;33mfcom\033[0m",        "\033[1;33mfcomp\033[0m",
+    "\033[1;33mfsub\033[0m",        "\033[1;33mfsubr\033[0m",       "\033[1;33mfdiv\033[0m",        "\033[1;33mfdivr\033[0m",
+    "\033[1;33mrol\033[0m",         "\033[1;33mror\033[0m",         "\033[1;33mrcl\033[0m",         "\033[1;33mrcr\033[0m",
+    "\033[1;33msal\033[0m",         "\033[1;33mshr\033[0m",         "\033[1;33mshl\033[0m",         "\033[1;33msar\033[0m",
+    "\033[1;33mnop\033[0m",         "\033[1;33mretn\033[0m",        "\033[1;33mretf\033[0m",        "\033[1;33mleave\033[0m",
+    "\033[1;33mpopf\033[0m",        "\033[1;33mpushf\033[0m",
+    "\033[1;33msyscall\033[0m",     "\033[1;33mcpuid\033[0m",       "\033[1;33mfnop\033[0m",        "\033[1;33mfchs\033[0m",
+    "\033[1;33mfabs\033[0m",        "\033[1;33mftst\033[0m",        "\033[1;33mfxam\033[0m",        "\033[1;33mfld1\033[0m",
+    "\033[1;33mfldl2t\033[0m",      "\033[1;33mfldl2e\033[0m",      "\033[1;33mfldpi\033[0m",       "\033[1;33mfldlg2\033[0m",
+    "\033[1;33mfldln2\033[0m",      "\033[1;33mfldz\033[0m",        "\033[1;33mf2xm1\033[0m",       "\033[1;33mfyl2x\033[0m",
+    "\033[1;33mfptan\033[0m",       "\033[1;33mfpatan\033[0m",      "\033[1;33mfxtract\033[0m",     "\033[1;33mfprem1\033[0m",
+    "\033[1;33mfdecstp\033[0m",     "\033[1;33mfincstp\033[0m",     "\033[1;33mfprem\033[0m",       "\033[1;33mfyl2xp1\033[0m",
+    "\033[1;33mfsqrt\033[0m",       "\033[1;33mfsincos\033[0m",     "\033[1;33mfrndint\033[0m",     "\033[1;33mfscale\033[0m",
+    "\033[1;33mfsin\033[0m",        "\033[1;33mfcos\033[0m",
+    "\033[1;33menter\033[0m",       "\033[1;33mcall\033[0m",        "\033[1;33min\033[0m",          "\033[1;33mout\033[0m",
+    "\033[1;33mjmp\033[0m",         "\033[1;33mmov\033[0m",         "\033[1;33mpop\033[0m",         "\033[1;33mpush\033[0m",
+    "\033[1;33mjo\033[0m",          "\033[1;33mjno\033[0m",         "\033[1;33mjb\033[0m",          "\033[1;33mjae\033[0m",
+    "\033[1;33mje\033[0m",          "\033[1;33mjne\033[0m",         "\033[1;33mjbe\033[0m",         "\033[1;33mja\033[0m",
+    "\033[1;33mjs\033[0m",          "\033[1;33mjns\033[0m",         "\033[1;33mjpe\033[0m",         "\033[1;33mjpo\033[0m",
+    "\033[1;33mjl\033[0m",          "\033[1;33mjge\033[0m",         "\033[1;33mjle\033[0m",         "\033[1;33mjg\033[0m",
+    "\033[1;33mcmovo\033[0m",       "\033[1;33mcmovno\033[0m",      "\033[1;33mcmovb\033[0m",       "\033[1;33mcmovae\033[0m",
+    "\033[1;33mcmove\033[0m",       "\033[1;33mcmovne\033[0m",      "\033[1;33mcmovbe\033[0m",      "\033[1;33mcmova\033[0m",
+    "\033[1;33mcmovs\033[0m",       "\033[1;33mcmovns\033[0m",      "\033[1;33mcmovpe\033[0m",      "\033[1;33mcmovpo\033[0m",
+    "\033[1;33mcmovl\033[0m",       "\033[1;33mcmovge\033[0m",      "\033[1;33mcmovle\033[0m",      "\033[1;33mcmovg\033[0m",
+    "\033[1;33mbswap\033[0m",       "\033[1;33mtest\033[0m",        "\033[1;33mxchg\033[0m",        "\033[1;33mlea\033[0m",
+    "\033[1;33mbsf\033[0m",         "\033[1;33mbsr\033[0m",
+    "\033[1;33mrep\033[0m",         "\033[1;33mrepe\033[0m",        "\033[1;33mrepne\033[0m",       "\033[1;33mrepz\033[0m",
+    "\033[1;33mrepnz\033[0m",       "\033[1;33mloop\033[0m",        "\033[1;33mloope\033[0m",       "\033[1;33mloopne\033[0m"
 };
-
-static int assemble_clean_up_queued = 0;
 
 static unsigned int   empty_count = 1;
 static unsigned int   empty_holes = 1;
@@ -179,7 +177,7 @@ static void modify_memory (unsigned int operation, unsigned int to, unsigned int
 }
 
 // REFACTORING IN PROGRESS
-static unsigned int build_regular (unsigned int * array) {
+static unsigned int build_double (unsigned int * array) {
 	unsigned int operation   = array [0],
 	             size        = array [1],
 	             to          = array [2],
@@ -199,7 +197,7 @@ static unsigned int build_regular (unsigned int * array) {
 
 	inset ((from == IMM) && (to == REG) && (destination == 0), 0x05 + 0x08 * (operation & 0x07) - 0x01 * (size == D8));
 
-	inset (! ((from == IMM) && (to == REG) && (destination == 0)), (destination & 0x07) * ((to == REG) && (from == IMM)) + 0x08 * (operation - REGULAR_BEGIN) + 0x01 * ((to == MEM) && (from == IMM) && (size == D8)) - 0x01 * ((to == REG) && (from == IMM) && (size != D8)) + 0x01 * (size != D8) + 0x02 * ((to == REG) && (from == MEM)) + 0x04 * ((to == MEM) && (from == IMM)) + 0xc0 * ((to == REG) && (from == IMM)));
+	inset (! ((from == IMM) && (to == REG) && (destination == 0)), (destination & 0x07) * ((to == REG) && (from == IMM)) + 0x08 * (operation - DOUBLE_BEGIN) + 0x01 * ((to == MEM) && (from == IMM) && (size == D8)) - 0x01 * ((to == REG) && (from == IMM) && (size != D8)) + 0x01 * (size != D8) + 0x02 * ((to == REG) && (from == MEM)) + 0x04 * ((to == MEM) && (from == IMM)) + 0xc0 * ((to == REG) && (from == IMM)));
 
 	modify_registers (to, destination, from, source);
 
@@ -216,7 +214,7 @@ static unsigned int build_regular (unsigned int * array) {
 	return (5);
 }
 
-static unsigned int build_irregular (unsigned int * array) {
+static unsigned int build_single (unsigned int * array) {
 	unsigned int operation   = array [0],
 	             size        = array [1],
 	             to          = array [2],
@@ -232,15 +230,16 @@ static unsigned int build_irregular (unsigned int * array) {
 
 	inset (1, 0xf7 + 0x08 * ((operation == INC) || (operation == DEC)) - 0x01 * (size == D8));
 
-	inset (to == REG, 0xc0 + 0x08 * (operation - IRREGULAR_BEGIN) + 0x01 * (destination & 0x07));
-	inset (to == MEM, 0x05 + 0x08 * (operation - IRREGULAR_BEGIN));
+	// THIS CAN BE REFACTORED TO C0F8 AND 053D
+	inset (to == REG, 0xc0 + 0x08 * (operation - SINGLE_BEGIN) + 0x01 * (destination & 0x07));
+	inset (to == MEM, 0x05 + 0x08 * (operation - SINGLE_BEGIN));
 
 	inset_memory (to == MEM, D32, destination, 0x1000 - (text_sector_size + 4));
 
 	return (3);
 }
 
-static unsigned int build_special_1 (unsigned int * array) {
+static unsigned int build_static_1 (unsigned int * array) {
 	unsigned int operation = array [0];
 
 	const unsigned char data  [] = {
@@ -249,12 +248,12 @@ static unsigned int build_special_1 (unsigned int * array) {
 
 	debug_printf ("> %s", data_name [array [0]]);
 
-	inset (1, data [operation - SPECIAL_1_BEGIN]);
+	inset (1, data [operation - STATIC_1_BEGIN]);
 
 	return (0);
 }
 
-static unsigned int build_special_2 (unsigned int * array) {
+static unsigned int build_static_2 (unsigned int * array) {
 	unsigned int operation = array [0];
 
 	const unsigned short data  [] = {
@@ -266,7 +265,7 @@ static unsigned int build_special_2 (unsigned int * array) {
 
 	debug_printf ("> %s", data_name [array [0]]);
 
-	inset_immediate (1, D16, data [operation - SPECIAL_2_BEGIN]);
+	inset_immediate (1, D16, data [operation - STATIC_2_BEGIN]);
 
 	return (0);
 }
@@ -423,7 +422,7 @@ static unsigned int build_float (unsigned int * array) {
 	return (3);
 }
 
-static unsigned int build_shifter (unsigned int * array) {
+static unsigned int build_shift (unsigned int * array) {
 	unsigned int operation   = array [0],
 	             size        = array [1],
 	             to          = array [2],
@@ -506,16 +505,32 @@ static unsigned int build_push (unsigned int * array) {
 	return (3);
 }
 
-static void assemble_clean_up (void) {
-	if (!assemble_clean_up_queued) {
-		return;
-	}
+static unsigned int fault (unsigned int * array) {
+	debug_printf ("> \033[0;31m%u\033[0m", array [0]);
 
-	free (text_sector_byte);
-	free (empty_array);
-	free (empty_imbue);
-	free (empty_store);
+	return (0);
 }
+
+static const unsigned int (* build_instruction []) (unsigned int * array) = {
+	store_memory,   store_relative, store_immediate,
+	fault, // ASMDIRREP IS UNIMPLEMENTED CURRENTLY
+	build_double,   build_double,   build_double,   build_double,   build_double,   build_double,   build_double,   build_double,
+	build_single,   build_single,   build_single,   build_single,   build_single,   build_single,   build_single,   build_single,
+	build_float,    build_float,    build_float,    build_float,    build_float,    build_float,    build_float,    build_float,
+	build_shift,    build_shift,    build_shift,    build_shift,    build_shift,    build_shift,    build_shift,    build_shift,
+	build_static_1, build_static_1, build_static_1, build_static_1, build_static_1, build_static_1,
+	build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2,
+	build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2,
+	build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2,
+	build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2,
+	build_enter,    build_call,     build_in_out,   build_in_out,   build_jump,     build_move,     build_pop,      build_push,
+	build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,
+	build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,
+	build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,
+	build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,
+	fault,          fault,          fault,          fault,          fault,          fault,
+	fault,          fault,          fault,          fault,          fault,          fault,          fault,          fault
+};
 
 unsigned int    nopification     = 1;
 unsigned int    text_entry_point = 0;
@@ -537,11 +552,6 @@ int assemble (unsigned int count, unsigned int * array) {
 	empty_imbue      = calloc (1024UL, sizeof (* empty_imbue));
 	empty_store      = calloc (1024UL, sizeof (* empty_store));
 
-	if (!assemble_clean_up_queued) {
-		atexit (assemble_clean_up);
-		assemble_clean_up_queued = ! assemble_clean_up_queued;
-	}
-
 	for (index = 0; index < count; ++index) {
 		unsigned int check_at;
 		unsigned int byte;
@@ -550,36 +560,7 @@ int assemble (unsigned int count, unsigned int * array) {
 
 		check_at = text_sector_size;
 
-		if ((array [index] >= REGULAR_BEGIN) && (array [index] <= REGULAR_END)) {
-			index += build_regular (& array [index]);
-		} else if ((array [index] >= IRREGULAR_BEGIN) && (array [index] <= IRREGULAR_END)) {
-			index += build_irregular (& array [index]);
-		} else if ((array [index] >= SPECIAL_1_BEGIN) && (array [index] <= SPECIAL_1_END)) {
-			index += build_special_1 (& array [index]);
-		} else if ((array [index] >= SPECIAL_2_BEGIN) && (array [index] <= SPECIAL_2_END)) {
-			index += build_special_2 (& array [index]);
-		} else if ((array [index] >= JUMP_IF_BEGIN) && (array [index] <= JUMP_IF_END)) {
-			index += build_jump_if (& array [index]);
-		} else if ((array [index] >= MOVE_IF_BEGIN) && (array [index] <= MOVE_IF_END)) {
-			index += build_move_if (& array [index]);
-		} else if ((array [index] >= FLOAT_BEGIN) && (array [index] <= FLOAT_END)) {
-			index += build_float (& array [index]);
-		} else if ((array [index] >= SHIFTER_BEGIN) && (array [index] <= SHIFTER_END)) {
-			index += build_shifter (& array [index]);
-		} else if ((array [index] == IN) || (array [index] == OUT)) {
-			index += build_in_out (& array [index]);
-		} else switch (array [index]) {
-			case ASMDIRREL: index += store_relative  (& array [index]); break;
-			case ASMDIRMEM: index += store_memory    (& array [index]); break;
-			case ASMDIRIMM: index += store_immediate (& array [index]); break;
-			case JMP:       index += build_jump      (& array [index]); break;
-			case MOV:       index += build_move      (& array [index]); break;
-			case CALL:      index += build_call      (& array [index]); break;
-			case ENTER:     index += build_enter     (& array [index]); break;
-			case POP:       index += build_pop       (& array [index]); break;
-			case PUSH:      index += build_push      (& array [index]); break;
-			default:        return (EXIT_FAILURE);
-		}
+		index += build_instruction [array [index]] (& array [index]);
 
 		debug_printf (" -- \033[0;35m");
 
@@ -603,5 +584,10 @@ int assemble (unsigned int count, unsigned int * array) {
 		replace (& text_sector_byte [get], (unsigned char *) & set, sizeof (set));
 	}
 
-	return (EXIT_SUCCESS);
+	free (text_sector_byte);
+	free (empty_array);
+	free (empty_imbue);
+	free (empty_store);
+
+	return (0);
 }
