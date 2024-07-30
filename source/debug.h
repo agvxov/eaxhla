@@ -1,4 +1,4 @@
-#ifndef  DEBUG_H
+#ifndef DEBUG_H
 #define DEBUG_H
 
 #if DEBUG == 1
@@ -64,7 +64,7 @@ void dump_function(void * data) {
 }
 
 __attribute__((unused))
-static 
+static
 void debug_dump_functions(void) {
     puts("# Functions:");
     tommy_hashtable_foreach(&symbol_table, dump_function);
@@ -75,7 +75,8 @@ static
 void debug_dump_symbols(void) {
     debug_dump_variables();
     debug_dump_functions();
-    printf("# Total variable size: '%d'\n", variable_size_sum());
+    printf("# Total variable size: '%d'\n",
+           variable_size_sum());
 }
 
 __attribute__((unused))

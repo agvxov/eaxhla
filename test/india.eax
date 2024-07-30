@@ -1,12 +1,21 @@
 unix program hello
 begin
-	mov al  0x11
-	mov ax  0x1122
-	mov eax 0x11223344
-
-	mov cl  0x11
-	mov cx  0x1122
-	mov ecx 0x11223344
+	inc eax
+	inc ecx
+	inc edx
+	inc ebx
+	inc esp
+	inc ebp
+	inc esi
+	inc edi
+	inc r8d
+	inc r9d
+	inc r10d
+	inc r11d
+	inc r12d
+	inc r13d
+	inc r14d
+	inc r15d
 
 	exit 0
 end program

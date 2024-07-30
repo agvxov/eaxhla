@@ -13,6 +13,7 @@
 #include "unix.h"
 #include "safety.h"
 #include "debug.h"
+#include "printf2.h"
 
 unsigned int * token_array = NULL;
 unsigned int   token_count = 0;
@@ -95,6 +96,9 @@ int compile(void) {
     debug_puts("Compiling output...");
 
     dump_variables_to_assembler();
+
+    // Anon: Example usage, delete or modify it...
+    printf2("[@yTest@-] Begining assembling @c%c%u@- process... @b@@%f@-\n", 'A', 6, 0.666);
 
     if (assemble(token_count, token_array)) {
         issue_internal_error();
