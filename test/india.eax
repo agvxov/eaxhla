@@ -1,21 +1,15 @@
 unix program hello
+	s8 <> world = "\x1b[1;31m> world.execute (me);\x1b[0m\n"
 begin
-	inc eax
-	inc ecx
-	inc edx
-	inc ebx
-	inc esp
-	inc ebp
-	inc esi
-	inc edi
-	inc r8d
-	inc r9d
-	inc r10d
-	inc r11d
-	inc r12d
-	inc r13d
-	inc r14d
-	inc r15d
-
+	mov ecx 3
+	reset:
+	mov r15d ecx
+	mov eax 1
+	mov edi 1
+	mov esi world
+	mov edx 33
+	syscall
+	mov ecx r15d
+	loopne reset
 	exit 0
 end program

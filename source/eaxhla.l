@@ -195,6 +195,9 @@ je              { return ITJE; }
 jmp             { return ITJMP; }
 jne             { return ITJNE; }
 leave           { return ITLEAVE; }
+loop            { return ITLOOP; }
+loope           { return ITLOOPE; }
+loopne          { return ITLOOPNE; }
 mov             { return ITMOV; }
 mul             { return ITMUL; }
 neg             { return ITNEG; }
@@ -203,6 +206,7 @@ not             { return ITNOT; }
 or              { return ITOR; }
 pop             { return ITPOP; }
 popf            { return ITPOPF; }
+push            { return ITPUSH; }
 pushf           { return ITPUSHF; }
 rcl             { return ITRCL; }
 rcr             { return ITRCR; }

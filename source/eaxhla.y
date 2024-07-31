@@ -93,7 +93,7 @@
 // Instructions
 %token INOP
 // #placeholder<instruction_token_list> BEGIN
-%token ITADC ITADD ITAND ITCMP ITCPUID ITDEC ITDIV ITF2XM1 ITFABS ITFCHS ITFCOS ITFDECSTP ITFINCSTP ITFLD1 ITFLDL2E ITFLDL2T ITFLDLG2 ITFLDLN2 ITFLDPI ITFLDZ ITFNOP ITFPATAN ITFPREM ITFPREM1 ITFPTAN ITFRNDINT ITFSCALE ITFSIN ITFSINCOS ITFSQRT ITFTST ITFXAM ITFXTRACT ITFYL2X ITFYL2XP1 ITIDIV ITIMUL ITINC ITJE ITJMP ITJNE ITLEAVE ITMOV ITMUL ITNEG ITNOP ITNOT ITOR ITPOP ITPOPF ITPUSHF ITRCL ITRCR ITRETF ITRETN ITROL ITROR ITSAL ITSAR ITSBB ITSHL ITSHR ITSUB ITSYSCALL ITXOR
+%token ITADC ITADD ITAND ITCMP ITCPUID ITDEC ITDIV ITF2XM1 ITFABS ITFCHS ITFCOS ITFDECSTP ITFINCSTP ITFLD1 ITFLDL2E ITFLDL2T ITFLDLG2 ITFLDLN2 ITFLDPI ITFLDZ ITFNOP ITFPATAN ITFPREM ITFPREM1 ITFPTAN ITFRNDINT ITFSCALE ITFSIN ITFSINCOS ITFSQRT ITFTST ITFXAM ITFXTRACT ITFYL2X ITFYL2XP1 ITIDIV ITIMUL ITINC ITJE ITJMP ITJNE ITLEAVE ITLOOP ITLOOPE ITLOOPNE ITMOV ITMUL ITNEG ITNOP ITNOT ITOR ITPOP ITPOPF ITPUSH ITPUSHF ITRCL ITRCR ITRETF ITRETN ITROL ITROR ITSAL ITSAR ITSBB ITSHL ITSHR ITSUB ITSYSCALL ITXOR
 // #placeholder<instruction_token_list> END
 
 // Instruction-likes
@@ -452,7 +452,7 @@ instruction_like: exit
     /* XXX: currently passing a negative is gramatically legal
              we could either define a more abstract token
              and only accept positives here or make eaxhla.c check.
-            as of now however, i do not care 
+            as of now however, i do not care
     */
 continue: CONTINUE         { add_continue(1);  }
     |     CONTINUE LITERAL { add_continue($2); }
@@ -576,7 +576,7 @@ instruction: INOP { append_instructions(NOP); }
     | ITMOV register immediate { append_instructions( MOV, $2.size, REG, $2.number, $3.type, $3.value ); }
     | ITMOV register memory { append_instructions( MOV, $2.size, REG, $2.number, MEM, $3 ); }
     | ITMOV memory register { append_instructions( MOV, D32, MEM, $2, REG, $3.number ); }
-    | ITMOV memory immediate { append_instructions( MOV, D32, MEM, $2, $3.type, $3.value ); }
+    | ITMOV memory immediate { append_instructions( MOV, $3.type, MEM, $2, $3.type, $3.value ); }
     | ITROL register immediate { append_instructions( ROL, $2.size, REG, $2.number, $3.type, $3.value ); }
     | ITROR register immediate { append_instructions( ROR, $2.size, REG, $2.number, $3.type, $3.value ); }
     | ITRCL register immediate { append_instructions( RCL, $2.size, REG, $2.number, $3.type, $3.value ); }
@@ -593,6 +593,11 @@ instruction: INOP { append_instructions(NOP); }
     | ITSHR memory immediate { append_instructions( SHR, D32, MEM, $2, $3.type, $3.value ); }
     | ITSHL memory immediate { append_instructions( SHL, D32, MEM, $2, $3.type, $3.value ); }
     | ITSAR memory immediate { append_instructions( SAR, D32, MEM, $2, $3.type, $3.value ); }
+    | ITLOOP relative { append_instructions( LOOP, D32, REL, $2 ); }
+    | ITLOOPE relative { append_instructions( LOOPE, D32, REL, $2 ); }
+    | ITLOOPNE relative { append_instructions( LOOPNE, D32, REL, $2 ); }
+    | ITPUSH register { append_instructions( PUSH, $2.size, REG, $2.number ); }
+    | ITPOP register { append_instructions( POP, $2.size, REG, $2.number ); }
 
     // #placeholder<instruction_parser_rules> END
     ;

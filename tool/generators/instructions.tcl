@@ -116,6 +116,11 @@ set instructions {
     {shr memory   immediate}
     {shl memory   immediate}
     {sar memory   immediate}
+    {loop   relative}
+    {loope  relative}
+    {loopne relative}
+    {push register}
+    {pop register}
 }
 
 proc malformed_instruction {i} {

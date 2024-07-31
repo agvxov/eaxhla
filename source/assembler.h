@@ -23,6 +23,17 @@
 #define CMOVNG  CMOVLE
 #define CMOVNGE CMOVL
 
+#define SETNPE SETPO
+#define SETNPO SETPE
+#define SETNB  SETAE
+#define SETNBE SETA
+#define SETNA  SETBE
+#define SETNAE SETB
+#define SETNL  SETGE
+#define SETNLE SETG
+#define SETNG  SETLE
+#define SETNGE SETL
+
 enum {
 	D8,             D16,            D32,            D64
 };
@@ -47,8 +58,9 @@ enum {
 	JS,             JNS,            JPE,            JPO,            JL,             JGE,            JLE,            JG,
 	CMOVO,          CMOVNO,         CMOVB,          CMOVAE,         CMOVE,          CMOVNE,         CMOVBE,         CMOVA,
 	CMOVS,          CMOVNS,         CMOVPE,         CMOVPO,         CMOVL,          CMOVGE,         CMOVLE,         CMOVG,
-	BSWAP,          TEST,           XCHG,           LEA,            BSF,            BSR,
-	REP,            REPE,           REPNE,          REPZ,           REPNZ,          LOOP,           LOOPE,          LOOPNE
+	SETO,           SETNO,          SETB,           SETAE,          SETE,           SETNE,          SETBE,          SETA,
+	SETS,           SETNS,          SETPE,          SETPO,          SETL,           SETGE,          SETLE,          SETG,
+	BSWAP,          BSF,            BSR,            LOOP,           LOOPE,          LOOPNE
 };
 
 enum {

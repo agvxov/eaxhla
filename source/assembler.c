@@ -15,6 +15,8 @@
 #define JUMP_IF_END    (JG)
 #define MOVE_IF_BEGIN  (CMOVO)
 #define MOVE_IF_END    (CMOVG)
+#define SET_IF_BEGIN   (SETO)
+#define SET_IF_END     (SETG)
 #define FLOAT_BEGIN    (FADD)
 #define FLOAT_END      (FDIVR)
 #define SHIFT_BEGIN    (ROL)
@@ -58,10 +60,12 @@ static const char * data_name [] = {
     "\033[1;33mcmove\033[0m",       "\033[1;33mcmovne\033[0m",      "\033[1;33mcmovbe\033[0m",      "\033[1;33mcmova\033[0m",
     "\033[1;33mcmovs\033[0m",       "\033[1;33mcmovns\033[0m",      "\033[1;33mcmovpe\033[0m",      "\033[1;33mcmovpo\033[0m",
     "\033[1;33mcmovl\033[0m",       "\033[1;33mcmovge\033[0m",      "\033[1;33mcmovle\033[0m",      "\033[1;33mcmovg\033[0m",
-    "\033[1;33mbswap\033[0m",       "\033[1;33mtest\033[0m",        "\033[1;33mxchg\033[0m",        "\033[1;33mlea\033[0m",
-    "\033[1;33mbsf\033[0m",         "\033[1;33mbsr\033[0m",
-    "\033[1;33mrep\033[0m",         "\033[1;33mrepe\033[0m",        "\033[1;33mrepne\033[0m",       "\033[1;33mrepz\033[0m",
-    "\033[1;33mrepnz\033[0m",       "\033[1;33mloop\033[0m",        "\033[1;33mloope\033[0m",       "\033[1;33mloopne\033[0m"
+    "\033[1;33mseto\033[0m",        "\033[1;33msetno\033[0m",       "\033[1;33msetb\033[0m",        "\033[1;33msetae\033[0m",
+    "\033[1;33msete\033[0m",        "\033[1;33msetne\033[0m",       "\033[1;33msetbe\033[0m",       "\033[1;33mseta\033[0m",
+    "\033[1;33msets\033[0m",        "\033[1;33msetns\033[0m",       "\033[1;33msetpe\033[0m",       "\033[1;33msetpo\033[0m",
+    "\033[1;33msetl\033[0m",        "\033[1;33msetge\033[0m",       "\033[1;33msetle\033[0m",       "\033[1;33msetg\033[0m",
+    "\033[1;33mbswap\033[0m",       "\033[1;33mbsf\033[0m",         "\033[1;33mbsr\033[0m",         "\033[1;33mloop\033[0m",
+    "\033[1;33mloope\033[0m",       "\033[1;33mloopne\033[0m"
 };
 
 static unsigned int   empty_count = 1;
@@ -275,7 +279,7 @@ static unsigned int build_jump_if (unsigned int * array) {
 	             size      = array [1],
 	             location  = array [3];
 
-	debug_printf ("> %s %s \033[0;31mrel\033[0m %u", data_name [array [0]], size_name [array [1]], array [3]);
+	debug_printf ("> %s %s \033[1;35mrel\033[0m %u", data_name [array [0]], size_name [array [1]], array [3]);
 
 	inset (far (location) && (size == D32), 0x0f);
 
@@ -308,6 +312,27 @@ static unsigned int build_move_if (unsigned int * array) {
 	modify_memory (destination, to, from);
 
 	return (5);
+}
+
+static unsigned int build_set_if (unsigned int * array) {
+	unsigned int operation   = array [0],
+	             to          = array [2],
+	             destination = array [3];
+
+	debug_printf ("> %s \033[1;35md8 \033[0m %s %u", data_name [array [0]], type_name [array [2]], array [3]);
+
+	inset ((to == REG) && (front (destination)), 0x40);
+	inset ((to == REG) && (upper (destination)), 0x41);
+
+	inset (1, 0x0f);
+	inset (1, 0x90 + operation - SET_IF_BEGIN);
+
+	inset (to == REG, 0xc0 + 0x01 * (destination & 0x07));
+	inset (to == MEM, 0x05);
+
+	inset_memory (to == MEM, D32, destination, 0x1000 - (text_sector_size + 4));
+
+	return (3);
 }
 
 static unsigned int build_jump (unsigned int * array) {
@@ -429,7 +454,7 @@ static unsigned int build_shift (unsigned int * array) {
 	             destination = array [3],
 	             offset      = array [5];
 
-	debug_printf ("> %s %s %s %u \033[0;31mimm\033[0m %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3], array [5]);
+	debug_printf ("> %s %s %s %u \033[1;35mimm\033[0m %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3], array [5]);
 
 	short_prefix (size);
 
@@ -505,15 +530,68 @@ static unsigned int build_push (unsigned int * array) {
 	return (3);
 }
 
+static unsigned int build_swap (unsigned int * array) {
+	unsigned int size        = array [1],
+	             destination = array [3];
+
+	debug_printf ("> %s %s \033[1;35mreg\033[0m %u", data_name [array [0]], size_name [array [1]], array [3]);
+
+	long_prefix (size, REG, destination, 0, 0);
+
+	inset (1, 0x0f);
+	inset (1, 0xc8 + 0x01 * (destination & 0x07));
+
+	return (3);
+}
+
+static unsigned int build_bit_scan (unsigned int * array) {
+	unsigned int size        = array [1],
+	             destination = array [3],
+	             from        = array [4],
+	             source      = array [5];
+
+	debug_printf ("> %s %s \033[1;35mreg\033[0m %u %s %u", data_name [array [0]], size_name [array [1]], array [3], type_name [array [4]], array [5]);
+
+	short_prefix (size);
+
+	long_prefix (size, REG, destination, from, source);
+
+	inset_immediate (1, D16, 0xbc0f);
+
+	modify_registers (REG, destination, from, source);
+
+	inset (from == MEM, 0x05 + 0x08 * destination);
+
+	inset_memory (from == MEM, D32, source, 0x1000 - (text_sector_size + 4));
+
+	return (5);
+}
+
+static unsigned int build_loop (unsigned int * array) {
+	unsigned int location = array [3];
+
+	debug_printf ("> %s \033[1;35md8 \033[0m \033[1;35mrel\033[0m %u", data_name [array [0]], array [3]);
+
+	inset (array [0] == LOOPNE, 0xe0);
+	inset (array [0] == LOOPE,  0xe1);
+	inset (array [0] == LOOP,   0xe2);
+
+	inset_memory (1, D8, location, -(text_sector_size + 1));
+
+	return (3);
+}
+
 static unsigned int fault (unsigned int * array) {
-	debug_printf ("> \033[0;31m%u\033[0m", array [0]);
+	debug_printf ("> fault : \033[1;31m%u\033[0m", array [0]);
 
 	return (0);
 }
 
 static unsigned int (* build_instruction []) (unsigned int * array) = {
-	store_memory,   store_relative, store_immediate,
-	fault, // ASMDIRREP IS UNIMPLEMENTED CURRENTLY
+	store_memory,   // ASMDIRMEM : LABEL
+	store_relative, // ASMDIRREL : "IMPLEMENTED"
+	store_immediate,// ASMDIRIMM : LITERAL
+	fault,          // ASMDIRREP : UNIMPLEMENTED
 	build_double,   build_double,   build_double,   build_double,   build_double,   build_double,   build_double,   build_double,
 	build_single,   build_single,   build_single,   build_single,   build_single,   build_single,   build_single,   build_single,
 	build_float,    build_float,    build_float,    build_float,    build_float,    build_float,    build_float,    build_float,
@@ -528,8 +606,9 @@ static unsigned int (* build_instruction []) (unsigned int * array) = {
 	build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,
 	build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,
 	build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,
-	fault,          fault,          fault,          fault,          fault,          fault,
-	fault,          fault,          fault,          fault,          fault,          fault,          fault,          fault
+	build_set_if,   build_set_if,   build_set_if,   build_set_if,   build_set_if,   build_set_if,   build_set_if,   build_set_if,
+	build_set_if,   build_set_if,   build_set_if,   build_set_if,   build_set_if,   build_set_if,   build_set_if,   build_set_if,
+	build_swap,     build_bit_scan, build_bit_scan, build_loop,     build_loop,     build_loop
 };
 
 unsigned int    nopification     = 1;

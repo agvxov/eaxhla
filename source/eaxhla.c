@@ -383,7 +383,7 @@ symbol_t * _add_label(const char * const name, int is_resolved) {
     char * full_name = make_scoped_name(scope, name);
 
     symbol_t * label = get_symbol(full_name);
-    
+
     if (label) {
         if (label->is_resolved) {
             issue_error("symbol '%s' redeclared as new label", name);
