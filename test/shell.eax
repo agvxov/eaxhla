@@ -1,0 +1,6 @@
+shell program payload
+begin
+    mov eax 60
+    mov edi 1
+    syscall
+end program

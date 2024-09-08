@@ -50,6 +50,7 @@ end { BEGIN IN_END; }
 
 fast           { return FAST; }
 unix           { return UNIX; }
+shell          { return SHELL; }
 
 in         { return TIN; }
 

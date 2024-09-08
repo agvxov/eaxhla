@@ -63,7 +63,7 @@
 
 // Specifiers
 %token FAST
-%token UNIX WIN64
+%token UNIX WIN64 SHELL
 
 // Logic
 %token ITNEQ
@@ -124,8 +124,10 @@ program_specifier: %empty
     | system_specifier
     ;
 
-system_specifier: UNIX { system_type = UNIX; }
+system_specifier
+    : UNIX  { system_type = UNIX;  }
     | WIN64 { system_type = WIN64; }
+    | SHELL { system_type = SHELL; }
     ;
 
     // XXX: end procedure thing

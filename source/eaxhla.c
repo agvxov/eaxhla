@@ -129,6 +129,15 @@ void add_break(unsigned i) {
     append_instructions(JMP, D32, REL, repeat_stack[repeat_stack_empty_top-i]+1);
 }
 
+void add_exit(unsigned short code) {
+    if (system_type == UNIX) {
+        append_instructions(MOV, D32, REG, GR0, IMM, 60,
+                            MOV, D32, REG, GR7, IMM, code,
+                            SYSCALL
+                        );
+    }
+}
+
 static char * scope = NULL;
 void empty_out_scope(void) {
     free(scope);
