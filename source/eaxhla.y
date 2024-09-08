@@ -464,7 +464,7 @@ break: BREAK         { add_break(1);  }
     |  BREAK LITERAL { add_break($2); }
     ;
 
-exit: EXIT value { append_exit($2); }
+exit: EXIT value { add_exit((unsigned short)$2); }
     ;
 
     /* XXX

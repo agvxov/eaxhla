@@ -13,8 +13,6 @@ extern int compile(void);
 
 extern void append_label(int rel);
 
-extern void append_exit(int code);
-
 extern void append_instructions_from_mem(void * src, unsigned n);
 
 /* --- Token appending

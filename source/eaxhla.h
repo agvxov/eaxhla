@@ -82,6 +82,7 @@ extern void add_repeat(void);
 extern void fin_repeat(void);
 extern void add_continue(unsigned i);
 extern void add_break(unsigned i);
+extern void add_exit(unsigned short code);
 /* Partially implemented */
 extern void add_if(void);
 extern void fin_if(void);
