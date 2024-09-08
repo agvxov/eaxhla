@@ -96,11 +96,6 @@ int make_executable(const char * const filename) {
     return r;
 }
 
-void append_instructions_from_mem(void * src, unsigned n) {
-    memcpy(token_array + token_count, src, n);
-    token_count += n;
-}
-
 void _append_instructions(const unsigned argc, ...) {
     va_list ap;
     va_start(ap, argc);
@@ -113,43 +108,11 @@ void _append_instructions(const unsigned argc, ...) {
     va_end(ap);
 }
 
-void append_label (int rel) {
-    append_instructions(ASMDIRMEM, rel);
-}
-
-// procedure my_procedure ... <argv> ... begin
-// rel = my_procedure (some unique index)
-// best if it's count of defined procedures!
-// it must not be address of it, or huge number!
-// optimally, it should be number 0 ... 140.
-// for now, 140 procedures is enough, will expand later!
-void append_fastcall_begin (int rel) {
-	append_label(rel);
-}
-
-// end procedure
-void append_fastcall_end (void) {
-	append_instructions(RETN);
-}
-
-// append these at the end, postpone it!
-// this function needs to be called after ALL instructions are parsed.
-// it has to do with structure of every binary executable file!
-// we can add it later, it's "triggered" on 'in'.
-void append_fastcall_arguments (int rel, int wid, int imm) { // TODO
-	append_instructions(ASMDIRMEM, rel, ASMDIRIMM, wid, imm);
-}
-
 int compile(void) {
     debug_puts("Compiling output...");
 
     dump_variables_to_assembler();
 
-    // Anon: Example usage, delete or modify it...
-    printf2("[@yTest@-] Begining assembling @c%c%u@- process... @b@@%f@-\n", 'A', 6, 0.666);
-
-    // Anon: I moved memory management of text+data sections here.
-    // Assembler shouldn't control how much memory it has, user should!
     text_sector_byte = calloc(4096UL, sizeof(*text_sector_byte));
 
     if (assemble(token_count, token_array)) {
