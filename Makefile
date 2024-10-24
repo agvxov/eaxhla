@@ -25,11 +25,10 @@ OUT := eaxhla
 PLUG := tool/plug
 
 ifeq (${DEBUG}, 1)
-  LFLAGS     += --debug --trace
-  CFLAGS     += -O0 -ggdb -fno-inline
-  CPPFLAGS   += -DDEBUG
-  FLEXFLAGS  += --trace --debug
-  BISONFLAGS += --debug
+  LFLAGS   += --debug --trace
+  CFLAGS   += -O0 -ggdb -fno-inline
+  CPPFLAGS += -DDEBUG
+  YFLAGS   += --debug
 else
   CFLAGS += -O3 -flto=auto -fno-stack-protector
 endif
@@ -49,11 +48,11 @@ LDLIBS := -lm
 all: ${OUT}
 
 ${OBJECT.d}/%.yy.c: ${SOURCE.d}/%.l
-	flex ${FLEXFLAGS} --header-file=object/$(basename $(notdir $<)).yy.h -o $@ $<
+	flex ${LFLAGS} --header-file=object/$(basename $(notdir $<)).yy.h -o $@ $<
 
 ${OBJECT.d}/%.tab.c: ${SOURCE.d}/%.y
 #~	bison ${BISONFLAGS} --header=object/$(basename $(notdir $<)).tab.h -o $@ $<
-	bison ${BISONFLAGS} --defines=object/$(basename $(notdir $<)).tab.h -o $@ $<
+	bison ${YFLAGS} --defines=object/$(basename $(notdir $<)).tab.h -o $@ $<
 
 ${OBJECT.d}/%.yy.o: ${OBJECT.d}/%.yy.c
 	${COMPILE.c} -o $@ $<
