@@ -578,7 +578,7 @@ instruction: INOP { append_instructions(NOP); }
     | ITMOV register immediate { append_instructions( MOV, $2.size, REG, $2.number, $3.type, $3.value ); }
     | ITMOV register memory { append_instructions( MOV, $2.size, REG, $2.number, MEM, $3 ); }
     | ITMOV memory register { append_instructions( MOV, D32, MEM, $2, REG, $3.number ); }
-    | ITMOV memory immediate { append_instructions( MOV, $3.type, MEM, $2, $3.type, $3.value ); }
+    | ITMOV memory immediate { append_instructions( MOV, D32, MEM, $2, $3.type, $3.value ); }
     | ITROL register immediate { append_instructions( ROL, $2.size, REG, $2.number, $3.type, $3.value ); }
     | ITROR register immediate { append_instructions( ROR, $2.size, REG, $2.number, $3.type, $3.value ); }
     | ITRCL register immediate { append_instructions( RCL, $2.size, REG, $2.number, $3.type, $3.value ); }
