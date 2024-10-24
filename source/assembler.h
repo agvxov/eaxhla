@@ -1,6 +1,7 @@
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
 
+// Instruction aliases
 #define JNPE JPO
 #define JNPO JPE
 #define JNB  JAE
@@ -33,6 +34,7 @@
 #define SETNLE SETG
 #define SETNG  SETLE
 #define SETNGE SETL
+// ---
 
 enum {
 	D8,             D16,            D32,            D64
