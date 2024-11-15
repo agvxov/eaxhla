@@ -62,7 +62,7 @@ int write_output(FILE * file) {
             // Header calculation
             int total_reserved_size = variable_size_sum();
 
-            elf_main_header(text_entry_point, 1, 1, 1);
+            elf_main_header(main_entry_point, 1, 1, 1);
             elf_text_sector(text_sector_size, total_reserved_size);
             elf_data_sector(text_sector_size, total_reserved_size);
 
@@ -74,7 +74,7 @@ int write_output(FILE * file) {
             checked_fwrite(text_sector_byte, sizeof(*text_sector_byte), (size_t)text_sector_size, file);
         } break;
         case SHELL: {
-            elf_main_header(text_entry_point, 1, 1, 1);
+            elf_main_header(main_entry_point, 1, 1, 1);
             elf_text_sector(text_sector_size, 0);
             elf_data_sector(text_sector_size, 0);
 
