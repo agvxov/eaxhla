@@ -1,6 +1,4 @@
-/* Ignore this file, it's for my autistic way of testing. -- xolatile */
-
-#include <xolatile/xtandard.c>
+#include <xolatile/xtandard.h>
 
 int main (int argc, char * * argv) {
 	int file, i;

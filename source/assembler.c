@@ -1,5 +1,4 @@
 #include "assembler.h"
-#include "debug.h"
 
 #include <stdlib.h>
 
@@ -21,56 +20,6 @@
 #define FLOAT_END      (FDIVR)
 #define SHIFT_BEGIN    (ROL)
 #define SHIFT_END      (SAR)
-
-#if DEBUG == 1
-
-static const char * size_name [] = {
-    "d8",           "d16",          "d32",          "d64"
-};
-
-static const char * type_name [] = {
-    "rel",          "reg",          "mem",          "imm"
-};
-
-static const char * data_name [] = {
-    "asmdirmem",    "asmdirrel",    "asmdirimm",    "asmdirrep",
-    "add",          "or",           "adc",          "sbb",
-    "and",          "sub",          "xor",          "cmp",
-    "inc",          "dec",          "not",          "neg",
-    "mul",          "imul",         "div",          "idiv",
-    "fadd",         "fmul",         "fcom",         "fcomp",
-    "fsub",         "fsubr",        "fdiv",         "fdivr",
-    "rol",          "ror",          "rcl",          "rcr",
-    "sal",          "shr",          "shl",          "sar",
-    "nop",          "retn",         "retf",         "leave",
-    "popf",         "pushf",
-    "syscall",      "cpuid",        "fnop",         "fchs",
-    "fabs",         "ftst",         "fxam",         "fld1",
-    "fldl2t",       "fldl2e",       "fldpi",        "fldlg2",
-    "fldln2",       "fldz",         "f2xm1",        "fyl2x",
-    "fptan",        "fpatan",       "fxtract",      "fprem1",
-    "fdecstp",      "fincstp",      "fprem",        "fyl2xp1",
-    "fsqrt",        "fsincos",      "frndint",      "fscale",
-    "fsin",         "fcos",
-    "enter",        "call",         "in",           "out",
-    "jmp",          "mov",          "pop",          "push",
-    "jo",           "jno",          "jb",           "jae",
-    "je",           "jne",          "jbe",          "ja",
-    "js",           "jns",          "jpe",          "jpo",
-    "jl",           "jge",          "jle",          "jg",
-    "cmovo",        "cmovno",       "cmovb",        "cmovae",
-    "cmove",        "cmovne",       "cmovbe",       "cmova",
-    "cmovs",        "cmovns",       "cmovpe",       "cmovpo",
-    "cmovl",        "cmovge",       "cmovle",       "cmovg",
-    "seto",         "setno",        "setb",         "setae",
-    "sete",         "setne",        "setbe",        "seta",
-    "sets",         "setns",        "setpe",        "setpo",
-    "setl",         "setge",        "setle",        "setg",
-    "bswap",        "bsf",          "bsr",          "loop",
-    "loope",        "loopne"
-};
-
-#endif
 
 static unsigned int   empty_count = 1;
 static unsigned int   empty_holes = 1;
@@ -111,8 +60,6 @@ static void inset_memory (int when, unsigned int size, unsigned int data, unsign
 static unsigned int store_relative (unsigned int * array) {
     unsigned int relative = array [1];
 
-    debug_printf ("> %s %u", data_name [array [0]], array [1]);
-
     empty_array [empty_holes] = text_sector_size;
     empty_imbue [empty_holes] = relative;
 
@@ -123,8 +70,6 @@ static unsigned int store_relative (unsigned int * array) {
 
 static unsigned int store_memory (unsigned int * array) {
     unsigned int memory = array [1];
-
-    debug_printf ("> %s %u", data_name [array [0]], array [1]);
 
     empty_store [memory] = text_sector_size;
 
@@ -137,8 +82,6 @@ static unsigned int store_immediate (unsigned int * array) {
     unsigned int index  = 0,
                  size   = array [1],
                  amount = array [2];
-
-    debug_printf ("> %s %s %u", data_name [array [0]], size_name [array [1]], array [2]);
 
     for (index = 0; index < amount; ++index) {
         inset_immediate (1, size, array [3 + index]);
@@ -195,8 +138,6 @@ static unsigned int build_double (unsigned int * array) {
                  from        = array [4],
                  source      = array [5];
 
-    debug_printf ("> %s %s %s %u %s %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3], type_name [array [4]], array [5]);
-
     short_prefix (size);
 
     long_prefix (size, to, destination, from, source);
@@ -230,8 +171,6 @@ static unsigned int build_single (unsigned int * array) {
                  to          = array [2],
                  destination = array [3];
 
-    debug_printf ("> %s %s %s %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3]);
-
     short_prefix (size);
 
     long_prefix (size, to, destination, 0, 0);
@@ -256,8 +195,6 @@ static unsigned int build_static_1 (unsigned int * array) {
         0x90, 0xc3, 0xcb, 0xc9, 0x9d, 0x9c
     };
 
-    debug_printf ("> %s", data_name [array [0]]);
-
     inset (1, data [operation - STATIC_1_BEGIN]);
 
     return (0);
@@ -273,8 +210,6 @@ static unsigned int build_static_2 (unsigned int * array) {
         0xfad9, 0xfbd9, 0xfcd9, 0xfdd9, 0xfed9, 0xffd9
     };
 
-    debug_printf ("> %s", data_name [array [0]]);
-
     inset_immediate (1, D16, data [operation - STATIC_2_BEGIN]);
 
     return (0);
@@ -284,8 +219,6 @@ static unsigned int build_jump_if (unsigned int * array) {
     unsigned int operation = array [0],
                  size      = array [1],
                  location  = array [3];
-
-    debug_printf ("> %s %s rel %u", data_name [array [0]], size_name [array [1]], array [3]);
 
     inset (far (location) && (size == D32), 0x0f);
 
@@ -305,8 +238,6 @@ static unsigned int build_move_if (unsigned int * array) {
                  from        = array [4],
                  source      = array [5];
 
-    debug_printf ("> %s %s %s %u %s %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3], type_name [array [4]], array [5]);
-
     short_prefix (size);
 
     long_prefix (size, to, destination, from, source);
@@ -324,8 +255,6 @@ static unsigned int build_set_if (unsigned int * array) {
     unsigned int operation   = array [0],
                  to          = array [2],
                  destination = array [3];
-
-    debug_printf ("> %s d8 %s %u", data_name [array [0]], type_name [array [2]], array [3]);
 
     inset ((to == REG) && (front (destination)), 0x40);
     inset ((to == REG) && (upper (destination)), 0x41);
@@ -345,8 +274,6 @@ static unsigned int build_jump (unsigned int * array) {
     unsigned int size        = array [1],
                  to          = array [2],
                  destination = array [3];
-
-    debug_printf ("> %s %s %s %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3]);
 
     inset ((to == REG) && upper (destination), 0X41);
 
@@ -369,8 +296,6 @@ static unsigned int build_move (unsigned int * array) {
                  from        = array [4],
                  source      = array [5],
                  extension   = array [6];
-
-    debug_printf ("> %s %s %s %u %s %u %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3], type_name [array [4]], array [5], (size == D64) ? array [6] : 0);
 
     short_prefix (size);
 
@@ -408,8 +333,6 @@ static unsigned int build_call (unsigned int * array) {
     unsigned int from   = array [1],
                  source = array [2];
 
-    debug_printf ("> %s %s %u", data_name [array [0]], type_name [array [1]], array [2]);
-
     inset ((from == REG) && (upper (source)), 0x41);
 
     inset (from == REL, 0xe8);
@@ -426,8 +349,6 @@ static unsigned int build_enter (unsigned int * array) {
     unsigned int dynamic_storage = array [1],
                  nesting_level   = array [2];
 
-    debug_printf ("> %s %u %u", data_name [array [0]], array [1], array [2]);
-
     inset (1, 0xc8);
 
     inset_immediate (1, D16, dynamic_storage);
@@ -441,8 +362,6 @@ static unsigned int build_float (unsigned int * array) {
                  size      = array [1],
                  from      = array [2],
                  source    = array [3];
-
-    debug_printf ("> %s %s %s %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3]);
 
     inset (from == MEM, 0xd8 + 0x04 * (size == D64));
 
@@ -459,8 +378,6 @@ static unsigned int build_shift (unsigned int * array) {
                  to          = array [2],
                  destination = array [3],
                  offset      = array [5];
-
-    debug_printf ("> %s %s %s %u imm %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3], array [5]);
 
     short_prefix (size);
 
@@ -483,8 +400,6 @@ static unsigned int build_in_out (unsigned int * array) {
                  type = array [2],
                  port = array [3];
 
-    debug_printf ("> %s %s %s %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3]);
-
     short_prefix (size);
 
     inset (1, 0xe4 + 0x01 * (size != D8) + 0x02 * (move != OUT) + 0x08 * (type == REG));
@@ -498,8 +413,6 @@ static unsigned int build_pop (unsigned int * array) {
     unsigned int size        = array [1],
                  to          = array [2],
                  destination = array [3];
-
-    debug_printf ("> %s %s %s %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3]);
 
     short_prefix (size);
 
@@ -518,8 +431,6 @@ static unsigned int build_push (unsigned int * array) {
     unsigned int size   = array [1],
                  from   = array [2],
                  source = array [3];
-
-    debug_printf ("> %s %s %s %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3]);
 
     short_prefix (size);
 
@@ -540,8 +451,6 @@ static unsigned int build_swap (unsigned int * array) {
     unsigned int size        = array [1],
                  destination = array [3];
 
-    debug_printf ("> %s %s reg %u", data_name [array [0]], size_name [array [1]], array [3]);
-
     long_prefix (size, REG, destination, 0, 0);
 
     inset (1, 0x0f);
@@ -555,8 +464,6 @@ static unsigned int build_bit_scan (unsigned int * array) {
                  destination = array [3],
                  from        = array [4],
                  source      = array [5];
-
-    debug_printf ("> %s %s reg %u %s %u", data_name [array [0]], size_name [array [1]], array [3], type_name [array [4]], array [5]);
 
     short_prefix (size);
 
@@ -575,8 +482,6 @@ static unsigned int build_bit_scan (unsigned int * array) {
 
 static unsigned int build_loop (unsigned int * array) {
     unsigned int location = array [3];
-
-    debug_printf ("> %s d8 rel %u", data_name [array [0]], array [3]);
 
     inset (array [0] == LOOPNE, 0xe0);
     inset (array [0] == LOOPE,  0xe1);
@@ -630,20 +535,7 @@ int assemble (unsigned int count, unsigned int * array) {
     empty_store = calloc (1024UL, sizeof (* empty_store));
 
     for (index = 0; index < count; ++index) {
-        unsigned int check_at;
-        unsigned int byte;
-
-#if DEBUG == 1
-        inset (array [index] > ASMDIRREP, 0x90);
-#endif
-
-        check_at = text_sector_size;
-
         index += build_instruction [array [index]] (& array [index]);
-
-        for (byte = check_at; byte < text_sector_size; ++byte) {
-            debug_printf ("%02X ", text_sector_byte [byte]);
-        }
     }
 
     text_entry_point = empty_store [0];

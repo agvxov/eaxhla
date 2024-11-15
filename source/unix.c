@@ -1,6 +1,5 @@
 #include "assembler.h"
 #include "unix.h"
-#include "debug.h"
 
 #include <string.h>
 
@@ -45,8 +44,6 @@ void elf_main_header(unsigned char has_program,
     elf_main_header_byte[18] = (for_x86_64)  ? 0x3e : 0x00;
 
     memcpy(& elf_main_header_byte[24], & enter, sizeof(enter));
-
-    debug_printf("UNX -- ELF64 main header\n");
 }
 
 void elf_text_sector(unsigned long text_size,
@@ -55,8 +52,6 @@ void elf_text_sector(unsigned long text_size,
 
     memcpy(& elf_text_sector_byte[32], & text, sizeof(text));
     memcpy(& elf_text_sector_byte[40], & text, sizeof(text));
-
-    debug_printf("UNX -- ELF64 text sector\n");
 }
 
 void elf_data_sector(unsigned long text_size,
@@ -70,6 +65,4 @@ void elf_data_sector(unsigned long text_size,
     memcpy(& elf_data_sector_byte[24], & move, sizeof(move));
     memcpy(& elf_data_sector_byte[32], & data, sizeof(data));
     memcpy(& elf_data_sector_byte[40], & data, sizeof(data));
-
-    debug_printf("UNX -- ELF64 data sector\n");
 }

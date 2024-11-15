@@ -1,21 +1,21 @@
-/* Ignore this file, it's for my autistic way of testing. -- xolatile */
+#include <xolatile/xtandard.h>
 
-#include <xolatile/xtandard.c>
-
-#define header                            \
-"#include <stdio.h>\n"                    \
-"#include <stdlib.h>\n"                   \
-"#include \"../source/assembler.h\"\n"    \
-"#include \"../source/assembler.c\"\n"    \
+#define header                                                             \
+"#include <stdio.h>\n"                                                     \
+"#include <stdlib.h>\n"                                                    \
+"#include \"/home/xolatile/Git/eaxcc/source/assembler.h\"\n" /* LNAO L: */ \
+"#include \"/home/xolatile/Git/eaxcc/source/assembler.c\"\n" /* LNAO L: */ \
 "static unsigned int array [] = { "
 
 #define footer                                                                     \
 "};\n"                                                                             \
 "int main (void) {\n"                                                              \
 "	unsigned int index;\n"                                                     \
+"	text_sector_byte = calloc (1024ul, 1ul);\n"                                \
 "	assemble ((unsigned int) (sizeof (array) / sizeof (array [0])), array);\n" \
 "	for (index = 0; index < text_sector_size; ++index)\n"                      \
 "		printf (\"%02X \", text_sector_byte [index]);\n"                   \
+"	free (text_sector_byte);\n"                                                \
 "	return (0);\n"                                                             \
 "}\n"
 
@@ -35,7 +35,7 @@ int main (int argc, char * * argv) {
 
 	file = file_close (file);
 
-	execute ("gcc x.c && ./a.out && echo -- && rm a.out x.c");
+	execute ("gcc -g x.c && ./a.out && echo -- && rm a.out x.c");
 
 	return (log_success);
 }
