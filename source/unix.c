@@ -1,4 +1,3 @@
-#include "assembler.h"
 #include "unix.h"
 
 #include <string.h>
@@ -34,10 +33,11 @@ unsigned char elf_data_sector_byte[ELF_DATA_SECTOR_SIZE] = {
     0X00, 0X10, 0X00, 0X00, 0X00, 0X00, 0X00, 0X00
 };
 
-void elf_main_header(unsigned char has_program,
+void elf_main_header(unsigned int  entry_point,
+                     unsigned char has_program,
                      unsigned char for_linux,
                      unsigned char for_x86_64) {
-    unsigned int enter = text_entry_point + 0x4000b0u;
+    unsigned int enter = entry_point + 0x4000b0u;
 
     elf_main_header_byte[16] = (has_program) ? 0x02 : 0x03;
     elf_main_header_byte[ 7] = (for_linux)   ? 0x03 : 0x00;

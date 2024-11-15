@@ -13,7 +13,8 @@ extern unsigned char elf_main_header_byte[ELF_MAIN_HEADER_SIZE];
 extern unsigned char elf_text_sector_byte[ELF_TEXT_SECTOR_SIZE];
 extern unsigned char elf_data_sector_byte[ELF_DATA_SECTOR_SIZE];
 
-extern void elf_main_header(unsigned char has_program,
+extern void elf_main_header(unsigned int  entry_point,
+                            unsigned char has_program,
                             unsigned char for_linux,
                             unsigned char for_x86_64);
 
