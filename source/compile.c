@@ -21,12 +21,12 @@ unsigned int   token_count = 0;
 char * output_file_name = "a.out";
 
 int compile_init(void) {
-	token_array = calloc(1440UL, sizeof(*token_array));
+    token_array = calloc(1440UL, sizeof(*token_array));
     return 0;
 }
 
 int compile_deinit(void) {
-	free(token_array);
+    free(token_array);
     return 0;
 }
 
@@ -71,14 +71,14 @@ int write_output(FILE * file) {
             checked_fwrite(elf_text_sector_byte, 1UL, ELF_TEXT_SECTOR_SIZE, file);
             checked_fwrite(elf_data_sector_byte, 1UL, ELF_DATA_SECTOR_SIZE, file);
 
-	        checked_fwrite(text_sector_byte, sizeof(*text_sector_byte), (size_t)text_sector_size, file);
+            checked_fwrite(text_sector_byte, sizeof(*text_sector_byte), (size_t)text_sector_size, file);
         } break;
         case SHELL: {
             elf_main_header(1, 1, 1);
             elf_text_sector(text_sector_size, 0);
             elf_data_sector(text_sector_size, 0);
 
-	        checked_fwrite(text_sector_byte, sizeof(*text_sector_byte), (size_t)text_sector_size, file);
+            checked_fwrite(text_sector_byte, sizeof(*text_sector_byte), (size_t)text_sector_size, file);
         } break;
     }
 
