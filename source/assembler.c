@@ -1,4 +1,5 @@
 #include "assembler.h"
+#include "debug.h"
 
 #include <stdlib.h>
 
@@ -20,6 +21,57 @@
 #define FLOAT_END      (FDIVR)
 #define SHIFT_BEGIN    (ROL)
 #define SHIFT_END      (SAR)
+
+#if DEBUG == 1
+
+static const char * size_name [] = {
+    "d8",           "d16",          "d32",          "d64",
+    "d80",          "d128",         "d256",         "d512"
+};
+
+static const char * operand_name [] = {
+    "rel",          "reg",          "mem",          "imm"
+};
+
+static const char * operation_name [] = {
+    "asmdirmem",    "asmdirrel",    "asmdirimm",    "asmdirrep",
+    "add",          "or",           "adc",          "sbb",
+    "and",          "sub",          "xor",          "cmp",
+    "inc",          "dec",          "not",          "neg",
+    "mul",          "imul",         "div",          "idiv",
+    "fadd",         "fmul",         "fcom",         "fcomp",
+    "fsub",         "fsubr",        "fdiv",         "fdivr",
+    "rol",          "ror",          "rcl",          "rcr",
+    "sal",          "shr",          "shl",          "sar",
+    "nop",          "retn",         "retf",         "leave",
+    "popf",         "pushf",
+    "syscall",      "cpuid",        "fnop",         "fchs",
+    "fabs",         "ftst",         "fxam",         "fld1",
+    "fldl2t",       "fldl2e",       "fldpi",        "fldlg2",
+    "fldln2",       "fldz",         "f2xm1",        "fyl2x",
+    "fptan",        "fpatan",       "fxtract",      "fprem1",
+    "fdecstp",      "fincstp",      "fprem",        "fyl2xp1",
+    "fsqrt",        "fsincos",      "frndint",      "fscale",
+    "fsin",         "fcos",
+    "enter",        "call",         "in",           "out",
+    "jmp",          "mov",          "pop",          "push",
+    "jo",           "jno",          "jb",           "jae",
+    "je",           "jne",          "jbe",          "ja",
+    "js",           "jns",          "jpe",          "jpo",
+    "jl",           "jge",          "jle",          "jg",
+    "cmovo",        "cmovno",       "cmovb",        "cmovae",
+    "cmove",        "cmovne",       "cmovbe",       "cmova",
+    "cmovs",        "cmovns",       "cmovpe",       "cmovpo",
+    "cmovl",        "cmovge",       "cmovle",       "cmovg",
+    "seto",         "setno",        "setb",         "setae",
+    "sete",         "setne",        "setbe",        "seta",
+    "sets",         "setns",        "setpe",        "setpo",
+    "setl",         "setge",        "setle",        "setg",
+    "bswap",        "bsf",          "bsr",          "loop",
+    "loope",        "loopne"
+};
+
+#endif
 
 static uint32_t   empty_count = 1;
 static uint32_t   empty_holes = 1;
@@ -121,6 +173,26 @@ static void short_prefix(uint32_t size) {
     inset(size == D16, 0x66);
 }
 
+static int32_t trm(uint32_t to, uint32_t from) {
+    return (to == REG) && (from == MEM);
+}
+
+static int32_t tmr(uint32_t to, uint32_t from) {
+    return (to == MEM) && (from == REG);
+}
+
+static int32_t tmi(uint32_t to, uint32_t from) {
+    return (to == MEM) && (from == IMM);
+}
+
+static int32_t trl(uint32_t to, uint32_t from) {
+    return (to == REG) && (from == REL);
+}
+
+static int32_t tri(uint32_t to, uint32_t from) {
+    return (to == REG) && (from == IMM);
+}
+
 static void long_prefix(uint32_t size,
                         uint32_t to,
                         uint32_t destination,
@@ -146,8 +218,8 @@ static void modify_memory(uint32_t operation,
                           uint32_t to,
                           uint32_t from) {
     // Refactor.
-    inset (((to == MEM) && (from == REG)) || ((to == REG) && (from == MEM)), 0x05 +
-        0x08 * operation * ((to == MEM) && (from == IMM)));
+    inset ((tmr(to, from)) || (trm(to, from)), 0x05 +
+        0x08 * operation * (tmi(to, from)));
 }
 
 // REFACTORING IN PROGRESS
@@ -159,6 +231,10 @@ static uint32_t build_double(uint32_t * array) {
              from        = array[4],
              source      = array[5];
 
+    debug_error(size > D64, "size : double = %i; -- XBA\n", size);
+    debug_error(to   > MEM, "to   : double = %i; -- XBA\n", to);
+    debug_error(from > IMM, "from : double = %i; -- XBA\n", from);
+
     short_prefix(size);
 
     long_prefix(size, to, destination, from, source);
@@ -166,7 +242,7 @@ static uint32_t build_double(uint32_t * array) {
     // What the fuck...?
     inset((size == D8) && (to == REG) && ((from == REG) || (from == IMM)) &&
         (((front(destination) && lower(source)) || (lower(destination) && front(source))) ||
-        ((to == REG) && (from == IMM) && front(destination))), 0x40);
+        (tri(to, from) && front(destination))), 0x40);
 
     inset((from == IMM) && (to == REG), 0x81 - 0x01 * (size == D8));
 
@@ -174,29 +250,29 @@ static uint32_t build_double(uint32_t * array) {
 
     // Seriously, what the fuck...?
     inset(! ((from == IMM) && (to == REG) && (destination == 0)),
-        (destination & 0x07) * ((to == REG) && (from == IMM)) +
+        (destination & 0x07) * (tri(to, from)) +
         0x08 * (operation - DOUBLE_BEGIN) +
-        0x01 * ((to == MEM) && (from == IMM) && (size == D8)) -
-        0x01 * ((to == REG) && (from == IMM) && (size != D8)) +
-        0x01 * (size != D8) + 0x02 * ((to == REG) && (from == MEM)) +
-        0x04 * ((to == MEM) && (from == IMM)) +
-        0xc0 * ((to == REG) && (from == IMM)));
+        0x01 * (tmi(to, from) && (size == D8)) -
+        0x01 * (tri(to, from) && (size != D8)) +
+        0x01 * (size != D8) + 0x02 * (trm(to, from)) +
+        0x04 * (tmi(to, from)) +
+        0xc0 * (tri(to, from)));
 
     modify_registers(to, destination, from, source);
 
     modify_memory(destination, to, from);
     modify_memory(source,      to, from);
 
-    inset_memory((to == REG) && (from == MEM), D32,  source, 0x1000 - text_sector_size - 4);
+    inset_memory(trm(to, from), D32,  source, 0x1000 - text_sector_size - 4);
 
-    inset_immediate((to == REG) && (from == IMM), size, source);
+    inset_immediate(tri(to, from), size, source);
 
-    inset_memory((to == MEM) && (from == REG), D32,  destination, 0x1000 - text_sector_size - 4);
-    inset_memory((to == MEM) && (from == IMM), D32,  destination, 0x1000 - text_sector_size - 4);
+    inset_memory(tmr(to, from), D32,  destination, 0x1000 - text_sector_size - 4);
+    inset_memory(tmi(to, from), D32,  destination, 0x1000 - text_sector_size - 4);
 
-    inset_immediate((to == MEM) && (from == IMM), size, source);
+    inset_immediate(tmi(to, from), size, source);
 
-    inset_memory((to == REG) && (from == REL), D32,  source, 0x4010b0 - text_sector_size - 4);
+    inset_memory(trl(to, from), D32,  source, 0x4010b0 - text_sector_size - 4);
 
     return 5;
 }
@@ -206,6 +282,9 @@ static uint32_t build_single(uint32_t * array) {
              size        = array[1],
              to          = array[2],
              destination = array[3];
+
+    debug_error(size > D64, "size : single = %i; -- XBA\n", size);
+    debug_error(to   > MEM, "to   : single = %i; -- XBA\n", to);
 
     short_prefix(size);
 
@@ -335,15 +414,28 @@ static uint32_t build_move(uint32_t * array) {
              destination = array[3],
              from        = array[4],
              source      = array[5],
-             extension   = array[6];
+             extension   = array[6],
+             offset      = 0x1000 - text_sector_size - 4;
+
+    debug_error(size > D64, "size : move = %i; -- XBA\n", size);
+    debug_error(to   > MEM, "to   : move = %i; -- XBA\n", to);
+    debug_error(from > IMM, "from : move = %i; -- XBA\n", from);
+
+    debug_printf("@ymov@- %s %s %u %s %u %u",
+                 size_name [size],
+                 operand_name [to],
+                 destination,
+                 operand_name [from],
+                 source,
+                 (size == D64) ? extension : 0);
 
     short_prefix(size);
 
     long_prefix(size, to, destination, from, source);
 
     inset((to == REG) && (from == REG), 0x88 + 0x01 * (size != D8));
-    inset((to == REG) && (from == MEM), 0x8a + 0x01 * (size != D8));
-    inset((to == MEM) && (from == REG), 0x88 + 0x01 * (size != D8));
+    inset(trm(to, from), 0x8a + 0x01 * (size != D8));
+    inset(tmr(to, from), 0x88 + 0x01 * (size != D8));
 
     modify_memory(destination, to, from);
     modify_memory(source,      to, from);
@@ -352,19 +444,20 @@ static uint32_t build_move(uint32_t * array) {
 
     inset((to == REG) && ((from == IMM) || (from == REL)), 0xb0 + 0x08 * (size != D8) + 0x01 * (destination & 0x07));
 
-    inset((to == MEM) && (from == IMM), 0xc6 + 0x01 * (size != D8));
-    inset((to == MEM) && (from == IMM), 0x05);
+    inset(tmi(to, from), 0xc6 + 0x01 * (size != D8));
+    inset(tmi(to, from), 0x05);
 
-    inset_memory((to == REG) && (from == MEM), D32, source,      0x1000 - text_sector_size - 4);
-    inset_memory((to == MEM) && (from == REG), D32, destination, 0x1000 - text_sector_size - 4);
-    inset_memory((to == MEM) && (from == IMM), D32, destination, 0x1000 - text_sector_size - 4);
-    inset_memory((to == REG) && (from == REL), D32, source,      0x4010b0);
+    inset_memory(trm(to, from), D32, source,      offset);
+    inset_memory(tmr(to, from), D32, destination, offset);
+    inset_memory(tmi(to, from), D32, destination, offset);
+    inset_memory(trl(to, from), D32, source,      0x4010b0);
 
-    inset_immediate((to == REG) && (from == IMM) && (size != D64), size, source);
-    inset_immediate((to == MEM) && (from == IMM) && (size != D64), size, source);
-    inset_immediate((to == REG) && (from == IMM) && (size == D64), D32,  source);
-    inset_immediate((to == REG) && (from == IMM) && (size == D64), D32,  extension);
-    inset_immediate((to == REG) && (from == IMM) && (size == D64), D32,  0);
+    inset_immediate(tri(to, from) && (size <= D32), size, source);
+    inset_immediate(tmi(to, from) && (size <= D32), size, source);
+
+    inset_immediate(tri(to, from) && (size == D64), D32, source);
+    inset_immediate(tri(to, from) && (size == D64), D32, extension);
+    inset_immediate(tri(to, from) && (size == D64), D32, 0);
 
     return 5 + (size == D64);
 }
@@ -595,7 +688,15 @@ int32_t assemble (uint32_t count, uint32_t * array) {
     empty_store = calloc(1024ul, sizeof(*empty_store));
 
     for (uint32_t index = 0; index < count; ++index) {
+        uint32_t size = text_sector_size;
+
         index += build_instruction[array[index]](&array[index]);
+
+        debug_printf(" -- ");
+        for (uint32_t byte = 0; byte < text_sector_size - size; ++byte) {
+            debug_printf("%02X ", text_sector_byte[byte]);
+        }
+        debug_printf("\n");
     }
 
     main_entry_point = empty_store[0];

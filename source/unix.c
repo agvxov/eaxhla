@@ -1,4 +1,5 @@
 #include "unix.h"
+#include "debug.h"
 
 #include <string.h>
 
