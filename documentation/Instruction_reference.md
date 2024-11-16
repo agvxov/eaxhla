@@ -2,7 +2,40 @@
 
 ## The following instructions are fully supported:
 ```asm
-    ; XXX fillin
+    add,            or,             adc,            sbb,
+    and,            sub,            xor,            cmp,
+    inc,            dec,            not,            neg,
+    mul,            imul,           div,            idiv,
+    fadd,           fmul,           fcom,           fcomp,
+    fsub,           fsubr,          fdiv,           fdivr,
+    rol,            ror,            rcl,            rcr,
+    sal,            shr,            shl,            sar,
+    nop,            retn,           retf,           leave,
+    popf,           pushf,
+    syscall,        cpuid,          fnop,           fchs,
+    fabs,           ftst,           fxam,           fld1,
+    fldl2t,         fldl2e,         fldpi,          fldlg2,
+    fldln2,         fldz,           f2xm1,          fyl2x,
+    fptan,          fpatan,         fxtract,        fprem1,
+    fdecstp,        fincstp,        fprem,          fyl2xp1,
+    fsqrt,          fsincos,        frndint,        fscale,
+    fsin,           fcos,
+    enter,          call,           in,             out,
+    jmp,            mov,            pop,            push,
+    jo,             jno,            jb,             jae,
+    je,             jne,            jbe,            ja,
+    js,             jns,            jpe,            jpo,
+    jl,             jge,            jle,            jg,
+    cmovo,          cmovno,         cmovb,          cmovae,
+    cmove,          cmovne,         cmovbe,         cmova,
+    cmovs,          cmovns,         cmovpe,         cmovpo,
+    cmovl,          cmovge,         cmovle,         cmovg,
+    seto,           setno,          setb,           setae,
+    sete,           setne,          setbe,          seta,
+    sets,           setns,          setpe,          setpo,
+    setl,           setge,          setle,          setg,
+    bswap,          bsf,            bsr,            loop,
+    loope,          loopne
 ```
 
 ## 2 argument instructions (t6)
