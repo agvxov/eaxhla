@@ -4,23 +4,23 @@
 #include <stdlib.h>
 
 #define DOUBLE_BEGIN   (ADD)
-#define DOUBLE_END     (CMP)
+//~#define DOUBLE_END     (CMP)
 #define SINGLE_BEGIN   (INC)
-#define SINGLE_END     (IDIV)
+//~#define SINGLE_END     (IDIV)
 #define STATIC_1_BEGIN (NOP)
-#define STATIC_1_END   (PUSHF)
+//~#define STATIC_1_END   (PUSHF)
 #define STATIC_2_BEGIN (SYSCALL)
-#define STATIC_2_END   (FCOS)
+//~#define STATIC_2_END   (FCOS)
 #define JUMP_IF_BEGIN  (JO)
-#define JUMP_IF_END    (JG)
+//~#define JUMP_IF_END    (JG)
 #define MOVE_IF_BEGIN  (CMOVO)
-#define MOVE_IF_END    (CMOVG)
+//~#define MOVE_IF_END    (CMOVG)
 #define SET_IF_BEGIN   (SETO)
-#define SET_IF_END     (SETG)
+//~#define SET_IF_END     (SETG)
 #define FLOAT_BEGIN    (FADD)
-#define FLOAT_END      (FDIVR)
+//~#define FLOAT_END      (FDIVR)
 #define SHIFT_BEGIN    (ROL)
-#define SHIFT_END      (SAR)
+//~#define SHIFT_END      (SAR)
 
 #if DEBUG == 1
 
@@ -73,50 +73,50 @@ static const char * operation_name [] = {
 
 #endif
 
-static uint32_t   empty_count = 1;
-static uint32_t   empty_holes = 1;
-static uint32_t * empty_array = NULL;
-static uint32_t * empty_imbue = NULL;
-static uint32_t * empty_store = NULL;
+static int   empty_count = 1;
+static int   empty_holes = 1;
+static int * empty_array = NULL;
+static int * empty_imbue = NULL;
+static int * empty_store = NULL;
 
-static void replace(uint8_t  * destination,
-                    uint8_t  * source,
-                    uint64_t   size) {
-    for (--size; size != ~0ul; --size) {
+static void replace(char * destination,
+                    char * source,
+                    int    size) {
+    for (--size; size != -1; --size) {
         destination[size] = source[size];
     }
 }
 
-static void inset(int32_t  when,
-                  uint32_t data) {
-    text_sector_byte[text_sector_size] = (uint8_t)data;
+static void inset(int  when,
+                  int data) {
+    text_sector_byte[text_sector_size] = (char)data;
 
-    text_sector_size += (uint32_t)when;
+    text_sector_size += (int)when;
 }
 
-static void inset_immediate(int32_t  when,
-                            uint32_t size,
-                            uint32_t data) {
+static void inset_immediate(int  when,
+                            int size,
+                            int data) {
     inset((when),                  (data >>  0) & 0xff);
     inset((when) && (size >= D16), (data >>  8) & 0xff);
     inset((when) && (size >= D32), (data >> 16) & 0xff);
     inset((when) && (size >= D32), (data >> 24) & 0xff);
 }
 
-static void inset_memory(int32_t  when,
-                         uint32_t size,
-                         uint32_t data,
-                         uint32_t base) {
+static void inset_memory(int  when,
+                         int size,
+                         int data,
+                         int base) {
     empty_array[empty_holes] = text_sector_size;
     empty_imbue[empty_holes] = data;
 
-    empty_holes += (uint32_t)when;
+    empty_holes += (int)when;
 
     inset_immediate(when, size, base);
 }
 
-static uint32_t store_relative(uint32_t * array) {
-    uint32_t relative = array[1];
+static int store_relative(int * array) {
+    int relative = array[1];
 
     empty_array[empty_holes] = text_sector_size;
     empty_imbue[empty_holes] = relative;
@@ -126,8 +126,8 @@ static uint32_t store_relative(uint32_t * array) {
     return 1;
 }
 
-static uint32_t store_memory(uint32_t * array) {
-    uint32_t memory = array[1];
+static int store_memory(int * array) {
+    int memory = array[1];
 
     empty_store[memory] = text_sector_size;
 
@@ -136,95 +136,85 @@ static uint32_t store_memory(uint32_t * array) {
     return 1;
 }
 
-static uint32_t store_immediate(uint32_t * array) {
-    uint32_t size   = array[1],
+static int store_immediate(int * array) {
+    int size   = array[1],
              amount = array[2];
 
-    for (uint32_t index = 0; index < amount; ++index) {
+    for (int index = 0; index < amount; ++index) {
         inset_immediate(1, size, array[3 + index]);
     }
 
     return amount + 2;
 }
 
-static int32_t front(uint32_t data) {
-    return (data >= GR4) && (data <= GR7);
-}
-
-static int32_t lower(uint32_t data) {
-    return data <= GR7;
-}
-
-static int32_t upper(uint32_t data) {
-    return (data >= GR8) && (data <= GR15);
-}
+static int front(int data) { return (data >= GR4) && (data <= GR7); }
+static int upper(int data) { return (data >= GR8) && (data <= GR15); }
+static int lower(int data) { return data <= GR7; }
 
 // We don't use these yet, hardcoded.
-static int32_t far(uint32_t label) {
-    return label && 1;
+static int far(int label)  { return label && 1; }
+static int near(int label) { return label && 0; }
+
+static int trr(int to, int from) {
+    return (to == REG) && (from == REG);
 }
 
-// We don't use these yet, hardcoded.
-static int32_t near(uint32_t label) {
-    return label && 0;
-}
-
-static void short_prefix(uint32_t size) {
-    inset(size == D16, 0x66);
-}
-
-static int32_t trm(uint32_t to, uint32_t from) {
+static int trm(int to, int from) {
     return (to == REG) && (from == MEM);
 }
 
-static int32_t tmr(uint32_t to, uint32_t from) {
+static int tmr(int to, int from) {
     return (to == MEM) && (from == REG);
 }
 
-static int32_t tmi(uint32_t to, uint32_t from) {
+static int tmi(int to, int from) {
     return (to == MEM) && (from == IMM);
 }
 
-static int32_t trl(uint32_t to, uint32_t from) {
-    return (to == REG) && (from == REL);
-}
-
-static int32_t tri(uint32_t to, uint32_t from) {
+static int tri(int to, int from) {
     return (to == REG) && (from == IMM);
 }
 
-static void long_prefix(uint32_t size,
-                        uint32_t to,
-                        uint32_t destination,
-                        uint32_t from,
-                        uint32_t source) {
-    uint32_t to_upper   = (to   == REG) && (upper(destination));
-    uint32_t from_upper = (from == REG) && (upper(source));
+static int trl(int to, int from) {
+    return (to == REG) && (from == REL);
+}
+
+static void short_prefix(int size) {
+    inset(size == D16, 0x66);
+}
+
+static void long_prefix(int size,
+                        int to,
+                        int destination,
+                        int from,
+                        int source) {
+    int to_upper   = (to   == REG) && (upper(destination));
+    int from_upper = (from == REG) && (upper(source));
 
     // Refactor.
     inset ((size == D64) || (to_upper) || (from_upper), 0x40 +
         0x01 * to_upper + 0x04 * from_upper + 0x08 * (size == D64));
 }
 
-static void modify_registers(uint32_t to,
-                             uint32_t destination,
-                             uint32_t from,
-                             uint32_t source) {
+static void modify_registers(int to,
+                             int destination,
+                             int from,
+                             int source) {
     // Refactor.
-    inset ((to == REG) && (from == REG), 0xc0 + 0x01 * (destination & 0x07) + 0x08 * (source & 0x07));
+    inset (trr(to, from), 0xc0 + 0x01 * (destination & 0x07) + 0x08 * (source & 0x07));
 }
 
-static void modify_memory(uint32_t operation,
-                          uint32_t to,
-                          uint32_t from) {
+static void modify_memory(int operation,
+                          int to,
+                          int from) {
     // Refactor.
     inset ((tmr(to, from)) || (trm(to, from)), 0x05 +
         0x08 * operation * (tmi(to, from)));
 }
 
 // REFACTORING IN PROGRESS
-static uint32_t build_double(uint32_t * array) {
-    uint32_t operation   = array[0],
+static int build_double(int * array) {
+    int operation   = array[0],
              size        = array[1],
              to          = array[2],
              destination = array[3],
@@ -234,6 +224,14 @@ static uint32_t build_double(uint32_t * array) {
     debug_error(size > D64, "size : double = %i; -- XBA\n", size);
     debug_error(to   > MEM, "to   : double = %i; -- XBA\n", to);
     debug_error(from > IMM, "from : double = %i; -- XBA\n", from);
+
+    debug_printf("@y%s@- @b%s@- @c%s@- %u @c%s@- %u",
+                 operation_name [operation],
+                 size_name [size],
+                 operand_name [to],
+                 destination,
+                 operand_name [from],
+                 source);
 
     short_prefix(size);
 
@@ -277,14 +275,20 @@ static uint32_t build_double(uint32_t * array) {
     return 5;
 }
 
-static uint32_t build_single(uint32_t * array) {
-    uint32_t operation   = array[0],
+static int build_single(int * array) {
+    int operation   = array[0],
              size        = array[1],
              to          = array[2],
              destination = array[3];
 
     debug_error(size > D64, "size : single = %i; -- XBA\n", size);
     debug_error(to   > MEM, "to   : single = %i; -- XBA\n", to);
+
+    debug_printf("@y%s@- @b%s@- @c%s@- %u",
+                 operation_name [operation],
+                 size_name [size],
+                 operand_name [to],
+                 destination);
 
     short_prefix(size);
 
@@ -305,35 +309,39 @@ static uint32_t build_single(uint32_t * array) {
     return 3;
 }
 
-static uint32_t build_static_1(uint32_t * array) {
-    uint32_t operation = array[0];
+static int build_static_1(int * array) {
+    int operation = array[0];
 
-    const uint8_t data[] = {
+    const unsigned char data[] = {
         0x90, 0xc3, 0xcb, 0xc9, 0x9d, 0x9c
     };
+
+    debug_printf("@y%s@-", operation_name [operation]);
 
     inset(1, data[operation - STATIC_1_BEGIN]);
 
     return 0;
 }
 
-static uint32_t build_static_2(uint32_t * array) {
-    uint32_t operation = array[0];
+static int build_static_2(int * array) {
+    int operation = array[0];
 
-    const uint16_t data[] = {
+    const unsigned short data[] = {
         0x050f, 0xa20f, 0xd0d9, 0xe0d9, 0xe1d9, 0xe4d9, 0xe5d9, 0xe8d9,
         0xe9d9, 0xead9, 0xebd9, 0xecd9, 0xedd9, 0xeed9, 0xf0d9, 0xf1d9,
         0xf2d9, 0xf3d9, 0xf4d9, 0xf5d9, 0xf6d9, 0xf7d9, 0xf8d9, 0xf9d9,
         0xfad9, 0xfbd9, 0xfcd9, 0xfdd9, 0xfed9, 0xffd9
     };
 
+    debug_printf("@y%s@-", operation_name [operation]);
+
     inset_immediate(1, D16, data[operation - STATIC_2_BEGIN]);
 
     return 0;
 }
 
-static uint32_t build_jump_if(uint32_t * array) {
-    uint32_t operation = array[0],
+static int build_jump_if(int * array) {
+    int operation = array[0],
              size      = array[1],
              location  = array[3];
 
@@ -347,8 +355,8 @@ static uint32_t build_jump_if(uint32_t * array) {
     return 3;
 }
 
-static uint32_t build_move_if(uint32_t * array) {
-    uint32_t operation   = array[0],
+static int build_move_if(int * array) {
+    int operation   = array[0],
              size        = array[1],
              to          = array[2],
              destination = array[3],
@@ -369,8 +377,8 @@ static uint32_t build_move_if(uint32_t * array) {
     return 5;
 }
 
-static uint32_t build_set_if(uint32_t * array) {
-    uint32_t operation   = array[0],
+static int build_set_if(int * array) {
+    int operation   = array[0],
              to          = array[2],
              destination = array[3];
 
@@ -388,8 +396,8 @@ static uint32_t build_set_if(uint32_t * array) {
     return 3;
 }
 
-static uint32_t build_jump(uint32_t * array) {
-    uint32_t size        = array[1],
+static int build_jump(int * array) {
+    int size        = array[1],
              to          = array[2],
              destination = array[3];
 
@@ -408,8 +416,8 @@ static uint32_t build_jump(uint32_t * array) {
 }
 
 // Please refactor this entire crap...
-static uint32_t build_move(uint32_t * array) {
-    uint32_t size        = array[1],
+static int build_move(int * array) {
+    int size        = array[1],
              to          = array[2],
              destination = array[3],
              from        = array[4],
@@ -421,7 +429,7 @@ static uint32_t build_move(uint32_t * array) {
     debug_error(to   > MEM, "to   : move = %i; -- XBA\n", to);
     debug_error(from > IMM, "from : move = %i; -- XBA\n", from);
 
-    debug_printf("@ymov@- %s %s %u %s %u %u",
+    debug_printf("@ymov@- @b%s@- @c%s@- %u @c%s@- %u %u",
                  size_name [size],
                  operand_name [to],
                  destination,
@@ -433,7 +441,7 @@ static uint32_t build_move(uint32_t * array) {
 
     long_prefix(size, to, destination, from, source);
 
-    inset((to == REG) && (from == REG), 0x88 + 0x01 * (size != D8));
+    inset(trr(to, from), 0x88 + 0x01 * (size != D8));
     inset(trm(to, from), 0x8a + 0x01 * (size != D8));
     inset(tmr(to, from), 0x88 + 0x01 * (size != D8));
 
@@ -462,9 +470,13 @@ static uint32_t build_move(uint32_t * array) {
     return 5 + (size == D64);
 }
 
-static uint32_t build_call(uint32_t * array) {
-    uint32_t from   = array[1],
-             source = array[2];
+static int build_call(int * array) {
+    int from   = array[1],
+        source = array[2];
+
+    debug_printf("@ycall@- @c%s@- %u",
+                 operand_name [from],
+                 source);
 
     inset((from == REG) && (upper(source)), 0x41);
 
@@ -478,9 +490,11 @@ static uint32_t build_call(uint32_t * array) {
     return 2;
 }
 
-static uint32_t build_enter(uint32_t * array) {
-    uint32_t dynamic_storage = array[1],
+static int build_enter(int * array) {
+    int dynamic_storage = array[1],
              nesting_level   = array[2];
+
+    debug_printf("@yenter@- %u %u", dynamic_storage, nesting_level);
 
     inset(1, 0xc8);
 
@@ -490,27 +504,28 @@ static uint32_t build_enter(uint32_t * array) {
     return 2;
 }
 
-static uint32_t build_float(uint32_t * array) {
-    uint32_t operation = array[0],
-             size      = array[1],
-             from      = array[2],
-             source    = array[3];
+// Check if this works at all...
+static int build_float(int * array) {
+    int operation = array[0],
+        size      = array[1],
+        from      = array[2],
+        source    = array[3];
 
     inset(from == MEM, 0xd8 + 0x04 * (size == D64));
 
-    modify_memory(operation, 0, from);
+    modify_memory(operation - FLOAT_BEGIN, 0, from);
 
     inset_memory(from == MEM, size, source, 0);
 
     return 3;
 }
 
-static uint32_t build_shift(uint32_t * array) {
-    uint32_t operation   = array[0],
-             size        = array[1],
-             to          = array[2],
-             destination = array[3],
-             offset      = array[5];
+static int build_shift(int * array) {
+    int operation   = array[0],
+        size        = array[1],
+        to          = array[2],
+        destination = array[3],
+        offset      = array[5];
 
     short_prefix(size);
 
@@ -518,8 +533,8 @@ static uint32_t build_shift(uint32_t * array) {
 
     inset(1, 0xc0 + 0x01 * (size != D8));
 
-    inset(to == REG, 0x05 + 0x08 * (operation & 7));
-    inset(to == MEM, 0xc0 + 0x08 * (operation & 7));
+    inset(to == REG, 0x05 + 0x08 * ((operation - SHIFT_BEGIN) & 7));
+    inset(to == MEM, 0xc0 + 0x08 * ((operation - SHIFT_BEGIN) & 7));
 
     inset_memory(to == MEM, D32, destination, 0x1000 - text_sector_size - 4);
 
@@ -528,8 +543,8 @@ static uint32_t build_shift(uint32_t * array) {
     return 5;
 }
 
-static uint32_t build_in_out(uint32_t * array) {
-    uint32_t move = array[0],
+static int build_in_out(int * array) {
+    int move = array[0],
              size = array[1],
              type = array[2],
              port = array[3];
@@ -544,8 +559,8 @@ static uint32_t build_in_out(uint32_t * array) {
     return 3;
 }
 
-static uint32_t build_pop(uint32_t * array) {
-    uint32_t size        = array[1],
+static int build_pop(int * array) {
+    int size        = array[1],
              to          = array[2],
              destination = array[3];
 
@@ -562,8 +577,8 @@ static uint32_t build_pop(uint32_t * array) {
     return 3;
 }
 
-static uint32_t build_push(uint32_t * array) {
-    uint32_t size   = array[1],
+static int build_push(int * array) {
+    int size   = array[1],
              from   = array[2],
              source = array[3];
 
@@ -583,8 +598,8 @@ static uint32_t build_push(uint32_t * array) {
     return 3;
 }
 
-static uint32_t build_swap(uint32_t * array) {
-    uint32_t size        = array[1],
+static int build_swap(int * array) {
+    int size        = array[1],
              destination = array[3];
 
     long_prefix(size, REG, destination, 0, 0);
@@ -595,8 +610,8 @@ static uint32_t build_swap(uint32_t * array) {
     return 3;
 }
 
-static uint32_t build_bit_scan(uint32_t * array) {
-    uint32_t size        = array[1],
+static int build_bit_scan(int * array) {
+    int size        = array[1],
              destination = array[3],
              from        = array[4],
              source      = array[5];
@@ -616,8 +631,8 @@ static uint32_t build_bit_scan(uint32_t * array) {
     return 5;
 }
 
-static uint32_t build_loop(uint32_t * array) {
-    uint32_t location = array[3];
+static int build_loop(int * array) {
+    int location = array[3];
 
     inset(array[0] == LOOPNE, 0xe0);
     inset(array[0] == LOOPE,  0xe1);
@@ -628,7 +643,7 @@ static uint32_t build_loop(uint32_t * array) {
     return 3;
 }
 
-static uint32_t (*build_instruction[])(uint32_t * array) = {
+static int (*build_instruction[])(int * array) = {
     store_memory,   // ASMDIRMEM : LABEL
     store_relative, // ASMDIRREL : "IMPLEMENTED"
     store_immediate,// ASMDIRIMM : LITERAL
@@ -669,15 +684,15 @@ static uint32_t (*build_instruction[])(uint32_t * array) = {
     build_loop,     build_loop
 };
 
-uint32_t   main_entry_point = 0;
-uint32_t   text_sector_size = 0;
-uint8_t  * text_sector_byte = NULL;
-uint32_t   data_sector_size = 0;    // This is unused, and it should be used...
-uint8_t  * data_sector_byte = NULL; // This is unused, and it should be used...
+int    main_entry_point = 0;
+int    text_sector_size = 0;
+char * text_sector_byte = NULL;
+int    data_sector_size = 0;    // This is unused, and it should be used...
+char * data_sector_byte = NULL; // This is unused, and it should be used...
 
-int32_t was_instruction_array_empty = 0;
+int was_instruction_array_empty = 0;
 
-int32_t assemble (uint32_t count, uint32_t * array) {
+int assemble (int count, int * array) {
     if ((!count) || (!array)) {
         was_instruction_array_empty = 1;
         return EXIT_FAILURE;
@@ -687,29 +702,31 @@ int32_t assemble (uint32_t count, uint32_t * array) {
     empty_imbue = calloc(1024ul, sizeof(*empty_imbue));
     empty_store = calloc(1024ul, sizeof(*empty_store));
 
-    for (uint32_t index = 0; index < count; ++index) {
-        uint32_t size = text_sector_size;
+    for (int index = 0; index < count; ++index) {
+        inset(array[index] > ASMDIRREP, 0x90);
+
+        int size = text_sector_size;
 
         index += build_instruction[array[index]](&array[index]);
 
         debug_printf(" -- ");
-        for (uint32_t byte = 0; byte < text_sector_size - size; ++byte) {
-            debug_printf("%02X ", text_sector_byte[byte]);
+        for (int byte = size; byte < text_sector_size; ++byte) {
+            debug_printf("@p%02X@- ", (unsigned char)text_sector_byte[byte]);
         }
         debug_printf("\n");
     }
 
     main_entry_point = empty_store[0];
 
-    for (uint32_t index = 1; index < empty_holes; ++index) {
-        uint32_t set = 0;
-        uint32_t get = empty_array[index];
+    for (int index = 1; index < empty_holes; ++index) {
+        int set = 0;
+        int get = empty_array[index];
 
-        replace((uint8_t*)&set, &text_sector_byte[get], sizeof(set));
+        replace((char*)&set, &text_sector_byte[get], (int)sizeof(set));
 
         set += empty_store[empty_imbue[index]];
 
-        replace(&text_sector_byte[get], (uint8_t*)&set, sizeof(get));
+        replace(&text_sector_byte[get], (char*)&set, (int)sizeof(get));
     }
 
     free(empty_array);

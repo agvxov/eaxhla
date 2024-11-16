@@ -15,8 +15,8 @@
 #include "debug.h"
 #include "printf2.h"
 
-unsigned int * token_array = NULL;
-unsigned int   token_count = 0;
+int * token_array = NULL;
+int   token_count = 0;
 
 char * output_file_name = "a.out";
 

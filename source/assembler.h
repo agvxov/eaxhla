@@ -1,8 +1,6 @@
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
 
-#include <stdint.h>
-
 #define JNPE (JPO)
 #define JNPO (JPE)
 #define JNB  (JAE)
@@ -36,16 +34,16 @@
 #define SETNG  (SETLE)
 #define SETNGE (SETL)
 
-typedef enum {
+enum {
     D8,             D16,            D32,            D64,
     D80,            D128,           D256,           D512
-} size_type_t;
+};
 
-typedef enum {
+enum {
     REL,            REG,            MEM,            IMM
-} operand_type_t;
+};
 
-typedef enum {
+enum {
     ASMDIRMEM,      ASMDIRREL,      ASMDIRIMM,      ASMDIRREP,
     ADD,            OR,             ADC,            SBB,
     AND,            SUB,            XOR,            CMP,
@@ -81,21 +79,21 @@ typedef enum {
     SETL,           SETGE,          SETLE,          SETG,
     BSWAP,          BSF,            BSR,            LOOP,
     LOOPE,          LOOPNE
-} operation_type_t;
+};
 
-typedef enum {
+enum {
     GR0,            GR1,            GR2,            GR3,
     GR4,            GR5,            GR6,            GR7,
     GR8,            GR9,            GR10,           GR11,
     GR12,           GR13,           GR14,           GR15
-} general_register_t;
+};
 
-typedef enum {
+enum {
     FR0,            FR1,            FR2,            FR3,
     FR4,            FR5,            FR6,            FR7
-} float_register_t;
+};
 
-typedef enum {
+enum {
     VR0,            VR1,            VR2,            VR3,
     VR4,            VR5,            VR6,            VR7,
     VR8,            VR9,            VR10,           VR11,
@@ -104,17 +102,17 @@ typedef enum {
     VR20,           VR21,           VR22,           VR23,
     VR24,           VR25,           VR26,           VR27,
     VR28,           VR29,           VR30,           VR31
-} vector_register_t; // We don't use them currently.
+}; // We don't use them currently.
 
-extern uint32_t   main_entry_point;
-extern uint32_t   text_sector_size;
-extern uint8_t  * text_sector_byte;
-extern uint32_t   data_sector_size; // This is unused, and it should be used...
-extern uint8_t  * data_sector_byte; // This is unused, and it should be used...
+extern int    main_entry_point;
+extern int    text_sector_size;
+extern char * text_sector_byte;
+extern int    data_sector_size; // This is unused, and it should be used...
+extern char * data_sector_byte; // This is unused, and it should be used...
 
-extern int32_t was_instruction_array_empty;
+extern int was_instruction_array_empty;
 
-extern int32_t assemble(uint32_t   count,
-                        uint32_t * array);
+extern int assemble(int   count,
+                    int * array);
 
 #endif

@@ -20,7 +20,6 @@ end procedure
 
 unix program main
 begin
-	mov r10d 0x11223344
 	fastcall heyo
 	fastcall cyaa
 	fastcall heyo
