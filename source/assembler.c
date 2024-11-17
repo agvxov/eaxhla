@@ -157,6 +157,8 @@ static void modify_memory(int operation,
 static int store_relative(int * array) {
     int relative = array[1];
 
+    debug_print("@yasmrel@- %i", relative);
+
     empty_array[empty_holes] = text_sector_size;
     empty_imbue[empty_holes] = relative;
 
@@ -168,6 +170,8 @@ static int store_relative(int * array) {
 static int store_memory(int * array) {
     int memory = array[1];
 
+    debug_print("@yasmmem@- %i", memory);
+
     empty_store[memory] = text_sector_size;
 
     ++empty_count;
@@ -178,6 +182,8 @@ static int store_memory(int * array) {
 static int store_immediate(int * array) {
     int size   = array[1],
              amount = array[2];
+
+    debug_print("@yasmimm@- @b%s@- %i", size_name [size], amount);
 
     for (int index = 0; index < amount; ++index) {
         inset_immediate(1, size, array[3 + index]);
@@ -199,7 +205,7 @@ static int build_double(int * array) {
     debug_error(to   > MEM, "to   : double = %i; -- XBA\n", to);
     debug_error(from > IMM, "from : double = %i; -- XBA\n", from);
 
-    debug_print("@y%s@- @b%s@- @c%s@- %u @c%s@- %u",
+    debug_print("@y%s@- @b%s@- @c%s@- %i @c%s@- %i",
                 operation_name [operation],
                 size_name [size],
                 operand_name [to],
@@ -258,7 +264,7 @@ static int build_single(int * array) {
     debug_error(size > D64, "size : single = %i; -- XBA\n", size);
     debug_error(to   > MEM, "to   : single = %i; -- XBA\n", to);
 
-    debug_print("@y%s@- @b%s@- @c%s@- %u",
+    debug_print("@y%s@- @b%s@- @c%s@- %i",
                 operation_name [operation],
                 size_name [size],
                 operand_name [to],
@@ -316,8 +322,13 @@ static int build_static_2(int * array) {
 
 static int build_jump_if(int * array) {
     int operation = array[0],
-             size      = array[1],
-             location  = array[3];
+        size      = array[1],
+        location  = array[3];
+
+    debug_print("@y%s@- @b%s@- @crel@- %i",
+                operation_name [operation],
+                size_name [size],
+                location);
 
     inset(far(location) && (size == D32), 0x0f);
 
@@ -331,11 +342,19 @@ static int build_jump_if(int * array) {
 
 static int build_move_if(int * array) {
     int operation   = array[0],
-             size        = array[1],
-             to          = array[2],
-             destination = array[3],
-             from        = array[4],
-             source      = array[5];
+        size        = array[1],
+        to          = array[2],
+        destination = array[3],
+        from        = array[4],
+        source      = array[5];
+
+    debug_print("@y%s@- @b%s@- @c%s@- %i @c%s@- %i",
+                operation_name [operation],
+                size_name [size],
+                operand_name [to],
+                destination,
+                operand_name [from],
+                source);
 
     short_prefix(size);
 
@@ -353,8 +372,17 @@ static int build_move_if(int * array) {
 
 static int build_set_if(int * array) {
     int operation   = array[0],
-             to          = array[2],
-             destination = array[3];
+        size        = array[1],
+        to          = array[2],
+        destination = array[3];
+
+    debug_error(size != D8, "bla bla");
+
+    debug_print("@y%s@- @b%s@- @c%s@- %i",
+                operation_name [operation],
+                size_name [size],
+                operand_name [to],
+                destination);
 
     inset((to == REG) && (front(destination)), 0x40);
     inset((to == REG) && (upper(destination)), 0x41);
@@ -374,6 +402,11 @@ static int build_jump(int * array) {
     int size        = array[1],
              to          = array[2],
              destination = array[3];
+
+    debug_print("@yjmp@- @b%s@- @c%s@- %i",
+                size_name [size],
+                operand_name [to],
+                destination);
 
     inset((to == REG) && upper(destination), 0X41);
 
@@ -403,7 +436,7 @@ static int build_move(int * array) {
     debug_error(to   > MEM, "to   : move = %i; -- XBA\n", to);
     debug_error(from > IMM, "from : move = %i; -- XBA\n", from);
 
-    debug_print("@ymov@- @b%s@- @c%s@- %u @c%s@- %u %u",
+    debug_print("@ymov@- @b%s@- @c%s@- %i @c%s@- %i %i",
                 size_name [size],
                 operand_name [to],
                 destination,
@@ -448,9 +481,7 @@ static int build_call(int * array) {
     int from   = array[1],
         source = array[2];
 
-    debug_print("@ycall@- @c%s@- %u",
-                operand_name [from],
-                source);
+    debug_print("@ycall@- @c%s@- %i", operand_name [from], source);
 
     inset((from == REG) && (upper(source)), 0x41);
 
@@ -466,9 +497,9 @@ static int build_call(int * array) {
 
 static int build_enter(int * array) {
     int dynamic_storage = array[1],
-             nesting_level   = array[2];
+        nesting_level   = array[2];
 
-    debug_print("@yenter@- %u %u", dynamic_storage, nesting_level);
+    debug_print("@yenter@- %i %i", dynamic_storage, nesting_level);
 
     inset(1, 0xc8);
 
@@ -485,6 +516,12 @@ static int build_float(int * array) {
         from      = array[2],
         source    = array[3];
 
+    debug_print("@y%s@- @b%s@- @c%s@- %i",
+                operation_name [operation],
+                size_name [size],
+                operand_name [from],
+                source);
+
     inset(from == MEM, 0xd8 + 0x04 * (size == D64));
 
     modify_memory(operation - FLOAT_BEGIN, 0, from);
@@ -500,6 +537,13 @@ static int build_shift(int * array) {
         to          = array[2],
         destination = array[3],
         offset      = array[5];
+
+    debug_print("@y%s@- @b%s@- @c%s@- %i @cimm@- %i",
+                operation_name [operation],
+                size_name [size],
+                operand_name [to],
+                destination,
+                offset);
 
     short_prefix(size);
 
@@ -523,6 +567,12 @@ static int build_in_out(int * array) {
              type = array[2],
              port = array[3];
 
+    debug_print("@y%s@- @b%s@- @c%s@- %i",
+                operation_name [move],
+                size_name [size],
+                operand_name [type],
+                port);
+
     short_prefix(size);
 
     // Shorten and extend, I think we're not covering all cases.
@@ -537,6 +587,11 @@ static int build_pop(int * array) {
     int size        = array[1],
              to          = array[2],
              destination = array[3];
+
+    debug_print("@ypop@- @b%s@- @c%s@- %i",
+                size_name [size],
+                operand_name [to],
+                destination);
 
     short_prefix(size);
 
@@ -555,6 +610,11 @@ static int build_push(int * array) {
     int size   = array[1],
              from   = array[2],
              source = array[3];
+
+    debug_print("@ypush@- @b%s@- @c%s@- %i",
+                size_name [size],
+                operand_name [from],
+                source);
 
     short_prefix(size);
 
@@ -576,6 +636,10 @@ static int build_swap(int * array) {
     int size        = array[1],
              destination = array[3];
 
+    debug_print("@yswap@- @b%s@- @creg@- %i",
+                size_name [size],
+                destination);
+
     long_prefix(size, REG, destination, 0, 0);
 
     inset(1, 0x0f);
@@ -584,17 +648,26 @@ static int build_swap(int * array) {
     return 3;
 }
 
+// Forward or reverse...?!
 static int build_bit_scan(int * array) {
-    int size        = array[1],
-             destination = array[3],
-             from        = array[4],
-             source      = array[5];
+    int operation   = array[0],
+        size        = array[1],
+        destination = array[3],
+        from        = array[4],
+        source      = array[5];
+
+    debug_print("@y%s@- @b%s@- @creg@- %i @c%s@- %i",
+                operation_name [operation],
+                size_name [size],
+                destination,
+                operand_name [from],
+                source);
 
     short_prefix(size);
 
     long_prefix(size, REG, destination, from, source);
 
-    inset_immediate(1, D16, 0xbc0f);
+    inset_immediate(1, D16, 0xbc0f + 0x100 * (operation == BSR));
 
     modify_registers(REG, destination, from, source);
 
@@ -606,11 +679,16 @@ static int build_bit_scan(int * array) {
 }
 
 static int build_loop(int * array) {
-    int location = array[3];
+    int operation = array[0],
+        location  = array[3];
 
-    inset(array[0] == LOOPNE, 0xe0);
-    inset(array[0] == LOOPE,  0xe1);
-    inset(array[0] == LOOP,   0xe2);
+    debug_print("@y%s@- @bd8@- @crel@- %i",
+                operation_name [operation],
+                location);
+
+    inset(operation == LOOPNE, 0xe0);
+    inset(operation == LOOPE,  0xe1);
+    inset(operation == LOOP,   0xe2);
 
     inset_memory(1, D8, location, -text_sector_size - 1);
 
@@ -683,7 +761,7 @@ int assemble (int count, int * array) {
 
         index += build_instruction[array[index]](&array[index]);
 
-        debug_print(" -- ");
+        debug_print(" @a--@- ");
         for (int byte = size; byte < text_sector_size; ++byte) {
             debug_print("@p%02X@- ", (unsigned char)text_sector_byte[byte]);
         }
