@@ -4,23 +4,14 @@
 #include <stdlib.h>
 
 #define DOUBLE_BEGIN   (ADD)
-//~#define DOUBLE_END     (CMP)
 #define SINGLE_BEGIN   (INC)
-//~#define SINGLE_END     (IDIV)
 #define STATIC_1_BEGIN (NOP)
-//~#define STATIC_1_END   (PUSHF)
 #define STATIC_2_BEGIN (SYSCALL)
-//~#define STATIC_2_END   (FCOS)
 #define JUMP_IF_BEGIN  (JO)
-//~#define JUMP_IF_END    (JG)
 #define MOVE_IF_BEGIN  (CMOVO)
-//~#define MOVE_IF_END    (CMOVG)
 #define SET_IF_BEGIN   (SETO)
-//~#define SET_IF_END     (SETG)
 #define FLOAT_BEGIN    (FADD)
-//~#define FLOAT_END      (FDIVR)
 #define SHIFT_BEGIN    (ROL)
-//~#define SHIFT_END      (SAR)
 
 #if DEBUG == 1
 
@@ -79,6 +70,21 @@ static int * empty_array = NULL;
 static int * empty_imbue = NULL;
 static int * empty_store = NULL;
 
+static int front(int data) { return (data >= GR4) && (data <= GR7);  }
+static int upper(int data) { return (data >= GR8) && (data <= GR15); }
+static int lower(int data) { return (data >= GR0) && (data <= GR7);  }
+
+// We don't use these yet, hardcoded.
+static int far (int label) { return label && 1; }
+static int near(int label) { return label && 0; }
+
+static int trr(int to, int from) { return (to == REG) && (from == REG); }
+static int trm(int to, int from) { return (to == REG) && (from == MEM); }
+static int tmr(int to, int from) { return (to == MEM) && (from == REG); }
+static int tmi(int to, int from) { return (to == MEM) && (from == IMM); }
+static int tri(int to, int from) { return (to == REG) && (from == IMM); }
+static int trl(int to, int from) { return (to == REG) && (from == REL); }
+
 static void replace(char * destination,
                     char * source,
                     int    size) {
@@ -115,70 +121,6 @@ static void inset_memory(int  when,
     inset_immediate(when, size, base);
 }
 
-static int store_relative(int * array) {
-    int relative = array[1];
-
-    empty_array[empty_holes] = text_sector_size;
-    empty_imbue[empty_holes] = relative;
-
-    ++empty_holes;
-
-    return 1;
-}
-
-static int store_memory(int * array) {
-    int memory = array[1];
-
-    empty_store[memory] = text_sector_size;
-
-    ++empty_count;
-
-    return 1;
-}
-
-static int store_immediate(int * array) {
-    int size   = array[1],
-             amount = array[2];
-
-    for (int index = 0; index < amount; ++index) {
-        inset_immediate(1, size, array[3 + index]);
-    }
-
-    return amount + 2;
-}
-
-static int front(int data) { return (data >= GR4) && (data <= GR7); }
-static int upper(int data) { return (data >= GR8) && (data <= GR15); }
-static int lower(int data) { return data <= GR7; }
-
-// We don't use these yet, hardcoded.
-static int far(int label)  { return label && 1; }
-static int near(int label) { return label && 0; }
-
-static int trr(int to, int from) {
-    return (to == REG) && (from == REG);
-}
-
-static int trm(int to, int from) {
-    return (to == REG) && (from == MEM);
-}
-
-static int tmr(int to, int from) {
-    return (to == MEM) && (from == REG);
-}
-
-static int tmi(int to, int from) {
-    return (to == MEM) && (from == IMM);
-}
-
-static int tri(int to, int from) {
-    return (to == REG) && (from == IMM);
-}
-
-static int trl(int to, int from) {
-    return (to == REG) && (from == REL);
-}
-
 static void short_prefix(int size) {
     inset(size == D16, 0x66);
 }
@@ -212,6 +154,38 @@ static void modify_memory(int operation,
         0x08 * operation * (tmi(to, from)));
 }
 
+static int store_relative(int * array) {
+    int relative = array[1];
+
+    empty_array[empty_holes] = text_sector_size;
+    empty_imbue[empty_holes] = relative;
+
+    ++empty_holes;
+
+    return 1;
+}
+
+static int store_memory(int * array) {
+    int memory = array[1];
+
+    empty_store[memory] = text_sector_size;
+
+    ++empty_count;
+
+    return 1;
+}
+
+static int store_immediate(int * array) {
+    int size   = array[1],
+             amount = array[2];
+
+    for (int index = 0; index < amount; ++index) {
+        inset_immediate(1, size, array[3 + index]);
+    }
+
+    return amount + 2;
+}
+
 // REFACTORING IN PROGRESS
 static int build_double(int * array) {
     int operation   = array[0],
@@ -225,13 +199,13 @@ static int build_double(int * array) {
     debug_error(to   > MEM, "to   : double = %i; -- XBA\n", to);
     debug_error(from > IMM, "from : double = %i; -- XBA\n", from);
 
-    debug_printf("@y%s@- @b%s@- @c%s@- %u @c%s@- %u",
-                 operation_name [operation],
-                 size_name [size],
-                 operand_name [to],
-                 destination,
-                 operand_name [from],
-                 source);
+    debug_print("@y%s@- @b%s@- @c%s@- %u @c%s@- %u",
+                operation_name [operation],
+                size_name [size],
+                operand_name [to],
+                destination,
+                operand_name [from],
+                source);
 
     short_prefix(size);
 
@@ -284,11 +258,11 @@ static int build_single(int * array) {
     debug_error(size > D64, "size : single = %i; -- XBA\n", size);
     debug_error(to   > MEM, "to   : single = %i; -- XBA\n", to);
 
-    debug_printf("@y%s@- @b%s@- @c%s@- %u",
-                 operation_name [operation],
-                 size_name [size],
-                 operand_name [to],
-                 destination);
+    debug_print("@y%s@- @b%s@- @c%s@- %u",
+                operation_name [operation],
+                size_name [size],
+                operand_name [to],
+                destination);
 
     short_prefix(size);
 
@@ -316,7 +290,7 @@ static int build_static_1(int * array) {
         0x90, 0xc3, 0xcb, 0xc9, 0x9d, 0x9c
     };
 
-    debug_printf("@y%s@-", operation_name [operation]);
+    debug_print("@y%s@-", operation_name [operation]);
 
     inset(1, data[operation - STATIC_1_BEGIN]);
 
@@ -333,7 +307,7 @@ static int build_static_2(int * array) {
         0xfad9, 0xfbd9, 0xfcd9, 0xfdd9, 0xfed9, 0xffd9
     };
 
-    debug_printf("@y%s@-", operation_name [operation]);
+    debug_print("@y%s@-", operation_name [operation]);
 
     inset_immediate(1, D16, data[operation - STATIC_2_BEGIN]);
 
@@ -429,13 +403,13 @@ static int build_move(int * array) {
     debug_error(to   > MEM, "to   : move = %i; -- XBA\n", to);
     debug_error(from > IMM, "from : move = %i; -- XBA\n", from);
 
-    debug_printf("@ymov@- @b%s@- @c%s@- %u @c%s@- %u %u",
-                 size_name [size],
-                 operand_name [to],
-                 destination,
-                 operand_name [from],
-                 source,
-                 (size == D64) ? extension : 0);
+    debug_print("@ymov@- @b%s@- @c%s@- %u @c%s@- %u %u",
+                size_name [size],
+                operand_name [to],
+                destination,
+                operand_name [from],
+                source,
+                (size == D64) ? extension : 0);
 
     short_prefix(size);
 
@@ -474,9 +448,9 @@ static int build_call(int * array) {
     int from   = array[1],
         source = array[2];
 
-    debug_printf("@ycall@- @c%s@- %u",
-                 operand_name [from],
-                 source);
+    debug_print("@ycall@- @c%s@- %u",
+                operand_name [from],
+                source);
 
     inset((from == REG) && (upper(source)), 0x41);
 
@@ -494,7 +468,7 @@ static int build_enter(int * array) {
     int dynamic_storage = array[1],
              nesting_level   = array[2];
 
-    debug_printf("@yenter@- %u %u", dynamic_storage, nesting_level);
+    debug_print("@yenter@- %u %u", dynamic_storage, nesting_level);
 
     inset(1, 0xc8);
 
@@ -698,9 +672,9 @@ int assemble (int count, int * array) {
         return EXIT_FAILURE;
     }
 
-    empty_array = calloc(1024ul, sizeof(*empty_array));
-    empty_imbue = calloc(1024ul, sizeof(*empty_imbue));
-    empty_store = calloc(1024ul, sizeof(*empty_store));
+    empty_array = calloc(1024, sizeof(*empty_array));
+    empty_imbue = calloc(1024, sizeof(*empty_imbue));
+    empty_store = calloc(1024, sizeof(*empty_store));
 
     for (int index = 0; index < count; ++index) {
         inset(array[index] > ASMDIRREP, 0x90);
@@ -709,11 +683,11 @@ int assemble (int count, int * array) {
 
         index += build_instruction[array[index]](&array[index]);
 
-        debug_printf(" -- ");
+        debug_print(" -- ");
         for (int byte = size; byte < text_sector_size; ++byte) {
-            debug_printf("@p%02X@- ", (unsigned char)text_sector_byte[byte]);
+            debug_print("@p%02X@- ", (unsigned char)text_sector_byte[byte]);
         }
-        debug_printf("\n");
+        debug_print("\n");
     }
 
     main_entry_point = empty_store[0];

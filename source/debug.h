@@ -16,7 +16,7 @@ void breakpoint(void) { ; }
 
 __attribute__((unused))
 static
-void debug_printf(const char * const fmt, ...) {
+void debug_print(const char * const fmt, ...) {
     va_list args;
     va_start(args, fmt);
     vprintf2(fmt, args);
@@ -122,7 +122,7 @@ void debug_dump_tail(void) {
 #else
 
 # define debug_puts(msg)
-# define debug_printf(...)
+# define debug_print(...)
 # define debug_error(cond, fmt, ...)
 # define debug_dump_variables() do {} while (0)
 # define debug_dump_functions() do {} while (0)
