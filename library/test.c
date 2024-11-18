@@ -1,4 +1,6 @@
 #define ARENA_IMPLEMENTATION
+#define ARENA_BLOCK_ALLOCATION_SIZE (13)
+
 #include "arena.h"
 #include <stdio.h>
 
@@ -19,18 +21,18 @@ int main (void) {
 	printf("%s", c);
 
 	char * d;
-	d = arena_allocate (6);
-	strcpy(d, "Heyo\n");
+	d = arena_allocate (10);
+	strcpy(d, "Holy crap\n");
 	printf("%s", d);
 
 	char * e;
-	e = arena_allocate (6);
-	strcpy(e, "Heyo\n");
+	e = arena_allocate (8);
+	strcpy(e, "Serbia\n");
 	printf("%s", e);
 
 	char * f;
 	f = arena_allocate (6);
-	strcpy(f, "Heyo\n");
+	strcpy(f, "Base\n");
 	printf("%s", f);
 
 	return (0);
