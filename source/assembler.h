@@ -112,7 +112,7 @@ extern char * data_sector_byte; // This is unused, and it should be used...
 
 extern int was_instruction_array_empty;
 
-extern int assemble(int   count,
-                    int * array);
+extern int assemble (      int            count,
+                     const int * restrict array);
 
 #endif

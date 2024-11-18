@@ -21,6 +21,7 @@ int   token_count = 0;
 char * output_file_name = "a.out";
 
 int compile_init(void) {
+    // Funny hacky solution, we can use arenas here.
     token_array = calloc(1440UL, sizeof(*token_array));
     return 0;
 }
