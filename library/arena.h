@@ -35,6 +35,7 @@ extern void * arena_allocate(size_t size);
 #endif
 
 #ifdef ARENA_IMPLEMENTATION
+#define arena_block_allocation_size (13)
 
 //~typedef struct {
     //~char   * buffer;
@@ -70,6 +71,8 @@ arena_block * arena_init(size_t limit) {
     //~*(arena->block_array[arena->block_count - 1]) = calloc(1, sizeof (arena_block));
 
     arena->block_array[arena->block_count - 1]->buffer = calloc(limit, 1);
+    arena->block_array[arena->block_count - 1]->count = 0;
+    arena->block_array[arena->block_count - 1]->capacity = limit;
 
     return block;
 }
@@ -99,12 +102,15 @@ void * arena_allocate(size_t size) {
         atexit(arena_deinit);
         open_arena = 1;
         arena = calloc(1, sizeof(*arena));
-    }
-
-    if (arena->block_count == 0) {
         arena->block_count++;
         arena->block_array = realloc(arena->block_array, arena->block_count * sizeof(*arena->block_array));
-        arena->block_array[arena->block_count - 1] = arena_init(13);
+        arena->block_array[arena->block_count - 1] = arena_init(arena_block_allocation_size);
+    }
+
+    if (arena->block_array[arena->block_count - 1]->count + size >= arena->block_array[arena->block_count - 1]->capacity) {
+        arena->block_count++;
+        arena->block_array = realloc(arena->block_array, arena->block_count * sizeof(*arena->block_array));
+        arena->block_array[arena->block_count - 1] = arena_init(arena_block_allocation_size);
     }
 
     size_t spot = arena->block_array[arena->block_count - 1]->count;
