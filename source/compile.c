@@ -13,6 +13,7 @@
 #include "unix.h"
 #include "safety.h"
 #include "debug.h"
+#include "arena.h"
 #include "printf2.h"
 
 int * token_array = NULL;
@@ -22,12 +23,14 @@ char * output_file_name = "a.out";
 
 int compile_init(void) {
     // Funny hacky solution, we can use arenas here.
-    token_array = calloc(1440UL, sizeof(*token_array));
+    // And a day later we did use them...
+    token_array = aalloc(1440ul * sizeof(*token_array));
     return 0;
 }
 
+// Function not needful anymore sir!
+// Arena handles the memory, no need to free!
 int compile_deinit(void) {
-    free(token_array);
     return 0;
 }
 
@@ -114,7 +117,7 @@ int compile(void) {
 
     dump_variables_to_assembler();
 
-    text_sector_byte = calloc(4096UL, sizeof(*text_sector_byte));
+    text_sector_byte = aalloc(4096ul * sizeof(*text_sector_byte));
 
     if (assemble(token_count, token_array)) {
         issue_internal_error();
@@ -126,8 +129,6 @@ int compile(void) {
     fclose(output_file);
 
     make_executable(output_file_name);
-
-    free(text_sector_byte);
 
     return 0;
 }

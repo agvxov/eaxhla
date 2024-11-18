@@ -1,5 +1,6 @@
 #include "assembler.h"
 #include "debug.h"
+#include "arena.h"
 
 #include <stdlib.h>
 
@@ -775,9 +776,9 @@ int assemble (      int            count,
         return EXIT_FAILURE;
     }
 
-    empty_array = calloc(1024, sizeof(*empty_array));
-    empty_imbue = calloc(1024, sizeof(*empty_imbue));
-    empty_store = calloc(1024, sizeof(*empty_store));
+    empty_array = aalloc(1024ul * sizeof(*empty_array));
+    empty_imbue = aalloc(1024ul * sizeof(*empty_imbue));
+    empty_store = aalloc(1024ul * sizeof(*empty_store));
 
     for (int index = 0; index < count; ++index) {
         const int size = text_sector_size;
@@ -806,10 +807,6 @@ int assemble (      int            count,
 
         replace(&text_sector_byte[get], (char*)&set, (int)sizeof(get));
     }
-
-    free(empty_array);
-    free(empty_imbue);
-    free(empty_store);
 
     return EXIT_SUCCESS;
 }

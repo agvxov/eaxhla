@@ -8,6 +8,9 @@
 #include "assembler.h"
 #include "debug.h"
 
+#define ARENA_IMPLEMENTATION
+#include "arena.h"
+
 int init(void) {
     eaxhla_init();
     compile_init();
@@ -19,8 +22,8 @@ void deinit(void) {
 
     yyfree_leftovers();
 
-    eaxhla_deinit();
-    compile_deinit();
+    eaxhla_deinit();  // We need this one because of 1000 dependencies.
+    compile_deinit(); // We don't need this one anymore...
 }
 
 signed main(int argc, char * argv[]) {
