@@ -1,5 +1,5 @@
 #define ARENA_IMPLEMENTATION
-#define ARENA_BLOCK_ALLOCATION_SIZE (13)
+#define AREA_BLOCK_ALLOCATION_MAX_CHUNK_SIZE (13)
 
 #include "arena.h"
 #include <stdio.h>
