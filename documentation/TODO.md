@@ -1,7 +1,9 @@
 + terrible infinit error on ../debug/comment\_as\_space.eax
 
+- X: Implement other utility instructions.
 - X: Implement BMI1 and BMI2 into assembler.
 - X: Write 'cpuid' tool to check for extensions.
+- X: Check out AES and SHA integration.
 
 Intel/AMD x86-64 CPU ISA Extensions:
 
@@ -35,3 +37,4 @@ Intel/AMD x86-64 CPU ISA Extensions:
     C) vpmaskmovd, vpmaskmovq, vpermps, vpermd, vpermpd, vpermq, vperm2i128;
     D) vpblendd, vpsllvd, vpsllvq, vpsrlvd, vpsrlvq, vpsravd;
 15) AVX5 -- Fuck this.
+15) AVX10 -- I'd rather die.

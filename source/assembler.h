@@ -77,8 +77,19 @@ enum {
     SETE,           SETNE,          SETBE,          SETA,
     SETS,           SETNS,          SETPE,          SETPO,
     SETL,           SETGE,          SETLE,          SETG,
-    BSWAP,          BSF,            BSR,            LOOP,
-    LOOPE,          LOOPNE
+    LEA,            CBW,            CWD,            CDQ,
+    BT,             BTC,            BTR,            BTS,
+    CMC,            CLC,            CLD,            CLI,
+    MOVBE,          STC,            STD,            STI,
+    TEST,           UD2,            XADD,           XCHG,
+    BSWAP,          BSF,            BSR,
+    LOOP,           LOOPE,          LOOPNE,
+    REP,            REPE,           REPNE,
+    INS,            OUTS,           LODS,           STOS,
+    MOVS,           CMPS,           SCAS
+    // The REP prefix can be added to the INS, OUTS, MOVS, LODS, and STOS instructions.
+    // The REPE and REPNE prefixes can be added to the CMPS and SCAS instructions.
+    // > CPUID, CMPXCHG, MONITOR, INT, IRET, HLT, LFENCE, MFENCE, SFENCE, MWAIT, PAUSE, SHLD, SHRD,
 };
 
 enum {
