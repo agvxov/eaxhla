@@ -24,5 +24,8 @@ begin
 	fastcall cyaa
 	fastcall heyo
 	fastcall cyaa
+	loop   heyo
+	loope  heyo
+	loopne heyo
 	exit 60
 end program

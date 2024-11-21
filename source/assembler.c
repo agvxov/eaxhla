@@ -5,14 +5,23 @@
 #include <stdlib.h>
 
 #define DOUBLE_BEGIN   (ADD)
+#define DOUBLE_END     (CMP)
 #define SINGLE_BEGIN   (INC)
-#define STATIC_1_BEGIN (NOP)
-#define STATIC_2_BEGIN (SYSCALL)
-#define JUMP_IF_BEGIN  (JO)
-#define MOVE_IF_BEGIN  (CMOVO)
-#define SET_IF_BEGIN   (SETO)
+#define SINGLE_END     (IDIV)
 #define FLOAT_BEGIN    (FADD)
+#define FLOAT_END      (FDIVR)
 #define SHIFT_BEGIN    (ROL)
+#define SHIFT_END      (SAR)
+#define STATIC_1_BEGIN (NOP)
+#define STATIC_1_END   (PUSHF)
+#define STATIC_2_BEGIN (SYSCALL)
+#define STATIC_2_END   (FCOS)
+#define JUMP_IF_BEGIN  (JO)
+#define JUMP_IF_END    (JG)
+#define MOVE_IF_BEGIN  (CMOVO)
+#define MOVE_IF_END    (CMOVG)
+#define SET_IF_BEGIN   (SETO)
+#define SET_IF_END     (SETG)
 
 #if DEBUG == 1
 
@@ -59,8 +68,16 @@ static const char * operation_name [] = {
     "sete",         "setne",        "setbe",        "seta",
     "sets",         "setns",        "setpe",        "setpo",
     "setl",         "setge",        "setle",        "setg",
-    "bswap",        "bsf",          "bsr",          "loop",
-    "loope",        "loopne"
+    "lea",          "cbw",          "cwd",          "cdq",
+    "cmc",          "clc",          "cld",          "cli",
+    "movbe",        "stc",          "std",          "sti",
+    "test",         "ud2",          "xadd",         "xchg",
+    "bt",           "bts",          "btr",          "btc",
+    "bsf",          "bsr",          "bswap",
+    "loop",         "loope",        "loopne",
+    "rep",          "repe",         "repne",
+    "ins",          "outs",         "lods",         "stos",
+    "movs",         "cmps",         "scas"
 };
 
 #endif
@@ -81,10 +98,13 @@ static int near(int label) { return label && 0; }
 
 static int transfer(int to, int from) { return (to == REG) && (from == REG); }
 static int import  (int to, int from) { return (to == REG) && (from == MEM); }
+static int attach  (int to, int from) { return (to == REG) && (from == IMM); }
 static int export  (int to, int from) { return (to == MEM) && (from == REG); }
 static int assign  (int to, int from) { return (to == MEM) && (from == IMM); }
-static int attach  (int to, int from) { return (to == REG) && (from == IMM); }
 static int relate  (int to, int from) { return (to == REG) && (from == REL); }
+
+static int absolute (void) { return (0x400000 - text_sector_size - 4); }
+static int relative (void) { return (0x1000   - text_sector_size - 4); }
 
 static void replace(char * destination,
                     char * source,
@@ -142,23 +162,23 @@ static void long_prefix(int size,
           0x08 * long_size);
 }
 
-static void modify_registers(int to,
-                             int destination,
-                             int from,
-                             int source) {
-    // Refactor.
-    inset(transfer(to, from),
-          0xc0 +
-          0x01 * (destination & 7) +
-          0x08 * (source      & 7));
-}
-
 static void modify_memory(int operation,
                           int to,
                           int from) {
     inset((export(to, from)) || (import(to, from)),
           0x05 +
           0x08 * operation * (assign(to, from)));
+}
+
+static int mc0(int code,
+               int base) {
+    return (0xc0 +
+            0x01 * (code % 8) +
+            0x08 * (base % 8));
+}
+
+static int m05(int code) {
+    return (0x05 + 0x08 * code);
 }
 
 static int store_relative(const int * restrict array) {
@@ -209,9 +229,9 @@ static int build_double(const int * restrict array) {
     const int source      = array[5];
     const int offset      = text_sector_size + 4;
 
-    debug_error(size > D64, "size : double = %i; -- XBA\n", size);
-    debug_error(to   > MEM, "to   : double = %i; -- XBA\n", to);
-    debug_error(from > IMM, "from : double = %i; -- XBA\n", from);
+    debug_error(size > D64, "@rsize : double = %i;@-\n", size);
+    debug_error(to   > MEM, "@rto   : double = %i;@-\n", to);
+    debug_error(from > IMM, "@rfrom : double = %i;@-\n", from);
 
     debug_print("@y%s@- @b%s@- @c%s@- %i @c%s@- %i",
                 operation_name [operation],
@@ -251,7 +271,7 @@ static int build_double(const int * restrict array) {
           0x04 * (assign(to, from)) +
           0xc0 * (attach(to, from)));
 
-    modify_registers(to, destination, from, source);
+    inset(transfer(to, from), mc0(destination, source));
 
     modify_memory(destination, to, from);
     modify_memory(source,      to, from);
@@ -277,8 +297,8 @@ static int build_single(const int * restrict array) {
     const int destination = array[3];
     const int offset      = text_sector_size + 4;
 
-    debug_error(size > D64, "size : single = %i; -- XBA\n", size);
-    debug_error(to   > MEM, "to   : single = %i; -- XBA\n", to);
+    debug_error(size > D64, "@rsize : single = %i;@-\n", size);
+    debug_error(to   > MEM, "@rto   : single = %i;@-\n", to);
 
     debug_print("@y%s@- @b%s@- @c%s@- %i",
                 operation_name [operation],
@@ -388,7 +408,7 @@ static int build_move_if(const int * restrict array) {
     inset(1, 0x0f);
     inset(1, 0x40 + operation - MOVE_IF_BEGIN);
 
-    modify_registers(to, destination, from, source);
+    inset(transfer(to, from), mc0(destination, source));
 
     modify_memory(destination, to, from);
 
@@ -453,9 +473,9 @@ static int build_move(const int * restrict array) {
     const int extension   = array[6];
     const int offset      = 0x1000 - text_sector_size - 4;
 
-    debug_error(size > D64, "size : move = %i; -- XBA\n", size);
-    debug_error(to   > MEM, "to   : move = %i; -- XBA\n", to);
-    debug_error(from > IMM, "from : move = %i; -- XBA\n", from);
+    debug_error(size > D64, "@rsize : move = %i;@-\n", size);
+    debug_error(to   > MEM, "@rto   : move = %i;@-\n", to);
+    debug_error(from > IMM, "@rfrom : move = %i;@-\n", from);
 
     debug_print("@ymov@- @b%s@- @c%s@- %i @c%s@- %i %i",
                 size_name [size],
@@ -476,7 +496,7 @@ static int build_move(const int * restrict array) {
     modify_memory(destination, to, from);
     modify_memory(source,      to, from);
 
-    modify_registers(to, destination, from, source);
+    inset(transfer(to, from), mc0(destination, source));
 
     inset((to == REG) && ((from == IMM) || (from == REL)), 0xb0 +
           0x08 * (size != D8) + 0x01 * (destination & 7));
@@ -673,7 +693,6 @@ static int build_swap(const int * restrict array) {
     return 3;
 }
 
-// Forward or reverse...?!
 static int build_bit_scan(const int * restrict array) {
     const int operation   = array[0];
     const int size        = array[1];
@@ -694,11 +713,58 @@ static int build_bit_scan(const int * restrict array) {
 
     inset_immediate(1, D16, 0xbc0f + 0x100 * (operation == BSR));
 
-    modify_registers(REG, destination, from, source);
+    inset(transfer(REG, from), mc0(destination, source));
 
     inset(from == MEM, 0x05 + 0x08 * destination);
 
     inset_memory(from == MEM, D32, source, 0x1000 - text_sector_size - 4);
+
+    return 5;
+}
+
+static int build_bit_test(const int * restrict array) {
+    const int operation   = array[0];
+    const int size        = array[1];
+    const int to          = array[2];
+    const int destination = array[3];
+    const int from        = array[4];
+    const int source      = array[5];
+
+    const int offset = operation - BT;
+
+    debug_error(size > D64, "@rsize : bit test = %i;@-\n", size);
+    debug_error(to   > MEM, "@rto   : bit test = %i;@-\n", to);
+    debug_error(from > IMM, "@rfrom : bit test = %i;@-\n", from);
+
+    debug_error(size   == D8,  "@rbit test ! size D8@-\n");
+    debug_error(from   == MEM, "@rbit test ! from MEM@-\n");
+    debug_error(source >= 64,  "@rbit test ! source %i@-\n", source);
+
+    debug_print("@y%s@- @b%s@- @c%s@- %i @c%s@- %i",
+                operation_name [operation],
+                size_name [size],
+                operand_name [to],
+                destination,
+                operand_name [from],
+                source);
+
+    short_prefix(size);
+
+    long_prefix(size, to, destination, from, source);
+
+    inset(1, 0x0f);
+
+    inset(attach  (to, from) || assign(to, from), 0xba);
+    inset(transfer(to, from) || export(to, from), 0xa3 + 0x08 * offset);
+
+    inset (export  (to, from), m05(to));
+    inset (assign  (to, from), m05(4 + offset));
+    inset (attach  (to, from), mc0(destination, 4 + offset));
+    inset (transfer(to, from), mc0(destination, source));
+
+    inset_memory(from == MEM, D32, source, relative());
+
+    inset(1, source);
 
     return 5;
 }
@@ -757,8 +823,23 @@ static int (*build_instruction[])(const int * restrict array) = {
     build_set_if,   build_set_if,   build_set_if,   build_set_if,
     build_set_if,   build_set_if,   build_set_if,   build_set_if,
     build_set_if,   build_set_if,   build_set_if,   build_set_if,
-    build_swap,     build_bit_scan, build_bit_scan, build_loop,
-    build_loop,     build_loop
+    NULL,           NULL,           NULL,           NULL,
+    NULL,           NULL,           NULL,           NULL,
+    NULL,           NULL,           NULL,           NULL,
+    NULL,           NULL,           NULL,           NULL,
+    //~LEA,            CBW,            CWD,            CDQ,
+    //~CMC,            CLC,            CLD,            CLI,
+    //~MOVBE,          STC,            STD,            STI,
+    //~TEST,           UD2,            XADD,           XCHG,
+    build_bit_test, build_bit_test, build_bit_test, build_bit_test,
+    build_bit_scan, build_bit_scan, build_swap,
+    build_loop,     build_loop,     build_loop,
+    NULL,           NULL,           NULL,
+    NULL,           NULL,           NULL,           NULL,
+    NULL,           NULL,           NULL
+    //~REP,            REPE,           REPNE,
+    //~INS,            OUTS,           LODS,           STOS,
+    //~MOVS,           CMPS,           SCAS
 };
 
 int    main_entry_point = 0;

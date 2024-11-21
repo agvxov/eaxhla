@@ -3,16 +3,16 @@
 
 #include <stdlib.h>
 
+// We only allocate memory, program is guaranteed to terminate.
 extern void * aalloc(size_t size);
 
 #endif
 
 #ifdef ARENA_IMPLEMENTATION
 
-#include <string.h>
-
 #ifndef ARENA_CHUNK
-#define ARENA_CHUNK (4096)
+// What memory chunk size would be enough for everyone...?
+#define ARENA_CHUNK (640 * 1024)
 #endif
 
 static struct {

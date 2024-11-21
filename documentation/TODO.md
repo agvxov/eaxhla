@@ -1,6 +1,7 @@
 + terrible infinit error on ../debug/comment\_as\_space.eax
 
 - X: Implement other utility instructions.
+- X: Implement ELF object files and symbols.
 - X: Implement BMI1 and BMI2 into assembler.
 - X: Write 'cpuid' tool to check for extensions.
 - X: Check out AES and SHA integration.
