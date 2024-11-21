@@ -103,8 +103,8 @@ static int export  (int to, int from) { return (to == MEM) && (from == REG); }
 static int assign  (int to, int from) { return (to == MEM) && (from == IMM); }
 static int relate  (int to, int from) { return (to == REG) && (from == REL); }
 
-static int absolute (void) { return (0x400000 - text_sector_size - 4); }
-static int relative (void) { return (0x1000   - text_sector_size - 4); }
+static int absolute(void) { return (0x4010b0 - text_sector_size - 4); }
+static int relative(void) { return (0x1000   - text_sector_size - 4); }
 
 static void replace(char * destination,
                     char * source,
@@ -162,12 +162,12 @@ static void long_prefix(int size,
           0x08 * long_size);
 }
 
-static void modify_memory(int operation,
+static void modify_memory(int code,
                           int to,
                           int from) {
     inset((export(to, from)) || (import(to, from)),
           0x05 +
-          0x08 * operation * (assign(to, from)));
+          0x08 * code * (assign(to, from)));
 }
 
 static int mc0(int code,
@@ -227,7 +227,6 @@ static int build_double(const int * restrict array) {
     const int destination = array[3];
     const int from        = array[4];
     const int source      = array[5];
-    const int offset      = text_sector_size + 4;
 
     debug_error(size > D64, "@rsize : double = %i;@-\n", size);
     debug_error(to   > MEM, "@rto   : double = %i;@-\n", to);
@@ -276,16 +275,16 @@ static int build_double(const int * restrict array) {
     modify_memory(destination, to, from);
     modify_memory(source,      to, from);
 
-    inset_memory(import(to, from), D32,  source, 0x1000 - offset);
+    inset_memory(import(to, from), D32,  source, relative());
 
     inset_immediate(attach(to, from), size, source);
 
-    inset_memory(export(to, from), D32, destination, 0x1000 - offset);
-    inset_memory(assign(to, from), D32, destination, 0x1000 - offset);
+    inset_memory(export(to, from), D32, destination, relative());
+    inset_memory(assign(to, from), D32, destination, relative());
 
     inset_immediate(assign(to, from), size, source);
 
-    inset_memory(relate(to, from), D32, source, 0x4010b0 - offset);
+    inset_memory(relate(to, from), D32, source, absolute());
 
     return 5;
 }
@@ -295,7 +294,6 @@ static int build_single(const int * restrict array) {
     const int size        = array[1];
     const int to          = array[2];
     const int destination = array[3];
-    const int offset      = text_sector_size + 4;
 
     debug_error(size > D64, "@rsize : single = %i;@-\n", size);
     debug_error(to   > MEM, "@rto   : single = %i;@-\n", to);
@@ -329,7 +327,7 @@ static int build_single(const int * restrict array) {
           0x05 +
           0x08 * (operation - SINGLE_BEGIN));
 
-    inset_memory(to == MEM, D32, destination, 0x1000 - offset);
+    inset_memory(to == MEM, D32, destination, relative());
 
     return 3;
 }
@@ -434,7 +432,7 @@ static int build_set_if(const int * restrict array) {
     inset(to == REG, 0xc0 + 0x01 * (destination & 7));
     inset(to == MEM, 0x05);
 
-    inset_memory(to == MEM, D32, destination, 0x1000 - text_sector_size - 4);
+    inset_memory(to == MEM, D32, destination, relative());
 
     return 3;
 }
@@ -471,7 +469,6 @@ static int build_move(const int * restrict array) {
     const int from        = array[4];
     const int source      = array[5];
     const int extension   = array[6];
-    const int offset      = 0x1000 - text_sector_size - 4;
 
     debug_error(size > D64, "@rsize : move = %i;@-\n", size);
     debug_error(to   > MEM, "@rto   : move = %i;@-\n", to);
@@ -504,9 +501,9 @@ static int build_move(const int * restrict array) {
     inset(assign(to, from), 0xc6 + 0x01 * (size != D8));
     inset(assign(to, from), 0x05);
 
-    inset_memory(import(to, from), D32, source,      offset);
-    inset_memory(export(to, from), D32, destination, offset);
-    inset_memory(assign(to, from), D32, destination, offset);
+    inset_memory(import(to, from), D32, source,      relative());
+    inset_memory(export(to, from), D32, destination, relative());
+    inset_memory(assign(to, from), D32, destination, relative());
     inset_memory(relate(to, from), D32, source,      0x4010b0);
 
     inset_immediate(attach(to, from) && (size <= D32), size, source);
@@ -596,7 +593,7 @@ static int build_shift(const int * restrict array) {
     inset(to == REG, 0x05 + 0x08 * ((operation - SHIFT_BEGIN) & 7));
     inset(to == MEM, 0xc0 + 0x08 * ((operation - SHIFT_BEGIN) & 7));
 
-    inset_memory(to == MEM, D32, destination, 0x1000 - text_sector_size - 4);
+    inset_memory(to == MEM, D32, destination, relative());
 
     inset_immediate(1, D8, offset);
 
@@ -717,7 +714,7 @@ static int build_bit_scan(const int * restrict array) {
 
     inset(from == MEM, 0x05 + 0x08 * destination);
 
-    inset_memory(from == MEM, D32, source, 0x1000 - text_sector_size - 4);
+    inset_memory(from == MEM, D32, source, relative());
 
     return 5;
 }
@@ -764,7 +761,7 @@ static int build_bit_test(const int * restrict array) {
 
     inset_memory(from == MEM, D32, source, relative());
 
-    inset(1, source);
+    inset(from == IMM, source);
 
     return 5;
 }
