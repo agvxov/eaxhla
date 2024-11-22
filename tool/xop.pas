@@ -18,10 +18,13 @@ begin
 
 		if code = 144 then
 		begin
-			writeln;
+			write (#10 + #27'[1;31m90' + #27'[0m');
+		end
+		else
+		begin
+			write (inttohex (code, 2));
 		end;
 
-		write (inttohex (code, 2));
 		write (' ');
 	end;
 
