@@ -44,19 +44,20 @@ static const char * operation_name [] = {
     "fsub",         "fsubr",        "fdiv",         "fdivr",
     "rol",          "ror",          "rcl",          "rcr",
     "sal",          "shr",          "shl",          "sar",
-    "nop",          "retn",         "retf",         "leave",
-    "popf",         "pushf",        "cwde",         "cdqe",
+    "nop",          "cwde",         "popf",         "pushf",
+    "halt",         "lock",         "wait",         "leave",
     "cmc",          "clc",          "cld",          "cli",
-    "stc",          "std",          "sti",          "lock",
-    "int3",         "iretn",        "iretf",        "wait",
-    "syscall",      "cpuid",        "fnop",         "fchs",
+    "stc",          "std",          "sti",
+    "retn",         "retf",
+    "syscall",      "sysenter",     "sysretn",      "sysexitn",
+    "cpuid",        "cdqe",         "rsm",          "ud2",
+    "fnop",         "fchs",         "fsin",         "fcos",
     "fabs",         "ftst",         "fxam",         "fld1",
     "fldl2t",       "fldl2e",       "fldpi",        "fldlg2",
     "fldln2",       "fldz",         "f2xm1",        "fyl2x",
     "fptan",        "fpatan",       "fxtract",      "fprem1",
     "fdecstp",      "fincstp",      "fprem",        "fyl2xp1",
     "fsqrt",        "fsincos",      "frndint",      "fscale",
-    "fsin",         "fcos",
     "enter",        "call",         "in",           "out",
     "jmp",          "mov",          "pop",          "push",
     "jo",           "jno",          "jb",           "jae",
@@ -71,14 +72,14 @@ static const char * operation_name [] = {
     "sete",         "setne",        "setbe",        "seta",
     "sets",         "setns",        "setpe",        "setpo",
     "setl",         "setge",        "setle",        "setg",
-    "lea",          "movbe",
-    "test",         "ud2",          "xadd",         "xchg",
+    //~"lea",          "movbe",
+    //~"test",         "ud2",          "xadd",         "xchg",
     "bt",           "bts",          "btr",          "btc",
     "bsf",          "bsr",          "bswap",
     "loop",         "loope",        "loopne",
-    "rep",          "repe",         "repne",
-    "ins",          "outs",         "lods",         "stos",
-    "movs",         "cmps",         "scas"
+    //~"rep",          "repe",         "repne",
+    //~"ins",          "outs",         "lods",         "stos",
+    //~"movs",         "cmps",         "scas"
 };
 
 #endif
@@ -337,7 +338,9 @@ static int build_static_1(const int * restrict array) {
     const int operation = array[0];
 
     const unsigned char data[] = {
-        0x90, 0xc3, 0xcb, 0xc9, 0x9d, 0x9c
+        0x90, 0x98, 0x9d, 0x9c, 0xf4, 0xf0, 0x9b, 0xc9,
+        0xf5, 0xf8, 0xfc, 0xfa, 0xf9, 0xfd, 0xfb,
+        0xc3, 0xcb
     };
 
     debug_print("@y%s@-", operation_name [operation]);
@@ -351,10 +354,13 @@ static int build_static_2(const int * restrict array) {
     const int operation = array[0];
 
     const unsigned short data[] = {
-        0x050f, 0xa20f, 0xd0d9, 0xe0d9, 0xe1d9, 0xe4d9, 0xe5d9, 0xe8d9,
-        0xe9d9, 0xead9, 0xebd9, 0xecd9, 0xedd9, 0xeed9, 0xf0d9, 0xf1d9,
-        0xf2d9, 0xf3d9, 0xf4d9, 0xf5d9, 0xf6d9, 0xf7d9, 0xf8d9, 0xf9d9,
-        0xfad9, 0xfbd9, 0xfcd9, 0xfdd9, 0xfed9, 0xffd9
+    SYSCALL,        SYSENTER,       SYSRETN,        SYSEXITN,
+    CPUID,          CDQE,           RSM,            UD2,
+        0x050f, 0x340f, 0x070f, 0x350f, 0xa20f, 0x9848, 0xaa0f, 0x0b0f,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x0000, 0x0000
     };
 
     debug_print("@y%s@-", operation_name [operation]);
@@ -797,7 +803,12 @@ static int (*build_instruction[])(const int * restrict array) = {
     build_float,    build_float,    build_float,    build_float,
     build_shift,    build_shift,    build_shift,    build_shift,
     build_shift,    build_shift,    build_shift,    build_shift,
+    //~build_static_1, build_static_1, build_static_1, build_static_1,
+    //~build_static_1, build_static_1,
     build_static_1, build_static_1, build_static_1, build_static_1,
+    build_static_1, build_static_1, build_static_1, build_static_1,
+    build_static_1, build_static_1, build_static_1, build_static_1,
+    build_static_1, build_static_1, build_static_1,
     build_static_1, build_static_1,
     build_static_2, build_static_2, build_static_2, build_static_2,
     build_static_2, build_static_2, build_static_2, build_static_2,
@@ -806,7 +817,8 @@ static int (*build_instruction[])(const int * restrict array) = {
     build_static_2, build_static_2, build_static_2, build_static_2,
     build_static_2, build_static_2, build_static_2, build_static_2,
     build_static_2, build_static_2, build_static_2, build_static_2,
-    build_static_2, build_static_2,
+    build_static_2, build_static_2, build_static_2, build_static_2,
+    build_static_2, build_static_2, build_static_2, build_static_2,
     build_enter,    build_call,     build_in_out,   build_in_out,
     build_jump,     build_move,     build_pop,      build_push,
     build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,
@@ -821,10 +833,10 @@ static int (*build_instruction[])(const int * restrict array) = {
     build_set_if,   build_set_if,   build_set_if,   build_set_if,
     build_set_if,   build_set_if,   build_set_if,   build_set_if,
     build_set_if,   build_set_if,   build_set_if,   build_set_if,
-    NULL,           NULL,           NULL,           NULL,
-    NULL,           NULL,           NULL,           NULL,
-    NULL,           NULL,           NULL,           NULL,
-    NULL,           NULL,           NULL,           NULL,
+    //~NULL,           NULL,           NULL,           NULL,
+    //~NULL,           NULL,           NULL,           NULL,
+    //~NULL,           NULL,           NULL,           NULL,
+    //~NULL,           NULL,           NULL,           NULL,
     //~LEA,            CWDE,           CDQE,
     //~CMC,            CLC,            CLD,            CLI,
     //~MOVBE,          STC,            STD,            STI,
@@ -832,9 +844,9 @@ static int (*build_instruction[])(const int * restrict array) = {
     build_bit_test, build_bit_test, build_bit_test, build_bit_test,
     build_bit_scan, build_bit_scan, build_swap,
     build_loop,     build_loop,     build_loop,
-    NULL,           NULL,           NULL,
-    NULL,           NULL,           NULL,           NULL,
-    NULL,           NULL,           NULL
+    //~NULL,           NULL,           NULL,
+    //~NULL,           NULL,           NULL,           NULL,
+    //~NULL,           NULL,           NULL
     //~REP,            REPE,           REPNE,
     //~INS,            OUTS,           LODS,           STOS,
     //~MOVS,           CMPS,           SCAS
