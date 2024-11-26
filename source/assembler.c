@@ -493,6 +493,8 @@ static int build_move(const int * restrict array) {
 
     long_prefix(size, to, destination, from, source);
 
+    inset((size == D8) && (front(destination)), 0x40);
+
     inset(transfer(to, from), 0x88 + 0x01 * (size != D8));
     inset(import(to, from), 0x8a + 0x01 * (size != D8));
     inset(export(to, from), 0x88 + 0x01 * (size != D8));
