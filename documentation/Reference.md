@@ -1,43 +1,13 @@
 # HLA
 
-## General
-+ x86\_64
-+ GPLv3-only
+## Premise
++ ASM, but slightly more readable
 
-## Technologies
-+ C99
-+ TommyHash
-+ Flex/Bison
-
-## Train of translation
-file -> preprocessor -> hla -> link -> exe
-
-NOTE: the compiler front-end should be able to handle the preprocessing someway,
-       but we are not making our own preprocessor. use Frexx or m4
-
-### implementation
-1. flex parsing
-2. bison creates partial syntax trees (since we dont optimize, we can render in relatively small chunks because not all that much context is needed)
-3. xolatile magick
-
-## Command line interface
-```
-eaxhla <options> <file>
-```
-
-options:
-```
-    -o | --output <file>
-    -a | --architecture <architecture>
-```
-
-## Syntax
-
-### Macros
+## Macros
 + fuck macros
 + use a preprocessor
 
-### Comments
+## Comments
 ```c
     // single line comment
     /* multi
@@ -53,13 +23,17 @@ Nested multiline comments are still not allowed.
 HLA also supports script like comments
 
 
-### Asm
+## Asm
+```
+<instruction> <arg>*
+```
+
 + no ',' argument deliteters
 
 For the specifics of the supported instructions consult
 [Instruction\_reference.md](Instruction\_reference.md).
 
-#### Registers
+### Registers
 ```
 | NUM | QWORD  | DWORD  | WORD   | BYTE   |
 | NUM | 64 BIT | 32 BIT | 16 BIT |  8 BIT |
@@ -82,7 +56,7 @@ For the specifics of the supported instructions consult
 ```
 
 
-### Types
+## Types
 ```
 <int prefix><int size>
 <float prefix><float size>
@@ -119,7 +93,7 @@ then we'll utilize the flag (`-fterry-types`) to enable them.
   // if not, does that mean no variables an be declared?
 
 
-### Machine code
+## Machine code
 ```
 machine
     // literal values
@@ -127,10 +101,10 @@ end machine
 ```
 All literal values (string or numeric) are copied as machine code.
 
-### Logic
+## Logic
 + only evaulated in _logical blocks_
 
-#### logical blocks
+### logical blocks
 + if-then-else-end-if
 
 #### operators
@@ -145,7 +119,7 @@ All literal values (string or numeric) are copied as machine code.
 + or
 + xor
 
-### Functions
+## Functions
 ```
 <qualifyiers>
 <type> <name>
@@ -163,7 +137,7 @@ type:
 + procedure
 + ? function
 
-### labels
+## labels
 ```C
 my_label:
 ```
@@ -171,13 +145,13 @@ Labels act like variables,
 but should not be dereferenced.
 Feel free to use them inside jump instructions.
 
-### Come back to later
+## Come back to later
 + `register`
 + `volatile`
 + `extern`
 + `static`
 
-## LATER
+### LATER
 + DWARF2
   - ask xolatile very nicely
 + linker?
