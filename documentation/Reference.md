@@ -130,12 +130,29 @@ end <type>
 ```
 
 qualifier:
-+ fast -> use the fastcall calling convention
-+ ? stack -> place all arguments on the stack
++ fast  -> use the fastcall calling convention
++ stack -> place all arguments on the stack; this implies varargs
 
 type:
 + procedure
 + ? function
+
+### calls
+```
+<call-type> <function> <args>+ [end call]
+```
+
+call types:
++ fastcall    -> call using the fastcall convention
++ stackcall   -> call pushing each argument on the stack
++ ccall       -> use the C calling convention
++ fortrancall -> use the fortran calling convention
++ inlinecall  -> copy the function definition; use the calling convention the function is marked with
+
+During a vararg call, the phrase `end call` must be used to signal the end of the argument list
+
+The special token `_` can be used to pass "nothing".
+This, in all sane contexes means leaving a registers value unchanged.
 
 ## labels
 ```C
