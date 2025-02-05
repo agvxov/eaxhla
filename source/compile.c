@@ -16,8 +16,8 @@
 #include "arena.h"
 #include "printf2.h"
 
-int * token_array = NULL;
-int   token_count = 0;
+unsigned * token_array = NULL;
+unsigned   token_count = 0;
 
 char * output_file_name = "a.out";
 
@@ -119,7 +119,7 @@ int compile(void) {
 
     text_sector_byte = aalloc(4096ul * sizeof(*text_sector_byte));
 
-    if (assemble(token_count, token_array)) {
+    if (!assemble(token_count, token_array)) {
         issue_internal_error();
         return 1;
     }

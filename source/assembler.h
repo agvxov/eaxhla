@@ -1,7 +1,11 @@
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
 
-#define JNPE (JPO)
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+#define JNPE (JPO) /// X: INTERFACE SHOULDN'T CHANGE!
 #define JNPO (JPE)
 #define JNB  (JAE)
 #define JNBE (JA)
@@ -34,16 +38,18 @@
 #define SETNG  (SETLE)
 #define SETNGE (SETL)
 
-enum {
+typedef enum {
     D8,             D16,            D32,            D64,
-    D80,            D128,           D256,           D512
-};
+    D80,            D128,           D256,           D512,
+    D_END
+} size_code_t;
 
-enum {
-    REL,            REG,            MEM,            IMM
-};
+typedef enum {
+    REL,            REG,            MEM,            IMM,
+    OPERAND_END
+} operand_code_t;
 
-enum {
+typedef enum {
     ASMDIRMEM,      ASMDIRREL,      ASMDIRIMM,      ASMDIRREP,
     ADD,            OR,             ADC,            SBB,
     AND,            SUB,            XOR,            CMP,
@@ -114,26 +120,29 @@ enum {
     BSF,            BSR,            BSWAP,
     //~SHLD,           SHRD,
     LOOP,           LOOPE,          LOOPNE,
+    OPERATION_END
     //~REP,            REPE,           REPNE,
     //~INS,            OUTS,           LODS,           STOS,
     //~MOVS,           CMPS,           SCAS
     // The REP prefix can be added to the INS, OUTS, MOVS, LODS, and STOS instructions.
     // The REPE and REPNE prefixes can be added to the CMPS and SCAS instructions.
-};
+} operation_code_t;
 
-enum {
+typedef enum { /// X: USE PROPER TYPE DEFINITIONS?
     GR0,            GR1,            GR2,            GR3,
     GR4,            GR5,            GR6,            GR7,
     GR8,            GR9,            GR10,           GR11,
-    GR12,           GR13,           GR14,           GR15
-};
+    GR12,           GR13,           GR14,           GR15,
+    GR_END
+} general_register_code_t;
 
-enum {
+typedef enum {
     FR0,            FR1,            FR2,            FR3,
-    FR4,            FR5,            FR6,            FR7
-};
+    FR4,            FR5,            FR6,            FR7,
+    FR_END
+} float_register_code_t;
 
-enum {
+typedef enum {
     VR0,            VR1,            VR2,            VR3,
     VR4,            VR5,            VR6,            VR7,
     VR8,            VR9,            VR10,           VR11,
@@ -141,18 +150,19 @@ enum {
     VR16,           VR17,           VR18,           VR19,
     VR20,           VR21,           VR22,           VR23,
     VR24,           VR25,           VR26,           VR27,
-    VR28,           VR29,           VR30,           VR31
-}; // We don't use them currently.
+    VR28,           VR29,           VR30,           VR31,
+    VR_END
+} vector_register_code_t; // We don't use them currently.
 
-extern int    main_entry_point;
-extern int    text_sector_size;
-extern char * text_sector_byte;
-extern int    data_sector_size; // This is unused, and it should be used...
-extern char * data_sector_byte; // This is unused, and it should be used...
+extern uint32_t   main_entry_point; /// X: REMOVE GLOBAL VARIABLES?
+extern uint32_t   text_sector_size;
+extern uint8_t  * text_sector_byte;
+extern uint32_t   data_sector_size; // This is unused, and it should be used...
+extern uint8_t  * data_sector_byte; // This is unused, and it should be used...
 
-extern int was_instruction_array_empty;
+extern bool was_instruction_array_empty;
 
-extern int assemble (      int            count,
-                     const int * restrict array);
+extern bool assemble (      uint32_t            count,
+                      const uint32_t * restrict array);
 
 #endif

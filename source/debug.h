@@ -98,8 +98,8 @@ void debug_dump_symbols(void) {
 __attribute__((unused))
 static
 void debug_token_dump(void) {
-    extern int * token_array;
-    extern int   token_count;
+    extern unsigned * token_array;
+    extern unsigned   token_count;
     FILE * o = fopen("token_dump", "wb");
     fwrite(token_array, sizeof(int), token_count, o);
     fclose(o);

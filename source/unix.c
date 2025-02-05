@@ -1,14 +1,10 @@
 #include "unix.h"
 #include "debug.h"
 
-#include <string.h>
-
-char elf_main_header_byte[ELF_MAIN_HEADER_SIZE] = {
+uint8_t elf_main_header_byte[ELF_MAIN_HEADER_SIZE] = { /// TOTALLY HARDCODED.
     0x7f, 0x45, 0x4c, 0x46, 0x02, 0x01, 0x01, 0x03,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x02, 0x00, 0x3e, 0x00, 0x01, 0x00, 0x00, 0x00,
-    // Redo this part...
-    // These should not be hardcoded.
     0xb0, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -16,7 +12,7 @@ char elf_main_header_byte[ELF_MAIN_HEADER_SIZE] = {
     0x02, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-char elf_text_sector_byte[ELF_TEXT_SECTOR_SIZE] = {
+uint8_t elf_text_sector_byte[ELF_TEXT_SECTOR_SIZE] = {
     0x01, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -26,7 +22,7 @@ char elf_text_sector_byte[ELF_TEXT_SECTOR_SIZE] = {
     0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-char elf_data_sector_byte[ELF_DATA_SECTOR_SIZE] = {
+uint8_t elf_data_sector_byte[ELF_DATA_SECTOR_SIZE] = {
     0x01, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x10, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -36,11 +32,11 @@ char elf_data_sector_byte[ELF_DATA_SECTOR_SIZE] = {
     0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-void elf_main_header(int entry_point,
-                     int has_program,
-                     int for_linux,
-                     int for_x86_64) {
-    int enter = entry_point + 0x4000b0;
+void elf_main_header(uint32_t entry_point,
+                     bool     has_program,
+                     bool     for_linux,
+                     bool     for_x86_64) { /// THIS IS A JOKE.
+    uint32_t enter = entry_point + 0x4000b0;
 
     // Latter 3 variables are determined by system, architecture and '-c' flag.
     elf_main_header_byte[16] = (has_program) ? 0x02 : 0x03;
@@ -50,19 +46,19 @@ void elf_main_header(int entry_point,
     memcpy(&elf_main_header_byte[24], &enter, sizeof(enter));
 }
 
-void elf_text_sector(int text_size,
-                     int data_size) {
-    int text = ELF_HEADER_SIZE + text_size - data_size;
+void elf_text_sector(uint32_t text_size,
+                     uint32_t data_size) {
+    uint32_t text = ELF_HEADER_SIZE + text_size - data_size;
 
     memcpy(&elf_text_sector_byte[32], &text, sizeof(text));
     memcpy(&elf_text_sector_byte[40], &text, sizeof(text));
 }
 
-void elf_data_sector(int text_size,
-                     int data_size) {
-    int data = data_size;
-    int core = ELF_HEADER_SIZE + text_size - data_size;
-    int move = 0x401000 + core;
+void elf_data_sector(uint32_t text_size,
+                     uint32_t data_size) {
+    uint32_t data = data_size;
+    uint32_t core = ELF_HEADER_SIZE + text_size - data_size;
+    uint32_t move = 0x401000 + core;
 
     memcpy(&elf_data_sector_byte[ 8], &core, sizeof(core));
     memcpy(&elf_data_sector_byte[16], &move, sizeof(move));
