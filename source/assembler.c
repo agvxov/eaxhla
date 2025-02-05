@@ -14,6 +14,8 @@
 #define STATIC_1_END   (RETF)
 #define STATIC_2_BEGIN (SYSCALL)
 #define STATIC_2_END   (FNCLEX)
+#define STATIC_3_BEGIN (MONITOR)
+#define STATIC_3_END   (FCLEX)
 #define JUMP_IF_BEGIN  (JO)
 #define JUMP_IF_END    (JG)
 #define MOVE_IF_BEGIN  (CMOVO)
@@ -59,6 +61,9 @@ static const char * operation_name[OPERATION_END] = {
     "fdecstp",      "fincstp",      "fprem",        "fyl2xp1",
     "fsqrt",        "fsincos",      "frndint",      "fscale",
     "fcompp",       "fucompp",      "fninit",       "fnclex",
+    "monitor",      "mwait",        "sysretf",      "sysexitf",
+    "lfence",       "mfence",       "sfence",       "rdtscp",
+    "finit",        "fclex",
     "enter",        "call",         "in",           "out",
     "jmp",          "mov",          "pop",          "push",
     "jo",           "jno",          "jb",           "jae",
@@ -91,20 +96,20 @@ static uint32_t * empty_array = NULL;
 static uint32_t * empty_imbue = NULL;
 static uint32_t * empty_store = NULL;
 
-static uint32_t front(uint32_t data) { return (data >= GR4) && (data <= GR7);  }
-static uint32_t upper(uint32_t data) { return (data >= GR8) && (data <= GR15); }
-static uint32_t lower(uint32_t data) { return (data <= GR7);                   }
+static bool front(uint32_t data) { return (data >= GR4) && (data <= GR7);  }
+static bool upper(uint32_t data) { return (data >= GR8) && (data <= GR15); }
+static bool lower(uint32_t data) { return (data <= GR7);                   }
 
 // We don't use these yet, hardcoded.
-static uint32_t far (uint32_t label) { return label && 1; }
-static uint32_t near(uint32_t label) { return label && 0; }
+static bool far (uint32_t label) { return label && 1; }
+static bool near(uint32_t label) { return label && 0; }
 
-static uint32_t transfer(uint32_t to, uint32_t from) { return (to == REG) && (from == REG); }
-static uint32_t import  (uint32_t to, uint32_t from) { return (to == REG) && (from == MEM); }
-static uint32_t attach  (uint32_t to, uint32_t from) { return (to == REG) && (from == IMM); }
-static uint32_t export  (uint32_t to, uint32_t from) { return (to == MEM) && (from == REG); }
-static uint32_t assign  (uint32_t to, uint32_t from) { return (to == MEM) && (from == IMM); }
-static uint32_t relate  (uint32_t to, uint32_t from) { return (to == REG) && (from == REL); }
+static bool transfer(uint32_t to, uint32_t from) { return (to == REG) && (from == REG); }
+static bool import  (uint32_t to, uint32_t from) { return (to == REG) && (from == MEM); }
+static bool attach  (uint32_t to, uint32_t from) { return (to == REG) && (from == IMM); }
+static bool export  (uint32_t to, uint32_t from) { return (to == MEM) && (from == REG); }
+static bool assign  (uint32_t to, uint32_t from) { return (to == MEM) && (from == IMM); }
+static bool relate  (uint32_t to, uint32_t from) { return (to == REG) && (from == REL); }
 
 static uint32_t absolute(void) { return (0x004010b0 - text_sector_size - 4); }
 static uint32_t relative(void) { return (0x00001000 - text_sector_size - 4); }
@@ -120,7 +125,7 @@ static void replace(uint8_t * destination, /// X: THIS IS SILLY.
 
 static void inset(uint32_t when,
                   uint32_t data) {
-    text_sector_byte[text_sector_size] = (char)data;
+    text_sector_byte[text_sector_size] = (uint8_t)data;
 
     text_sector_size += when;
 }
@@ -175,7 +180,7 @@ static void modify_memory(uint32_t code,
 }
 
 static uint32_t mc0(uint32_t code, /// X: THIS IS PLAIN EVIL.
-               uint32_t base) {
+                    uint32_t base) {
     return (0xc0 +
             0x01 * (code % 8) +
             0x08 * (base % 8));
@@ -217,7 +222,7 @@ static uint32_t store_immediate(const uint32_t * restrict array) {
     debug_print("@yasmimm@- @b%s@- %i", size_name[size], amount);
 
     for (uint32_t index = 0; index < amount; ++index) {
-        inset_immediate(1, size, array[3 + index]);
+        inset_immediate(true, size, array[3 + index]);
     }
 
     return amount + 2;
@@ -341,12 +346,12 @@ static uint32_t build_static_1(const uint32_t * restrict array) {
     const uint8_t data[STATIC_1_END - STATIC_1_BEGIN + 1] = {
         0x90, 0x98, 0x9d, 0x9c, 0xf4, 0xf0, 0x9b, 0xc9,
         0xf5, 0xf8, 0xfc, 0xfa, 0xf9, 0xfd, 0xfb, 0xc3,
-        0xcb
+        0xcb,
     };
 
     debug_print("@y%s@-", operation_name[operation]);
 
-    inset(1, data[operation - STATIC_1_BEGIN]);
+    inset(true, data[operation - STATIC_1_BEGIN]);
 
     return 0;
 }
@@ -360,12 +365,37 @@ static uint32_t build_static_2(const uint32_t * restrict array) {
         0xd0d9, 0xe0d9, 0xfed9, 0xffd9, 0xe1d9, 0xe4d9, 0xe5d9, 0xe8d9,
         0xe9d9, 0xead9, 0xebd9, 0xecd9, 0xedd9, 0xeed9, 0xf0d9, 0xf1d9,
         0xf2d9, 0xf3d9, 0xf4d9, 0xf5d9, 0xf6d9, 0xf7d9, 0xf8d9, 0xf9d9,
-        0xfad9, 0xfbd9, 0xfcd9, 0xfdd9, 0xd9de, 0xe9da, 0xe3db, 0xe2db
+        0xfad9, 0xfbd9, 0xfcd9, 0xfdd9, 0xd9de, 0xe9da, 0xe3db, 0xe2db,
     };
 
     debug_print("@y%s@-", operation_name[operation]);
 
-    inset_immediate(1, D16, data[operation - STATIC_2_BEGIN]);
+    inset_immediate(true, D16, data[operation - STATIC_2_BEGIN]);
+
+    return 0;
+}
+
+static uint32_t build_static_3(const uint32_t * restrict array) {
+    const uint32_t operation = array[0];
+
+    const uint8_t data[(STATIC_3_END - STATIC_3_BEGIN + 1) * 3] = {
+        0x0f, 0x01, 0xc8,
+        0x0f, 0x01, 0xc9,
+        0x48, 0x0f, 0x07,
+        0x48, 0x0f, 0x35,
+        0x0f, 0xae, 0xe8,
+        0x0f, 0xae, 0xf0,
+        0x0f, 0xae, 0xf8,
+        0x0f, 0x01, 0xf9,
+        0x9b, 0xdb, 0xe3,
+        0x9b, 0xdb, 0xe2,
+    };
+
+    debug_print("@y%s@-", operation_name[operation]);
+
+    inset(true, data[(operation - STATIC_3_BEGIN) * 3 + 0]);
+    inset(true, data[(operation - STATIC_3_BEGIN) * 3 + 1]);
+    inset(true, data[(operation - STATIC_3_BEGIN) * 3 + 2]);
 
     return 0;
 }
@@ -385,7 +415,7 @@ static uint32_t build_jump_if(const uint32_t * restrict array) {
     inset(far(location),  0x80 + operation - JUMP_IF_BEGIN);
     inset(near(location), 0x70 + operation - JUMP_IF_BEGIN);
 
-    inset_memory(1, D32, location, -text_sector_size - 4);
+    inset_memory(true, D32, location, unsorted());
 
     return 3;
 }
@@ -410,8 +440,8 @@ static uint32_t build_move_if(const uint32_t * restrict array) {
 
     long_prefix(size, to, destination, from, source);
 
-    inset(1, 0x0f);
-    inset(1, 0x40 + operation - MOVE_IF_BEGIN);
+    inset(true, 0x0f);
+    inset(true, 0x40 + operation - MOVE_IF_BEGIN);
 
     inset(transfer(to, from), mc0(destination, source));
 
@@ -433,8 +463,8 @@ static uint32_t build_set_if(const uint32_t * restrict array) {
     inset((to == REG) && (front(destination)), 0x40);
     inset((to == REG) && (upper(destination)), 0x41);
 
-    inset(1, 0x0f);
-    inset(1, 0x90 + operation - SET_IF_BEGIN);
+    inset(true, 0x0f);
+    inset(true, 0x90 + operation - SET_IF_BEGIN);
 
     inset(to == REG, 0xc0 + 0x01 * (destination & 7));
     inset(to == MEM, 0x05);
@@ -462,7 +492,7 @@ static uint32_t build_jump(const uint32_t * restrict array) {
     inset(to == MEM, 0xff);
     inset(to == MEM, 0x25);
 
-    inset_memory(to == REL, D32, destination, -text_sector_size - 4);
+    inset_memory(to == REL, D32, destination, unsorted());
     inset_memory(to == MEM, D32, destination, 0x4010b0);
 
     return 3;
@@ -535,7 +565,7 @@ static uint32_t build_call(const uint32_t * restrict array) {
     inset(from == REL, 0xe8);
     inset(from == REG, 0xff);
 
-    inset_memory(from == REL, D32, source, -text_sector_size - 4);
+    inset_memory(from == REL, D32, source, unsorted());
 
     inset(from == REG, (0xd0 + 0x01 * (source & 7)));
 
@@ -548,10 +578,10 @@ static uint32_t build_enter(const uint32_t * restrict array) {
 
     debug_print("@yenter@- %i %i", dynamic_storage, nesting_level);
 
-    inset(1, 0xc8);
+    inset(true, 0xc8);
 
-    inset_immediate(1, D16, dynamic_storage);
-    inset_immediate(1, D8,  nesting_level & 0x1f);
+    inset_immediate(true, D16, dynamic_storage);
+    inset_immediate(true, D8,  nesting_level & 0x1f);
 
     return 2;
 }
@@ -595,14 +625,14 @@ static uint32_t build_shift(const uint32_t * restrict array) {
 
     long_prefix(size, to, destination, 0, 0);
 
-    inset(1, 0xc0 + 0x01 * (size != D8));
+    inset(true, 0xc0 + 0x01 * (size != D8));
 
     inset(to == REG, 0x05 + 0x08 * ((operation - SHIFT_BEGIN) & 7));
     inset(to == MEM, 0xc0 + 0x08 * ((operation - SHIFT_BEGIN) & 7));
 
     inset_memory(to == MEM, D32, destination, relative());
 
-    inset_immediate(1, D8, offset);
+    inset_immediate(true, D8, offset);
 
     return 5;
 }
@@ -622,7 +652,7 @@ static uint32_t build_in_out(const uint32_t * restrict array) {
     short_prefix(size);
 
     // Shorten and extend, I think we're not covering all cases.
-    inset(1, 0xe4 +
+    inset(true, 0xe4 +
              0x01 * (size != D8) +
              0x02 * (move == IN) +
              0x08 * (type == REG));
@@ -691,8 +721,8 @@ static uint32_t build_swap(const uint32_t * restrict array) {
 
     long_prefix(size, REG, destination, 0, 0);
 
-    inset(1, 0x0f);
-    inset(1, 0xc8 + 0x01 * (destination & 7));
+    inset(true, 0x0f);
+    inset(true, 0xc8 + 0x01 * (destination & 7));
 
     return 3;
 }
@@ -715,7 +745,7 @@ static uint32_t build_bit_scan(const uint32_t * restrict array) {
 
     long_prefix(size, REG, destination, from, source);
 
-    inset_immediate(1, D16, 0xbc0f + 0x100 * (operation == BSR));
+    inset_immediate(true, D16, 0xbc0f + 0x100 * (operation == BSR));
 
     inset(transfer(REG, from), mc0(destination, source));
 
@@ -756,7 +786,7 @@ static uint32_t build_bit_test(const uint32_t * restrict array) {
 
     long_prefix(size, to, destination, from, source);
 
-    inset(1, 0x0f);
+    inset(true, 0x0f);
 
     inset(attach  (to, from) || assign(to, from), 0xba);
     inset(transfer(to, from) || export(to, from), 0xa3 + 0x08 * offset);
@@ -785,7 +815,7 @@ static uint32_t build_loop(const uint32_t * restrict array) {
     inset(operation == LOOPE,  0xe1);
     inset(operation == LOOP,   0xe2);
 
-    inset_memory(1, D8, location, -text_sector_size - 1);
+    inset_memory(true, D8, location, -text_sector_size - 1);
 
     return 3;
 }
@@ -820,6 +850,9 @@ static uint32_t (*build_instruction[OPERATION_END])(const uint32_t * restrict ar
     build_static_2, build_static_2, build_static_2, build_static_2,
     build_static_2, build_static_2, build_static_2, build_static_2,
     build_static_2, build_static_2, build_static_2, build_static_2,
+    build_static_3, build_static_3, build_static_3, build_static_3,
+    build_static_3, build_static_3, build_static_3, build_static_3,
+    build_static_3, build_static_3,
     build_enter,    build_call,     build_in_out,   build_in_out,
     build_jump,     build_move,     build_pop,      build_push,
     build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,
@@ -861,8 +894,8 @@ uint8_t  * data_sector_byte = NULL; // This is unused, and it should be used...
 
 bool was_instruction_array_empty = false;
 
-bool assemble (      uint32_t            count,
-               const uint32_t * restrict array) {
+bool assemble(      uint32_t            count,
+              const uint32_t * restrict array) {
     if ((!count) || (!array)) {
         was_instruction_array_empty = true;
         return false;

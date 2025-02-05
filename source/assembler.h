@@ -94,9 +94,9 @@ typedef enum {
     FSQRT,          FSINCOS,        FRNDINT,        FSCALE,
     FCOMPP,         FUCOMPP,        FNINIT,         FNCLEX,
     /**/
-    //~MONITOR,        MWAIT,          SYSRETF,        SYSEXITF,
-    //~LFENCE,         MFENCE,         SFENCE,         RDTSCP,
-    //~FINIT,          FCLEX,
+    MONITOR,        MWAIT,          SYSRETF,        SYSEXITF,
+    LFENCE,         MFENCE,         SFENCE,         RDTSCP,
+    FINIT,          FCLEX,
     /**/
     ENTER,          CALL,           IN,             OUT,
     JMP,            MOV,            POP,            PUSH,
@@ -162,7 +162,7 @@ extern uint8_t  * data_sector_byte; // This is unused, and it should be used...
 
 extern bool was_instruction_array_empty;
 
-extern bool assemble (      uint32_t            count,
-                      const uint32_t * restrict array);
+extern bool assemble(      uint32_t            count,
+                     const uint32_t * restrict array);
 
 #endif
