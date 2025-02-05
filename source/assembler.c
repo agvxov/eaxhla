@@ -11,9 +11,9 @@
 #define SHIFT_BEGIN    (ROL)
 #define SHIFT_END      (SAR)
 #define STATIC_1_BEGIN (NOP)
-#define STATIC_1_END   (PUSHF)
+#define STATIC_1_END   (RETF)
 #define STATIC_2_BEGIN (SYSCALL)
-#define STATIC_2_END   (FCOS)
+#define STATIC_2_END   (FNCLEX)
 #define JUMP_IF_BEGIN  (JO)
 #define JUMP_IF_END    (JG)
 #define MOVE_IF_BEGIN  (CMOVO)
@@ -23,16 +23,16 @@
 
 #if DEBUG == 1
 
-static const char * size_name[] = {
+static const char * size_name[SIZE_END] = {
     "d8",           "d16",          "d32",          "d64",
     "d80",          "d128",         "d256",         "d512"
 };
 
-static const char * operand_name[] = {
+static const char * operand_name[OPERAND_END] = {
     "rel",          "reg",          "mem",          "imm"
 };
 
-static const char * operation_name[] = {
+static const char * operation_name[OPERATION_END] = {
     "asmdirmem",    "asmdirrel",    "asmdirimm",    "asmdirrep",
     "add",          "or",           "adc",          "sbb",
     "and",          "sub",          "xor",          "cmp",
@@ -45,10 +45,12 @@ static const char * operation_name[] = {
     "nop",          "cwde",         "popf",         "pushf",
     "halt",         "lock",         "wait",         "leave",
     "cmc",          "clc",          "cld",          "cli",
-    "stc",          "std",          "sti",
-    "retn",         "retf",
+    "stc",          "std",          "sti",          "retn",
+    "retf",
     "syscall",      "sysenter",     "sysretn",      "sysexitn",
     "cpuid",        "cdqe",         "rsm",          "ud2",
+    "emms",         "pause",        "invd",         "wbinvd",
+    "wrmsr",        "rdmsr",        "rdpmc",        "rdtsc",
     "fnop",         "fchs",         "fsin",         "fcos",
     "fabs",         "ftst",         "fxam",         "fld1",
     "fldl2t",       "fldl2e",       "fldpi",        "fldlg2",
@@ -56,6 +58,7 @@ static const char * operation_name[] = {
     "fptan",        "fpatan",       "fxtract",      "fprem1",
     "fdecstp",      "fincstp",      "fprem",        "fyl2xp1",
     "fsqrt",        "fsincos",      "frndint",      "fscale",
+    "fcompp",       "fucompp",      "fninit",       "fnclex",
     "enter",        "call",         "in",           "out",
     "jmp",          "mov",          "pop",          "push",
     "jo",           "jno",          "jb",           "jae",
@@ -335,10 +338,10 @@ static uint32_t build_single(const uint32_t * restrict array) { /// X: ERROR PRO
 static uint32_t build_static_1(const uint32_t * restrict array) {
     const uint32_t operation = array[0];
 
-    const unsigned char data[] = {
+    const uint8_t data[STATIC_1_END - STATIC_1_BEGIN + 1] = {
         0x90, 0x98, 0x9d, 0x9c, 0xf4, 0xf0, 0x9b, 0xc9,
-        0xf5, 0xf8, 0xfc, 0xfa, 0xf9, 0xfd, 0xfb,
-        0xc3, 0xcb
+        0xf5, 0xf8, 0xfc, 0xfa, 0xf9, 0xfd, 0xfb, 0xc3,
+        0xcb
     };
 
     debug_print("@y%s@-", operation_name[operation]);
@@ -351,12 +354,13 @@ static uint32_t build_static_1(const uint32_t * restrict array) {
 static uint32_t build_static_2(const uint32_t * restrict array) {
     const uint32_t operation = array[0];
 
-    const unsigned short data[] = {
+    const uint16_t data[STATIC_2_END - STATIC_2_BEGIN + 1] = {
         0x050f, 0x340f, 0x070f, 0x350f, 0xa20f, 0x9848, 0xaa0f, 0x0b0f,
-        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-        0x0000, 0x0000, 0x0000, 0x0000
+        0x770f, 0x90f3, 0x080f, 0x090f, 0x300f, 0x320f, 0x330f, 0x310f,
+        0xd0d9, 0xe0d9, 0xfed9, 0xffd9, 0xe1d9, 0xe4d9, 0xe5d9, 0xe8d9,
+        0xe9d9, 0xead9, 0xebd9, 0xecd9, 0xedd9, 0xeed9, 0xf0d9, 0xf1d9,
+        0xf2d9, 0xf3d9, 0xf4d9, 0xf5d9, 0xf6d9, 0xf7d9, 0xf8d9, 0xf9d9,
+        0xfad9, 0xfbd9, 0xfcd9, 0xfdd9, 0xd9de, 0xe9da, 0xe3db, 0xe2db
     };
 
     debug_print("@y%s@-", operation_name[operation]);
@@ -799,13 +803,14 @@ static uint32_t (*build_instruction[OPERATION_END])(const uint32_t * restrict ar
     build_float,    build_float,    build_float,    build_float,
     build_shift,    build_shift,    build_shift,    build_shift,
     build_shift,    build_shift,    build_shift,    build_shift,
-    //~build_static_1, build_static_1, build_static_1, build_static_1,
-    //~build_static_1, build_static_1,
     build_static_1, build_static_1, build_static_1, build_static_1,
     build_static_1, build_static_1, build_static_1, build_static_1,
     build_static_1, build_static_1, build_static_1, build_static_1,
-    build_static_1, build_static_1, build_static_1,
-    build_static_1, build_static_1,
+    build_static_1, build_static_1, build_static_1, build_static_1,
+    build_static_1,
+    build_static_2, build_static_2, build_static_2, build_static_2,
+    build_static_2, build_static_2, build_static_2, build_static_2,
+    build_static_2, build_static_2, build_static_2, build_static_2,
     build_static_2, build_static_2, build_static_2, build_static_2,
     build_static_2, build_static_2, build_static_2, build_static_2,
     build_static_2, build_static_2, build_static_2, build_static_2,

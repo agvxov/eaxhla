@@ -41,7 +41,7 @@
 typedef enum {
     D8,             D16,            D32,            D64,
     D80,            D128,           D256,           D512,
-    D_END
+    SIZE_END
 } size_code_t;
 
 typedef enum {
@@ -78,13 +78,13 @@ typedef enum {
     NOP,            CWDE,           POPF,           PUSHF,
     HALT,           LOCK,           WAIT,           LEAVE,
     CMC,            CLC,            CLD,            CLI,
-    STC,            STD,            STI,
-    RETN,           RETF,
+    STC,            STD,            STI,            RETN,
+    RETF,
     /**/
     SYSCALL,        SYSENTER,       SYSRETN,        SYSEXITN,
     CPUID,          CDQE,           RSM,            UD2,
-    //~EMMS,           PAUSE,          INVD,           WBINVD,
-    //~WRMSR,          RDMSR,          RDPMC,          RDTSC,
+    EMMS,           PAUSE,          INVD,           WBINVD,
+    WRMSR,          RDMSR,          RDPMC,          RDTSC,
     FNOP,           FCHS,           FSIN,           FCOS,
     FABS,           FTST,           FXAM,           FLD1,
     FLDL2T,         FLDL2E,         FLDPI,          FLDLG2,
@@ -92,11 +92,11 @@ typedef enum {
     FPTAN,          FPATAN,         FXTRACT,        FPREM1,
     FDECSTP,        FINCSTP,        FPREM,          FYL2XP1,
     FSQRT,          FSINCOS,        FRNDINT,        FSCALE,
-    //~FCOMPP,         FUCOMPP,        FINIT,          FNINIT,
-    //~FCLEX,          FNCLEX,
+    FCOMPP,         FUCOMPP,        FNINIT,         FNCLEX,
     /**/
     //~MONITOR,        MWAIT,          SYSRETF,        SYSEXITF,
     //~LFENCE,         MFENCE,         SFENCE,         RDTSCP,
+    //~FINIT,          FCLEX,
     /**/
     ENTER,          CALL,           IN,             OUT,
     JMP,            MOV,            POP,            PUSH,
