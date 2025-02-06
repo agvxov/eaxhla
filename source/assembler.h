@@ -46,7 +46,7 @@ typedef enum {
 
 typedef enum {
     REL,            REG,            MEM,            IMM,
-    //~DER,            INT,            BCF,            BCD,
+    DER,            INT,            BCF,            BCD,
     OPERAND_END
 } operand_code_t;
 
@@ -60,6 +60,8 @@ typedef enum {
     SAL,            SHR,            SHL,            SAR,
     FADD,           FMUL,           FCOM,           FCOMP,
     FSUB,           FSUBR,          FDIV,           FDIVR,
+    FLADD,          FLMUL,          FLCOM,          FLCOMP,
+    FLSUB,          FLSUBR,         FLDIV,          FLDIVR,
     FCMOVB,         FCMOVE,         FCMOVBE,        FCMOVU,
     FCMOVAE,        FCMOVNE,        FCMOVA,         FCMOVNU,
     /**/

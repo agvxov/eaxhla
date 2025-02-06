@@ -10,6 +10,8 @@
 #define SHIFT_END      (SAR)
 #define FLOAT_BEGIN    (FADD)
 #define FLOAT_END      (FDIVR)
+#define FLOATL_BEGIN   (FLADD)
+#define FLOATL_END     (FLDIVR)
 #define FMOVE_IF_BEGIN (FCMOVB)
 #define FMOVE_IF_END   (FCMOVNU)
 #define STATIC_1_BEGIN (NOP)
@@ -33,9 +35,8 @@ static const char * size_name[SIZE_END] = {
 };
 
 static const char * operand_name[OPERAND_END] = {
-    "rel",          "reg",          "mem",          "imm"
-    //~,
-    //~"der",          "int",          "bcf",          "bcd",
+    "rel",          "reg",          "mem",          "imm",
+    "der",          "int",          "bcf",          "bcd",
 };
 
 static const char * operation_name[OPERATION_END] = {
@@ -48,6 +49,8 @@ static const char * operation_name[OPERATION_END] = {
     "sal",          "shr",          "shl",          "sar",
     "fadd",         "fmul",         "fcom",         "fcomp",
     "fsub",         "fsubr",        "fdiv",         "fdivr",
+    "fladd",        "flmul",        "flcom",        "flcomp",
+    "flsub",        "flsubr",       "fldiv",        "fldivr",
     "fcmovb",       "fcmove",       "fcmovbe",      "fcmovu",
     "fcmovae",      "fcmovne",      "fcmova",       "fcmovnu",
     "nop",          "cwde",         "popf",         "pushf",
@@ -626,7 +629,7 @@ static uint32_t build_float(const uint32_t * restrict array) { /// X: UNCHECKED.
     const uint32_t operation = array[0];
     const uint32_t size      = array[1];
     const uint32_t from      = array[2];
-    const uint32_t source    = array[3];
+    const uint32_t source    = array[3]; /// X: REMOVE UNUSED STUFF.
 
     debug_print("@y%s@- @b%s@- @c%s@- %i",
                 operation_name[operation],
@@ -641,6 +644,55 @@ static uint32_t build_float(const uint32_t * restrict array) { /// X: UNCHECKED.
     inset_memory(from == MEM, size, source, 0);
 
     return 3;
+}
+
+static void m072445(uint32_t fuck) { /// THIS IS HORRIBLE.
+    if (fuck == 4) {
+        inset(true, 0x04);
+        inset(true, 0x24);
+    } else if (fuck == 5) {
+        inset(true, 0x45);
+        inset(true, 0x00);
+    } else {
+        inset(true, fuck & 7);
+    }
+}
+
+static uint32_t build_floatl(const uint32_t * restrict array) { /// X: UNCHECKED.
+    const uint32_t operation = array[0];
+    const uint32_t size      = array[1];
+    const uint32_t type      = array[2];
+    const uint32_t from      = array[3];
+    const uint32_t source    = array[4];
+
+    // FLADD D32 INT DER 1 -> fiadd dword[eax]
+    // FLADD D32 BCF DER 1 -> fadd  dword[eax]
+    // FLADD D16 INT MEM # -> fiadd  word[x]
+    // FLADD D32 INT MEM # -> fiadd dword[x]
+    // FLADD D32 BCF MEM # -> fadd  dword[x]
+    // FLADD D64 BCF MEM # -> fadd  qword[x]
+
+    debug_print("@y%s@- @b%s@- @c%s@- @c%s@- %i",
+                operation_name[operation],
+                size_name[size],
+                operand_name[type],
+                operand_name[from],
+                source);
+
+    inset((from == DER) && (size == D32), 0x67);
+
+    inset((from == DER) && (upper(source)), 0x41);
+
+    inset((type == BCF) && (size == D32), 0xd8);
+    inset((type == INT) && (size == D32), 0xda);
+    inset((type == BCF) && (size == D64), 0xdc);
+    inset((type == INT) && (size == D16), 0xde);
+
+    if (from == DER) m072445(source); /// KILL THIS WITH FIRE.
+
+    inset_memory(from == MEM, D32, source, relative());
+
+    return 4;
 }
 
 static uint32_t build_fmove_if(const uint32_t * restrict array) { /// X: UNCHECKED.
@@ -861,6 +913,8 @@ static uint32_t (*build_instruction[OPERATION_END])(const uint32_t * restrict ar
     build_shift,    build_shift,    build_shift,    build_shift,
     build_float,    build_float,    build_float,    build_float,
     build_float,    build_float,    build_float,    build_float,
+    build_floatl,   build_floatl,   build_floatl,   build_floatl,
+    build_floatl,   build_floatl,   build_floatl,   build_floatl,
     build_fmove_if, build_fmove_if, build_fmove_if, build_fmove_if,
     build_fmove_if, build_fmove_if, build_fmove_if, build_fmove_if,
     build_static_1, build_static_1, build_static_1, build_static_1,
