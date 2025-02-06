@@ -6,10 +6,12 @@
 #define DOUBLE_END     (CMP)
 #define SINGLE_BEGIN   (INC)
 #define SINGLE_END     (IDIV)
-#define FLOAT_BEGIN    (FADD)
-#define FLOAT_END      (FDIVR)
 #define SHIFT_BEGIN    (ROL)
 #define SHIFT_END      (SAR)
+#define FLOAT_BEGIN    (FADD)
+#define FLOAT_END      (FDIVR)
+#define FMOVE_IF_BEGIN (FCMOVB)
+#define FMOVE_IF_END   (FCMOVNU)
 #define STATIC_1_BEGIN (NOP)
 #define STATIC_1_END   (RETF)
 #define STATIC_2_BEGIN (SYSCALL)
@@ -27,11 +29,13 @@
 
 static const char * size_name[SIZE_END] = {
     "d8",           "d16",          "d32",          "d64",
-    "d80",          "d128",         "d256",         "d512"
+    "d80",          "d128",         "d256",         "d512",
 };
 
 static const char * operand_name[OPERAND_END] = {
     "rel",          "reg",          "mem",          "imm"
+    //~,
+    //~"der",          "int",          "bcf",          "bcd",
 };
 
 static const char * operation_name[OPERATION_END] = {
@@ -40,10 +44,12 @@ static const char * operation_name[OPERATION_END] = {
     "and",          "sub",          "xor",          "cmp",
     "inc",          "dec",          "not",          "neg",
     "mul",          "imul",         "div",          "idiv",
-    "fadd",         "fmul",         "fcom",         "fcomp",
-    "fsub",         "fsubr",        "fdiv",         "fdivr",
     "rol",          "ror",          "rcl",          "rcr",
     "sal",          "shr",          "shl",          "sar",
+    "fadd",         "fmul",         "fcom",         "fcomp",
+    "fsub",         "fsubr",        "fdiv",         "fdivr",
+    "fcmovb",       "fcmove",       "fcmovbe",      "fcmovu",
+    "fcmovae",      "fcmovne",      "fcmova",       "fcmovnu",
     "nop",          "cwde",         "popf",         "pushf",
     "halt",         "lock",         "wait",         "leave",
     "cmc",          "clc",          "cld",          "cli",
@@ -586,27 +592,6 @@ static uint32_t build_enter(const uint32_t * restrict array) {
     return 2;
 }
 
-static uint32_t build_float(const uint32_t * restrict array) { /// X: UNCHECKED.
-    const uint32_t operation = array[0];
-    const uint32_t size      = array[1];
-    const uint32_t from      = array[2];
-    const uint32_t source    = array[3];
-
-    debug_print("@y%s@- @b%s@- @c%s@- %i",
-                operation_name[operation],
-                size_name[size],
-                operand_name[from],
-                source);
-
-    inset(from == MEM, 0xd8 + 0x04 * (size == D64));
-
-    modify_memory(operation - FLOAT_BEGIN, 0, from);
-
-    inset_memory(from == MEM, size, source, 0);
-
-    return 3;
-}
-
 static uint32_t build_shift(const uint32_t * restrict array) {
     const uint32_t operation   = array[0];
     const uint32_t size        = array[1];
@@ -635,6 +620,49 @@ static uint32_t build_shift(const uint32_t * restrict array) {
     inset_immediate(true, D8, offset);
 
     return 5;
+}
+
+static uint32_t build_float(const uint32_t * restrict array) { /// X: UNCHECKED.
+    const uint32_t operation = array[0];
+    const uint32_t size      = array[1];
+    const uint32_t from      = array[2];
+    const uint32_t source    = array[3];
+
+    debug_print("@y%s@- @b%s@- @c%s@- %i",
+                operation_name[operation],
+                size_name[size],
+                operand_name[from],
+                source);
+
+    inset(from == MEM, 0xd8 + 0x04 * (size == D64));
+
+    modify_memory(operation - FLOAT_BEGIN, 0, from);
+
+    inset_memory(from == MEM, size, source, 0);
+
+    return 3;
+}
+
+static uint32_t build_fmove_if(const uint32_t * restrict array) { /// X: UNCHECKED.
+    const uint32_t operation = array[0];
+    const uint32_t source    = array[1];
+    const uint32_t offset    = operation - FMOVE_IF_BEGIN;
+
+    debug_print("@y%s@- @cst@- 0 @cst@- %i",
+                operation_name[operation],
+                source);
+
+    debug_error (source > 7, "@r%s ! source %i > 7@-\n",
+                             operation_name[operation],
+                             source);
+
+    inset(operation < FCMOVAE, 0xda);
+    inset(operation > FCMOVU,  0xdb);
+
+    inset(operation < FCMOVAE, 0xc0 + 0x08 * (offset - 0) + source);
+    inset(operation > FCMOVU,  0xc0 + 0x08 * (offset - 4) + source);
+
+    return 1;
 }
 
 static uint32_t build_in_out(const uint32_t * restrict array) {
@@ -829,10 +857,12 @@ static uint32_t (*build_instruction[OPERATION_END])(const uint32_t * restrict ar
     build_double,   build_double,   build_double,   build_double,
     build_single,   build_single,   build_single,   build_single,
     build_single,   build_single,   build_single,   build_single,
-    build_float,    build_float,    build_float,    build_float,
-    build_float,    build_float,    build_float,    build_float,
     build_shift,    build_shift,    build_shift,    build_shift,
     build_shift,    build_shift,    build_shift,    build_shift,
+    build_float,    build_float,    build_float,    build_float,
+    build_float,    build_float,    build_float,    build_float,
+    build_fmove_if, build_fmove_if, build_fmove_if, build_fmove_if,
+    build_fmove_if, build_fmove_if, build_fmove_if, build_fmove_if,
     build_static_1, build_static_1, build_static_1, build_static_1,
     build_static_1, build_static_1, build_static_1, build_static_1,
     build_static_1, build_static_1, build_static_1, build_static_1,

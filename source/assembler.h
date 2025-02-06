@@ -46,6 +46,7 @@ typedef enum {
 
 typedef enum {
     REL,            REG,            MEM,            IMM,
+    //~DER,            INT,            BCF,            BCD,
     OPERAND_END
 } operand_code_t;
 
@@ -55,25 +56,36 @@ typedef enum {
     AND,            SUB,            XOR,            CMP,
     INC,            DEC,            NOT,            NEG,
     MUL,            IMUL,           DIV,            IDIV,
-    FADD,           FMUL,           FCOM,           FCOMP,
-    FSUB,           FSUBR,          FDIV,           FDIVR,
     ROL,            ROR,            RCL,            RCR,
     SAL,            SHR,            SHL,            SAR,
+    FADD,           FMUL,           FCOM,           FCOMP,
+    FSUB,           FSUBR,          FDIV,           FDIVR,
+    FCMOVB,         FCMOVE,         FCMOVBE,        FCMOVU,
+    FCMOVAE,        FCMOVNE,        FCMOVA,         FCMOVNU,
     /**/
     //~FBLD,           FBSTP,
+    /**/
     //~FADDP,          FIADD,
-    //~FCMOVB,         FCMOVE,         FCMOVBE,        FCMOVU,
-    //~FCMOVAE,        FCMOVNE,        FCMOVA,         FCMOVNU,
-    //~FCOMI,          FCOMIP,         FUCOMI,         FUCOMIP,
-    //~FDIVP,          FIDIV,          FDIVRP,         FIDIVR,
-    //~FFREE,          FICOM,          FICOMP,         FILD,
+    //~FMULP,          FIMUL,
+    //~ fcompare
+    //~FCOMI,          FCOMIP,         FUCOMI,         FUCOMIP, // 2-3
+    //~FICOM,          FICOMP,         FUCOM,          FUCOMP,
+    //~ fcompare
+    //~FSUBP,          FISUB,
+    //~FSUBRP,         FISUBR,
+    //~FDIVP,          FIDIV,
+    //~FDIVRP,         FIDIVR,
+    /**/
+    //~FFREE,
+    //~FILD,
     //~FIST,           FISTP,
     //~FISTTP,         FLD,            FLDCW,          FLDENV,
-    //~FMULP,          FIMUL,          FRSTOR,         FUCOM,
-    //~FSAVE,          FNSAVE,         FST,            FSTP,
-    //~FSTCW,          FNSTCW,         FSTENV,         FNSTENV,
-    //~FSTSW,          FNSTSW,         FSUBP,          FISUB,
-    //~FSUBRP,         FISUBR,         FUCOMP,
+    //~FRSTOR,
+    //~FSAVE,          FNSAVE,
+    //~FST,            FSTP,
+    //~FSTCW,          FNSTCW,
+    //~FSTENV,         FNSTENV,
+    //~FSTSW,          FNSTSW,
     /**/
     NOP,            CWDE,           POPF,           PUSHF,
     HALT,           LOCK,           WAIT,           LEAVE,
@@ -115,7 +127,7 @@ typedef enum {
     SETS,           SETNS,          SETPE,          SETPO,
     SETL,           SETGE,          SETLE,          SETG,
     //~LEA,            MOVBE,
-    //~TEST,           XADD,           XCHG,           /*BSWAP,*/
+    //~TEST,           XADD,           XCHG,
     BT,             BTS,            BTR,            BTC,
     BSF,            BSR,            BSWAP,
     //~SHLD,           SHRD,
@@ -128,7 +140,7 @@ typedef enum {
     // The REPE and REPNE prefixes can be added to the CMPS and SCAS instructions.
 } operation_code_t;
 
-typedef enum { /// X: USE PROPER TYPE DEFINITIONS?
+typedef enum {
     GR0,            GR1,            GR2,            GR3,
     GR4,            GR5,            GR6,            GR7,
     GR8,            GR9,            GR10,           GR11,
