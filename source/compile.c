@@ -97,6 +97,7 @@ int make_executable(const char * const filename) {
 }
 
 void _append_instructions(const unsigned argc, ...) {
+    // XXX: extension logic
     va_list ap;
     va_start(ap, argc);
 

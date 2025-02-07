@@ -102,12 +102,16 @@ end machine
 All literal values (string or numeric) are copied as machine code.
 
 ## Logic
-+ only evaulated in _logical blocks_
+```
+if <logical-block> then
+[else if <logic> then]+
+[otherwise]
+end if
+```
 
-### logical blocks
-+ if-then-else-end-if
+Logic is only evaulated in _logical blocks_
 
-#### operators
+### operators
 + =
 + >
 + <
