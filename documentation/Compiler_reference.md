@@ -29,4 +29,6 @@ options:
 ```
     -o | --output <file>
     -a | --architecture <architecture>
+    -c | --compile-only
+    -v | --verbose
 ```

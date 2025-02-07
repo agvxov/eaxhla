@@ -1,670 +1,1024 @@
 #include "assembler.h"
 #include "debug.h"
+#include "arena.h"
 
-#include <stdlib.h>
-
-#define DOUBLE_BEGIN   (ADD)
+#define DOUBLE_BEGIN   (ADD) /// X: INTERFACE SHOULDN'T CHANGE!
 #define DOUBLE_END     (CMP)
 #define SINGLE_BEGIN   (INC)
 #define SINGLE_END     (IDIV)
+#define SHIFT_BEGIN    (ROL)
+#define SHIFT_END      (SAR)
+#define FLOAT_BEGIN    (FADD)
+#define FLOAT_END      (FDIVR)
+#define FLOATL_BEGIN   (FLADD)
+#define FLOATL_END     (FLDIVR)
+#define FMOVE_IF_BEGIN (FCMOVB)
+#define FMOVE_IF_END   (FCMOVNU)
 #define STATIC_1_BEGIN (NOP)
-#define STATIC_1_END   (PUSHF)
+#define STATIC_1_END   (RETF)
 #define STATIC_2_BEGIN (SYSCALL)
-#define STATIC_2_END   (FCOS)
+#define STATIC_2_END   (FNCLEX)
+#define STATIC_3_BEGIN (MONITOR)
+#define STATIC_3_END   (FCLEX)
 #define JUMP_IF_BEGIN  (JO)
 #define JUMP_IF_END    (JG)
 #define MOVE_IF_BEGIN  (CMOVO)
 #define MOVE_IF_END    (CMOVG)
 #define SET_IF_BEGIN   (SETO)
 #define SET_IF_END     (SETG)
-#define FLOAT_BEGIN    (FADD)
-#define FLOAT_END      (FDIVR)
-#define SHIFT_BEGIN    (ROL)
-#define SHIFT_END      (SAR)
 
-static const char * size_name [] = {
-    "\033[1;36md8 \033[0m",         "\033[1;36md16\033[0m",         "\033[1;36md32\033[0m",         "\033[1;36md64\033[0m"
+#if DEBUG == 1
+
+static const char * size_name[SIZE_END] = {
+    "d8",           "d16",          "d32",          "d64",
+    "d80",          "d128",         "d256",         "d512",
 };
 
-static const char * type_name [] = {
-    "\033[1;34mrel\033[0m",         "\033[1;34mreg\033[0m",         "\033[1;34mmem\033[0m",         "\033[1;34mimm\033[0m"
+static const char * operand_name[OPERAND_END] = {
+    "rel",          "reg",          "mem",          "imm",
+    "der",          "int",          "bcf",          "bcd",
 };
 
-static const char * data_name [] = {
-    "\033[1;33masmdirmem\033[0m",   "\033[1;33masmdirrel\033[0m",   "\033[1;33masmdirimm\033[0m",   "\033[1;33masmdirrep\033[0m",
-    "\033[1;33madd\033[0m",         "\033[1;33mor\033[0m",          "\033[1;33madc\033[0m",         "\033[1;33msbb\033[0m",
-    "\033[1;33mand\033[0m",         "\033[1;33msub\033[0m",         "\033[1;33mxor\033[0m",         "\033[1;33mcmp\033[0m",
-    "\033[1;33minc\033[0m",         "\033[1;33mdec\033[0m",         "\033[1;33mnot\033[0m",         "\033[1;33mneg\033[0m",
-    "\033[1;33mmul\033[0m",         "\033[1;33mimul\033[0m",        "\033[1;33mdiv\033[0m",         "\033[1;33midiv\033[0m",
-    "\033[1;33mfadd\033[0m",        "\033[1;33mfmul\033[0m",        "\033[1;33mfcom\033[0m",        "\033[1;33mfcomp\033[0m",
-    "\033[1;33mfsub\033[0m",        "\033[1;33mfsubr\033[0m",       "\033[1;33mfdiv\033[0m",        "\033[1;33mfdivr\033[0m",
-    "\033[1;33mrol\033[0m",         "\033[1;33mror\033[0m",         "\033[1;33mrcl\033[0m",         "\033[1;33mrcr\033[0m",
-    "\033[1;33msal\033[0m",         "\033[1;33mshr\033[0m",         "\033[1;33mshl\033[0m",         "\033[1;33msar\033[0m",
-    "\033[1;33mnop\033[0m",         "\033[1;33mretn\033[0m",        "\033[1;33mretf\033[0m",        "\033[1;33mleave\033[0m",
-    "\033[1;33mpopf\033[0m",        "\033[1;33mpushf\033[0m",
-    "\033[1;33msyscall\033[0m",     "\033[1;33mcpuid\033[0m",       "\033[1;33mfnop\033[0m",        "\033[1;33mfchs\033[0m",
-    "\033[1;33mfabs\033[0m",        "\033[1;33mftst\033[0m",        "\033[1;33mfxam\033[0m",        "\033[1;33mfld1\033[0m",
-    "\033[1;33mfldl2t\033[0m",      "\033[1;33mfldl2e\033[0m",      "\033[1;33mfldpi\033[0m",       "\033[1;33mfldlg2\033[0m",
-    "\033[1;33mfldln2\033[0m",      "\033[1;33mfldz\033[0m",        "\033[1;33mf2xm1\033[0m",       "\033[1;33mfyl2x\033[0m",
-    "\033[1;33mfptan\033[0m",       "\033[1;33mfpatan\033[0m",      "\033[1;33mfxtract\033[0m",     "\033[1;33mfprem1\033[0m",
-    "\033[1;33mfdecstp\033[0m",     "\033[1;33mfincstp\033[0m",     "\033[1;33mfprem\033[0m",       "\033[1;33mfyl2xp1\033[0m",
-    "\033[1;33mfsqrt\033[0m",       "\033[1;33mfsincos\033[0m",     "\033[1;33mfrndint\033[0m",     "\033[1;33mfscale\033[0m",
-    "\033[1;33mfsin\033[0m",        "\033[1;33mfcos\033[0m",
-    "\033[1;33menter\033[0m",       "\033[1;33mcall\033[0m",        "\033[1;33min\033[0m",          "\033[1;33mout\033[0m",
-    "\033[1;33mjmp\033[0m",         "\033[1;33mmov\033[0m",         "\033[1;33mpop\033[0m",         "\033[1;33mpush\033[0m",
-    "\033[1;33mjo\033[0m",          "\033[1;33mjno\033[0m",         "\033[1;33mjb\033[0m",          "\033[1;33mjae\033[0m",
-    "\033[1;33mje\033[0m",          "\033[1;33mjne\033[0m",         "\033[1;33mjbe\033[0m",         "\033[1;33mja\033[0m",
-    "\033[1;33mjs\033[0m",          "\033[1;33mjns\033[0m",         "\033[1;33mjpe\033[0m",         "\033[1;33mjpo\033[0m",
-    "\033[1;33mjl\033[0m",          "\033[1;33mjge\033[0m",         "\033[1;33mjle\033[0m",         "\033[1;33mjg\033[0m",
-    "\033[1;33mcmovo\033[0m",       "\033[1;33mcmovno\033[0m",      "\033[1;33mcmovb\033[0m",       "\033[1;33mcmovae\033[0m",
-    "\033[1;33mcmove\033[0m",       "\033[1;33mcmovne\033[0m",      "\033[1;33mcmovbe\033[0m",      "\033[1;33mcmova\033[0m",
-    "\033[1;33mcmovs\033[0m",       "\033[1;33mcmovns\033[0m",      "\033[1;33mcmovpe\033[0m",      "\033[1;33mcmovpo\033[0m",
-    "\033[1;33mcmovl\033[0m",       "\033[1;33mcmovge\033[0m",      "\033[1;33mcmovle\033[0m",      "\033[1;33mcmovg\033[0m",
-    "\033[1;33mseto\033[0m",        "\033[1;33msetno\033[0m",       "\033[1;33msetb\033[0m",        "\033[1;33msetae\033[0m",
-    "\033[1;33msete\033[0m",        "\033[1;33msetne\033[0m",       "\033[1;33msetbe\033[0m",       "\033[1;33mseta\033[0m",
-    "\033[1;33msets\033[0m",        "\033[1;33msetns\033[0m",       "\033[1;33msetpe\033[0m",       "\033[1;33msetpo\033[0m",
-    "\033[1;33msetl\033[0m",        "\033[1;33msetge\033[0m",       "\033[1;33msetle\033[0m",       "\033[1;33msetg\033[0m",
-    "\033[1;33mbswap\033[0m",       "\033[1;33mbsf\033[0m",         "\033[1;33mbsr\033[0m",         "\033[1;33mloop\033[0m",
-    "\033[1;33mloope\033[0m",       "\033[1;33mloopne\033[0m"
+static const char * operation_name[OPERATION_END] = {
+    "asmdirmem",    "asmdirrel",    "asmdirimm",    "asmdirrep",
+    "add",          "or",           "adc",          "sbb",
+    "and",          "sub",          "xor",          "cmp",
+    "inc",          "dec",          "not",          "neg",
+    "mul",          "imul",         "div",          "idiv",
+    "rol",          "ror",          "rcl",          "rcr",
+    "sal",          "shr",          "shl",          "sar",
+    "fadd",         "fmul",         "fcom",         "fcomp",
+    "fsub",         "fsubr",        "fdiv",         "fdivr",
+    "fladd",        "flmul",        "flcom",        "flcomp",
+    "flsub",        "flsubr",       "fldiv",        "fldivr",
+    "fcmovb",       "fcmove",       "fcmovbe",      "fcmovu",
+    "fcmovae",      "fcmovne",      "fcmova",       "fcmovnu",
+    "nop",          "cwde",         "popf",         "pushf",
+    "halt",         "lock",         "wait",         "leave",
+    "cmc",          "clc",          "cld",          "cli",
+    "stc",          "std",          "sti",          "retn",
+    "retf",
+    "syscall",      "sysenter",     "sysretn",      "sysexitn",
+    "cpuid",        "cdqe",         "rsm",          "ud2",
+    "emms",         "pause",        "invd",         "wbinvd",
+    "wrmsr",        "rdmsr",        "rdpmc",        "rdtsc",
+    "fnop",         "fchs",         "fsin",         "fcos",
+    "fabs",         "ftst",         "fxam",         "fld1",
+    "fldl2t",       "fldl2e",       "fldpi",        "fldlg2",
+    "fldln2",       "fldz",         "f2xm1",        "fyl2x",
+    "fptan",        "fpatan",       "fxtract",      "fprem1",
+    "fdecstp",      "fincstp",      "fprem",        "fyl2xp1",
+    "fsqrt",        "fsincos",      "frndint",      "fscale",
+    "fcompp",       "fucompp",      "fninit",       "fnclex",
+    "monitor",      "mwait",        "sysretf",      "sysexitf",
+    "lfence",       "mfence",       "sfence",       "rdtscp",
+    "finit",        "fclex",
+    "enter",        "call",         "in",           "out",
+    "jmp",          "mov",          "pop",          "push",
+    "jo",           "jno",          "jb",           "jae",
+    "je",           "jne",          "jbe",          "ja",
+    "js",           "jns",          "jpe",          "jpo",
+    "jl",           "jge",          "jle",          "jg",
+    "cmovo",        "cmovno",       "cmovb",        "cmovae",
+    "cmove",        "cmovne",       "cmovbe",       "cmova",
+    "cmovs",        "cmovns",       "cmovpe",       "cmovpo",
+    "cmovl",        "cmovge",       "cmovle",       "cmovg",
+    "seto",         "setno",        "setb",         "setae",
+    "sete",         "setne",        "setbe",        "seta",
+    "sets",         "setns",        "setpe",        "setpo",
+    "setl",         "setge",        "setle",        "setg",
+    //~"lea",          "movbe",
+    //~"test",         "ud2",          "xadd",         "xchg",
+    "bt",           "bts",          "btr",          "btc",
+    "bsf",          "bsr",          "bswap",
+    "loop",         "loope",        "loopne",
+    //~"rep",          "repe",         "repne",
+    //~"ins",          "outs",         "lods",         "stos",
+    //~"movs",         "cmps",         "scas"
 };
 
-static unsigned int   empty_count = 1;
-static unsigned int   empty_holes = 1;
-static unsigned int * empty_array = NULL;
-static unsigned int * empty_imbue = NULL;
-static unsigned int * empty_store = NULL;
+#endif
 
-static void replace (unsigned char * destination, unsigned char * source, unsigned long size) {
-	for (--size; size != (unsigned long) -1; --size) {
-		destination  [size] = source  [size];
-	}
+static uint32_t   empty_count = 1; /// X: REMOVE GLOBAL VARIABLES.
+static uint32_t   empty_holes = 1; /// X: MULTITHREAD? MODERNIZE?
+static uint32_t * empty_array = NULL;
+static uint32_t * empty_imbue = NULL;
+static uint32_t * empty_store = NULL;
+
+static bool front(uint32_t data) { return (data >= GR4) && (data <= GR7);  }
+static bool upper(uint32_t data) { return (data >= GR8) && (data <= GR15); }
+static bool lower(uint32_t data) { return (data <= GR7);                   }
+
+// We don't use these yet, hardcoded.
+static bool far (uint32_t label) { return label && 1; }
+static bool near(uint32_t label) { return label && 0; }
+
+static bool transfer(uint32_t to, uint32_t from) { return (to == REG) && (from == REG); }
+static bool import  (uint32_t to, uint32_t from) { return (to == REG) && (from == MEM); }
+static bool attach  (uint32_t to, uint32_t from) { return (to == REG) && (from == IMM); }
+static bool export  (uint32_t to, uint32_t from) { return (to == MEM) && (from == REG); }
+static bool assign  (uint32_t to, uint32_t from) { return (to == MEM) && (from == IMM); }
+static bool relate  (uint32_t to, uint32_t from) { return (to == REG) && (from == REL); }
+
+static uint32_t absolute(void) { return (0x004010b0 - text_sector_size - 4); }
+static uint32_t relative(void) { return (0x00001000 - text_sector_size - 4); }
+static uint32_t unsorted(void) { return (0x00000000 - text_sector_size - 4); }
+
+static void replace(uint8_t * destination, /// X: THIS IS SILLY.
+                    uint8_t * source,
+                    size_t    size) {
+    for (; size; --size) {
+        destination[size - 1] = source[size - 1];
+    }
 }
 
-static void inset (int when, unsigned int data) {
-	text_sector_byte [text_sector_size] = (unsigned char) data;
+static void inset(uint32_t when,
+                  uint32_t data) {
+    text_sector_byte[text_sector_size] = (uint8_t)data;
 
-	text_sector_size += (unsigned int) when;
+    text_sector_size += when;
 }
 
-static void inset_immediate (int when, unsigned int size, unsigned int data) {
-	inset ((when),                  (data >>  0) & 0xff);
-	inset ((when) && (size >= D16), (data >>  8) & 0xff);
-	inset ((when) && (size >= D32), (data >> 16) & 0xff);
-	inset ((when) && (size >= D32), (data >> 24) & 0xff);
+static void inset_immediate(uint32_t when,
+                            uint32_t size,
+                            uint32_t data) {
+    inset((when),                  (data >>  0) & 0xff);
+    inset((when) && (size >= D16), (data >>  8) & 0xff);
+    inset((when) && (size >= D32), (data >> 16) & 0xff);
+    inset((when) && (size >= D32), (data >> 24) & 0xff);
 }
 
-static void inset_memory (int when, unsigned int size, unsigned int data, unsigned int base) {
-	empty_array [empty_holes] = text_sector_size;
-	empty_imbue [empty_holes] = data;
+static void inset_memory(uint32_t when,
+                         uint32_t size,
+                         uint32_t data,
+                         uint32_t base) {
+    empty_array[empty_holes] = text_sector_size;
+    empty_imbue[empty_holes] = data;
 
-	empty_holes += (unsigned int) when;
+    empty_holes += when;
 
-	inset_immediate (when, size, base);
+    inset_immediate(when, size, base);
 }
 
-static unsigned int store_relative (unsigned int * array) {
-	unsigned int relative = array [1];
-
-	debug_printf ("> %s %u", data_name [array [0]], array [1]);
-
-	empty_array [empty_holes] = text_sector_size;
-	empty_imbue [empty_holes] = relative;
-
-	++empty_holes;
-
-	return (1);
+static void short_prefix(uint32_t size) {
+    inset(size == D16, 0x66);
 }
 
-static unsigned int store_memory (unsigned int * array) {
-	unsigned int memory = array [1];
+static void long_prefix(uint32_t size,
+                        uint32_t to,
+                        uint32_t destination,
+                        uint32_t from,
+                        uint32_t source) {
+    const uint32_t long_destination = (to   == REG) && (upper(destination));
+    const uint32_t long_source      = (from == REG) && (upper(source));
+    const uint32_t long_size        = (size == D64);
 
-	debug_printf ("> %s %u", data_name [array [0]], array [1]);
-
-	empty_store [memory] = text_sector_size;
-
-	++empty_count;
-
-	return (1);
+    inset(long_destination || long_source || long_size,
+          0x40 +
+          0x01 * long_destination +
+          0x04 * long_source +
+          0x08 * long_size);
 }
 
-static unsigned int store_immediate (unsigned int * array) {
-	unsigned int index  = 0,
-	             size   = array [1],
-	             amount = array [2];
-
-	debug_printf ("> %s %s %u", data_name [array [0]], size_name [array [1]], array [2]);
-
-	for (index = 0; index < amount; ++index) {
-		inset_immediate (1, size, array [3 + index]);
-	}
-
-	return (amount + 2);
+static void modify_memory(uint32_t code,
+                          uint32_t to,
+                          uint32_t from) {
+    inset((export(to, from)) || (import(to, from)),
+          0x05 +
+          0x08 * code * (assign(to, from)));
 }
 
-static int front (unsigned int data) {
-	return ((data >= GR4) && (data <= GR7));
+static uint32_t mc0(uint32_t code, /// X: THIS IS PLAIN EVIL.
+                    uint32_t base) {
+    return (0xc0 +
+            0x01 * (code % 8) +
+            0x08 * (base % 8));
 }
 
-static int lower (unsigned int data) {
-	return (data <= GR7);
+static uint32_t m05(uint32_t code) {
+    return (0x05 + 0x08 * code);
 }
 
-static int upper (unsigned int data) {
-	return ((data >= GR8) && (data <= GR15));
+static uint32_t store_relative(const uint32_t * restrict array) {
+    const uint32_t relative = array[1];
+
+    debug_print("@yasmrel@- %i", relative);
+
+    empty_array[empty_holes] = text_sector_size;
+    empty_imbue[empty_holes] = relative;
+
+    ++empty_holes;
+
+    return 1;
 }
 
-static int far (unsigned int label) {
-	return (label && 1);
+static uint32_t store_memory(const uint32_t * restrict array) {
+    const uint32_t memory = array[1];
+
+    debug_print("@yasmmem@- %i", memory);
+
+    empty_store[memory] = text_sector_size;
+
+    ++empty_count;
+
+    return 1;
 }
 
-static int near (unsigned int label) {
-	return (label && 0);
+static uint32_t store_immediate(const uint32_t * restrict array) {
+    const uint32_t size   = array[1];
+    const uint32_t amount = array[2];
+
+    debug_print("@yasmimm@- @b%s@- %i", size_name[size], amount);
+
+    for (uint32_t index = 0; index < amount; ++index) {
+        inset_immediate(true, size, array[3 + index]);
+    }
+
+    return amount + 2;
 }
 
-static void short_prefix (unsigned int size) {
-	inset (size == D16, 0x66);
+static uint32_t build_double(const uint32_t * restrict array) { /// X: ERROR PRONE.
+    const uint32_t operation   = array[0];
+    const uint32_t size        = array[1];
+    const uint32_t to          = array[2];
+    const uint32_t destination = array[3];
+    const uint32_t from        = array[4];
+    const uint32_t source      = array[5];
+
+    debug_error(size > D64, "@rsize : double = %i;@-\n", size);
+    debug_error(to   > MEM, "@rto   : double = %i;@-\n", to);
+    debug_error(from > IMM, "@rfrom : double = %i;@-\n", from);
+
+    debug_print("@y%s@- @b%s@- @c%s@- %i @c%s@- %i",
+                operation_name[operation],
+                size_name[size],
+                operand_name[to],
+                destination,
+                operand_name[from],
+                source);
+
+    short_prefix(size);
+
+    long_prefix(size, to, destination, from, source);
+
+    // What the fuck...?
+    inset((size == D8) && (to == REG) && ((from == REG) || (from == IMM)) &&
+          (((front(destination) && lower(source)) ||
+            (lower(destination) && front(source))) ||
+              (attach(to, from) && front(destination))), 0x40);
+
+    inset((from == IMM) && (to == REG),
+          0x81 -
+          0x01 * (size == D8));
+
+    inset((from == IMM) && (to == REG) && (destination == 0),
+          0x05 +
+          0x08 * (operation & 7) -
+          0x01 * (size == D8));
+
+    // Seriously, what the fuck...?
+    inset(!((from == IMM) && (to == REG) && (destination == 0)),
+          (destination & 7) * (attach(to, from)) +
+          0x08 * (operation - DOUBLE_BEGIN) +
+          0x01 * (assign(to, from) && (size == D8)) -
+          0x01 * (attach(to, from) && (size != D8)) +
+          0x01 * (size != D8) +
+          0x02 * (import(to, from)) +
+          0x04 * (assign(to, from)) +
+          0xc0 * (attach(to, from)));
+
+    inset(transfer(to, from), mc0(destination, source));
+
+    modify_memory(destination, to, from);
+    modify_memory(source,      to, from);
+
+    inset_memory(import(to, from), D32,  source, relative());
+
+    inset_immediate(attach(to, from), size, source);
+
+    inset_memory(export(to, from), D32, destination, relative());
+    inset_memory(assign(to, from), D32, destination, relative());
+
+    inset_immediate(assign(to, from), size, source);
+
+    inset_memory(relate(to, from), D32, source, absolute());
+
+    return 5;
 }
 
-static void long_prefix (unsigned int size, unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
-	unsigned int to_upper   = (to   == REG) && (upper (destination));
-	unsigned int from_upper = (from == REG) && (upper (source));
+static uint32_t build_single(const uint32_t * restrict array) { /// X: ERROR PRONE.
+    const uint32_t operation   = array[0];
+    const uint32_t size        = array[1];
+    const uint32_t to          = array[2];
+    const uint32_t destination = array[3];
 
-	inset ((size == D64) || (to_upper) || (from_upper), 0x40 + 0x01 * to_upper + 0x04 * from_upper + 0x08 * (size == D64));
+    debug_error(size > D64, "@rsize : single = %i;@-\n", size);
+    debug_error(to   > MEM, "@rto   : single = %i;@-\n", to);
+
+    debug_print("@y%s@- @b%s@- @c%s@- %i",
+                operation_name[operation],
+                size_name[size],
+                operand_name[to],
+                destination);
+
+    short_prefix(size);
+
+    long_prefix(size, to, destination, 0, 0);
+
+    inset((size == D8) && (to == REG) && front(destination), 0x40);
+
+    inset(1,
+          0xf7 +
+          0x08 * ((operation == INC) || (operation == DEC)) -
+          0x01 * (size == D8));
+
+    // THIS CAN BE REFACTORED TO C0F8 AND 053D
+    // This old comment should be respected out...
+    // And there's probably a way to shorten these.
+    inset(to == REG,
+          0xc0 +
+          0x08 * (operation - SINGLE_BEGIN) +
+          0x01 * (destination & 7));
+
+    inset(to == MEM,
+          0x05 +
+          0x08 * (operation - SINGLE_BEGIN));
+
+    inset_memory(to == MEM, D32, destination, relative());
+
+    return 3;
 }
 
-static void modify_registers (unsigned int to, unsigned int destination, unsigned int from, unsigned int source) {
-	inset ((to == REG) && (from == REG), 0xc0 + 0x01 * (destination & 0x07) + 0x08 * (source & 0x07));
+static uint32_t build_static_1(const uint32_t * restrict array) {
+    const uint32_t operation = array[0];
+
+    const uint8_t data[STATIC_1_END - STATIC_1_BEGIN + 1] = {
+        0x90, 0x98, 0x9d, 0x9c, 0xf4, 0xf0, 0x9b, 0xc9,
+        0xf5, 0xf8, 0xfc, 0xfa, 0xf9, 0xfd, 0xfb, 0xc3,
+        0xcb,
+    };
+
+    debug_print("@y%s@-", operation_name[operation]);
+
+    inset(true, data[operation - STATIC_1_BEGIN]);
+
+    return 0;
 }
 
-static void modify_memory (unsigned int operation, unsigned int to, unsigned int from) {
-	inset (((to == MEM) && (from == REG)) || ((to == REG) && (from == MEM)), 0x05 + 0x08 * operation * ((to == MEM) && (from == IMM)));
+static uint32_t build_static_2(const uint32_t * restrict array) {
+    const uint32_t operation = array[0];
+
+    const uint16_t data[STATIC_2_END - STATIC_2_BEGIN + 1] = {
+        0x050f, 0x340f, 0x070f, 0x350f, 0xa20f, 0x9848, 0xaa0f, 0x0b0f,
+        0x770f, 0x90f3, 0x080f, 0x090f, 0x300f, 0x320f, 0x330f, 0x310f,
+        0xd0d9, 0xe0d9, 0xfed9, 0xffd9, 0xe1d9, 0xe4d9, 0xe5d9, 0xe8d9,
+        0xe9d9, 0xead9, 0xebd9, 0xecd9, 0xedd9, 0xeed9, 0xf0d9, 0xf1d9,
+        0xf2d9, 0xf3d9, 0xf4d9, 0xf5d9, 0xf6d9, 0xf7d9, 0xf8d9, 0xf9d9,
+        0xfad9, 0xfbd9, 0xfcd9, 0xfdd9, 0xd9de, 0xe9da, 0xe3db, 0xe2db,
+    };
+
+    debug_print("@y%s@-", operation_name[operation]);
+
+    inset_immediate(true, D16, data[operation - STATIC_2_BEGIN]);
+
+    return 0;
 }
 
-// REFACTORING IN PROGRESS
-static unsigned int build_double (unsigned int * array) {
-	unsigned int operation   = array [0],
-	             size        = array [1],
-	             to          = array [2],
-	             destination = array [3],
-	             from        = array [4],
-	             source      = array [5];
+static uint32_t build_static_3(const uint32_t * restrict array) {
+    const uint32_t operation = array[0];
 
-	debug_printf ("> %s %s %s %u %s %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3], type_name [array [4]], array [5]);
+    const uint8_t data[(STATIC_3_END - STATIC_3_BEGIN + 1) * 3] = {
+        0x0f, 0x01, 0xc8,
+        0x0f, 0x01, 0xc9,
+        0x48, 0x0f, 0x07,
+        0x48, 0x0f, 0x35,
+        0x0f, 0xae, 0xe8,
+        0x0f, 0xae, 0xf0,
+        0x0f, 0xae, 0xf8,
+        0x0f, 0x01, 0xf9,
+        0x9b, 0xdb, 0xe3,
+        0x9b, 0xdb, 0xe2,
+    };
 
-	short_prefix (size);
+    debug_print("@y%s@-", operation_name[operation]);
 
-	long_prefix (size, to, destination, from, source);
+    inset(true, data[(operation - STATIC_3_BEGIN) * 3 + 0]);
+    inset(true, data[(operation - STATIC_3_BEGIN) * 3 + 1]);
+    inset(true, data[(operation - STATIC_3_BEGIN) * 3 + 2]);
 
-	inset ((size == D8) && (to == REG) && ((from == REG) || (from == IMM)) && (( (front (destination) && lower (source)) || (lower (destination) && front (source))) || ((to == REG) && (from == IMM) && front (destination))), 0x40);
-
-	inset ((from == IMM) && (to == REG), 0x81 - 0x01 * (size == D8));
-
-	inset ((from == IMM) && (to == REG) && (destination == 0), 0x05 + 0x08 * (operation & 0x07) - 0x01 * (size == D8));
-
-	inset (! ((from == IMM) && (to == REG) && (destination == 0)), (destination & 0x07) * ((to == REG) && (from == IMM)) + 0x08 * (operation - DOUBLE_BEGIN) + 0x01 * ((to == MEM) && (from == IMM) && (size == D8)) - 0x01 * ((to == REG) && (from == IMM) && (size != D8)) + 0x01 * (size != D8) + 0x02 * ((to == REG) && (from == MEM)) + 0x04 * ((to == MEM) && (from == IMM)) + 0xc0 * ((to == REG) && (from == IMM)));
-
-	modify_registers (to, destination, from, source);
-
-	modify_memory (destination, to, from);
-	modify_memory (source,      to, from);
-
-	inset_memory    ((to == REG) && (from == MEM), D32,  source, 0x1000 - (text_sector_size + 4));
-	inset_immediate ((to == REG) && (from == IMM), size, source);
-	inset_memory    ((to == MEM) && (from == REG), D32,  destination, 0x1000 - (text_sector_size + 4));
-	inset_memory    ((to == MEM) && (from == IMM), D32,  destination, 0x1000 - (text_sector_size + 4));
-	inset_immediate ((to == MEM) && (from == IMM), size, source);
-	inset_memory    ((to == REG) && (from == REL), D32,  source, 0x4010b0 - (text_sector_size + 4));
-
-	return (5);
+    return 0;
 }
 
-static unsigned int build_single (unsigned int * array) {
-	unsigned int operation   = array [0],
-	             size        = array [1],
-	             to          = array [2],
-	             destination = array [3];
+static uint32_t build_jump_if(const uint32_t * restrict array) {
+    const uint32_t operation = array[0];
+    const uint32_t size      = array[1];
+    const uint32_t location  = array[3];
 
-	debug_printf ("> %s %s %s %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3]);
+    debug_print("@y%s@- @b%s@- @crel@- %i",
+                operation_name[operation],
+                size_name[size],
+                location);
 
-	short_prefix (size);
+    inset(far(location) && (size == D32), 0x0f);
 
-	long_prefix (size, to, destination, 0, 0);
+    inset(far(location),  0x80 + operation - JUMP_IF_BEGIN);
+    inset(near(location), 0x70 + operation - JUMP_IF_BEGIN);
 
-	inset ((size == D8) && (to == REG) && front (destination), 0x40);
+    inset_memory(true, D32, location, unsorted());
 
-	inset (1, 0xf7 + 0x08 * ((operation == INC) || (operation == DEC)) - 0x01 * (size == D8));
-
-	// THIS CAN BE REFACTORED TO C0F8 AND 053D
-	inset (to == REG, 0xc0 + 0x08 * (operation - SINGLE_BEGIN) + 0x01 * (destination & 0x07));
-	inset (to == MEM, 0x05 + 0x08 * (operation - SINGLE_BEGIN));
-
-	inset_memory (to == MEM, D32, destination, 0x1000 - (text_sector_size + 4));
-
-	return (3);
+    return 3;
 }
 
-static unsigned int build_static_1 (unsigned int * array) {
-	unsigned int operation = array [0];
+static uint32_t build_move_if(const uint32_t * restrict array) {
+    const uint32_t operation   = array[0];
+    const uint32_t size        = array[1];
+    const uint32_t to          = array[2];
+    const uint32_t destination = array[3];
+    const uint32_t from        = array[4];
+    const uint32_t source      = array[5];
 
-	const unsigned char data  [] = {
-		0x90, 0xc3, 0xcb, 0xc9, 0x9d, 0x9c
-	};
+    debug_print("@y%s@- @b%s@- @c%s@- %i @c%s@- %i",
+                operation_name[operation],
+                size_name[size],
+                operand_name[to],
+                destination,
+                operand_name[from],
+                source);
 
-	debug_printf ("> %s", data_name [array [0]]);
+    short_prefix(size);
 
-	inset (1, data [operation - STATIC_1_BEGIN]);
+    long_prefix(size, to, destination, from, source);
 
-	return (0);
+    inset(true, 0x0f);
+    inset(true, 0x40 + operation - MOVE_IF_BEGIN);
+
+    inset(transfer(to, from), mc0(destination, source));
+
+    modify_memory(destination, to, from);
+
+    return 5;
 }
 
-static unsigned int build_static_2 (unsigned int * array) {
-	unsigned int operation = array [0];
+static uint32_t build_set_if(const uint32_t * restrict array) {
+    const uint32_t operation   = array[0];
+    const uint32_t to          = array[2];
+    const uint32_t destination = array[3];
 
-	const unsigned short data  [] = {
-		0x050f, 0xa20f, 0xd0d9, 0xe0d9, 0xe1d9, 0xe4d9, 0xe5d9, 0xe8d9,
-		0xe9d9, 0xead9, 0xebd9, 0xecd9, 0xedd9, 0xeed9, 0xf0d9, 0xf1d9,
-		0xf2d9, 0xf3d9, 0xf4d9, 0xf5d9, 0xf6d9, 0xf7d9, 0xf8d9, 0xf9d9,
-		0xfad9, 0xfbd9, 0xfcd9, 0xfdd9, 0xfed9, 0xffd9
-	};
+    debug_print("@y%s@- @bd8@- @c%s@- %i",
+                operation_name[operation],
+                operand_name[to],
+                destination);
 
-	debug_printf ("> %s", data_name [array [0]]);
+    inset((to == REG) && (front(destination)), 0x40);
+    inset((to == REG) && (upper(destination)), 0x41);
 
-	inset_immediate (1, D16, data [operation - STATIC_2_BEGIN]);
+    inset(true, 0x0f);
+    inset(true, 0x90 + operation - SET_IF_BEGIN);
 
-	return (0);
+    inset(to == REG, 0xc0 + 0x01 * (destination & 7));
+    inset(to == MEM, 0x05);
+
+    inset_memory(to == MEM, D32, destination, relative());
+
+    return 3;
 }
 
-static unsigned int build_jump_if (unsigned int * array) {
-	unsigned int operation = array [0],
-	             size      = array [1],
-	             location  = array [3];
+static uint32_t build_jump(const uint32_t * restrict array) {
+    const uint32_t size        = array[1];
+    const uint32_t to          = array[2];
+    const uint32_t destination = array[3];
 
-	debug_printf ("> %s %s \033[1;35mrel\033[0m %u", data_name [array [0]], size_name [array [1]], array [3]);
+    debug_print("@yjmp@- @b%s@- @c%s@- %i",
+                size_name[size],
+                operand_name[to],
+                destination);
 
-	inset (far (location) && (size == D32), 0x0f);
+    inset((to == REG) && upper(destination), 0X41);
 
-	inset (far  (location), 0x80 + operation - JUMP_IF_BEGIN);
-	inset (near (location), 0x70 + operation - JUMP_IF_BEGIN);
+    inset(to == REL, 0xe9 + 0x02 * (size == D8));
+    inset(to == REG, 0xff);
+    inset(to == REG, 0xe0 + 0x01 * (destination & 7));
+    inset(to == MEM, 0xff);
+    inset(to == MEM, 0x25);
 
-	inset_memory (1, D32, location, -(text_sector_size + 4));
+    inset_memory(to == REL, D32, destination, unsorted());
+    inset_memory(to == MEM, D32, destination, 0x4010b0);
 
-	return (3);
+    return 3;
 }
 
-static unsigned int build_move_if (unsigned int * array) {
-	unsigned int operation   = array [0],
-	             size        = array [1],
-	             to          = array [2],
-	             destination = array [3],
-	             from        = array [4],
-	             source      = array [5];
+static uint32_t build_move(const uint32_t * restrict array) { /// X: ERROR PRONE.
+    const uint32_t size        = array[1];
+    const uint32_t to          = array[2];
+    const uint32_t destination = array[3];
+    const uint32_t from        = array[4];
+    const uint32_t source      = array[5];
+    const uint32_t extension   = array[6];
 
-	debug_printf ("> %s %s %s %u %s %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3], type_name [array [4]], array [5]);
+    debug_error(size > D64, "@rsize : move = %i;@-\n", size);
+    debug_error(to   > MEM, "@rto   : move = %i;@-\n", to);
+    debug_error(from > IMM, "@rfrom : move = %i;@-\n", from);
 
-	short_prefix (size);
+    debug_print("@ymov@- @b%s@- @c%s@- %i @c%s@- %i %i",
+                size_name[size],
+                operand_name[to],
+                destination,
+                operand_name[from],
+                source,
+                (size == D64) ? extension : 0);
 
-	long_prefix (size, to, destination, from, source);
+    short_prefix(size);
 
-	inset (1, 0x0f);
-	inset (1, 0x40 + operation - MOVE_IF_BEGIN);
+    long_prefix(size, to, destination, from, source);
 
-	modify_registers (to, destination, from, source);
-	modify_memory (destination, to, from);
+    inset((size == D8) && (front(destination)), 0x40);
 
-	return (5);
+    inset(transfer(to, from), 0x88 + 0x01 * (size != D8));
+    inset(import(to, from), 0x8a + 0x01 * (size != D8));
+    inset(export(to, from), 0x88 + 0x01 * (size != D8));
+
+    modify_memory(destination, to, from);
+    modify_memory(source,      to, from);
+
+    inset(transfer(to, from), mc0(destination, source));
+
+    inset((to == REG) && ((from == IMM) || (from == REL)), 0xb0 +
+          0x08 * (size != D8) + 0x01 * (destination & 7));
+
+    inset(assign(to, from), 0xc6 + 0x01 * (size != D8));
+    inset(assign(to, from), 0x05);
+
+    inset_memory(import(to, from), D32, source,      relative());
+    inset_memory(export(to, from), D32, destination, relative());
+    inset_memory(assign(to, from), D32, destination, relative());
+    inset_memory(relate(to, from), D32, source,      0x4010b0);
+
+    inset_immediate(attach(to, from) && (size <= D32), size, source);
+    inset_immediate(assign(to, from) && (size <= D32), size, source);
+
+    inset_immediate(attach(to, from) && (size == D64), D32, source);
+    inset_immediate(attach(to, from) && (size == D64), D32, extension);
+    inset_immediate(attach(to, from) && (size == D64), D32, 0);
+
+    return 5 + (size == D64);
 }
 
-static unsigned int build_set_if (unsigned int * array) {
-	unsigned int operation   = array [0],
-	             to          = array [2],
-	             destination = array [3];
+static uint32_t build_call(const uint32_t * restrict array) {
+    const uint32_t from   = array[1];
+    const uint32_t source = array[2];
 
-	debug_printf ("> %s \033[1;35md8 \033[0m %s %u", data_name [array [0]], type_name [array [2]], array [3]);
+    debug_print("@ycall@- @c%s@- %i", operand_name[from], source);
 
-	inset ((to == REG) && (front (destination)), 0x40);
-	inset ((to == REG) && (upper (destination)), 0x41);
+    inset((from == REG) && (upper(source)), 0x41);
 
-	inset (1, 0x0f);
-	inset (1, 0x90 + operation - SET_IF_BEGIN);
+    inset(from == REL, 0xe8);
+    inset(from == REG, 0xff);
 
-	inset (to == REG, 0xc0 + 0x01 * (destination & 0x07));
-	inset (to == MEM, 0x05);
+    inset_memory(from == REL, D32, source, unsorted());
 
-	inset_memory (to == MEM, D32, destination, 0x1000 - (text_sector_size + 4));
+    inset(from == REG, (0xd0 + 0x01 * (source & 7)));
 
-	return (3);
+    return 2;
 }
 
-static unsigned int build_jump (unsigned int * array) {
-	unsigned int size        = array [1],
-	             to          = array [2],
-	             destination = array [3];
+static uint32_t build_enter(const uint32_t * restrict array) {
+    const uint32_t dynamic_storage = array[1];
+    const uint32_t nesting_level   = array[2];
 
-	debug_printf ("> %s %s %s %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3]);
+    debug_print("@yenter@- %i %i", dynamic_storage, nesting_level);
 
-	inset ((to == REG) && upper (destination), 0X41);
+    inset(true, 0xc8);
 
-	inset (to == REL, 0xe9 + 0x02 * (size == D8));
-	inset (to == REG, 0xff);
-	inset (to == REG, 0xe0 + 0x01 * (destination & 0x07));
-	inset (to == MEM, 0xff);
-	inset (to == MEM, 0x25);
+    inset_immediate(true, D16, dynamic_storage);
+    inset_immediate(true, D8,  nesting_level & 0x1f);
 
-	inset_memory (to == REL, D32, destination, -(text_sector_size + 4));
-	inset_memory (to == MEM, D32, destination, 0x4010b0);
-
-	return (3);
+    return 2;
 }
 
-static unsigned int build_move (unsigned int * array) {
-	unsigned int size        = array [1],
-	             to          = array [2],
-	             destination = array [3],
-	             from        = array [4],
-	             source      = array [5],
-	             extension   = array [6];
+static uint32_t build_shift(const uint32_t * restrict array) {
+    const uint32_t operation   = array[0];
+    const uint32_t size        = array[1];
+    const uint32_t to          = array[2];
+    const uint32_t destination = array[3];
+    const uint32_t offset      = array[5];
 
-	debug_printf ("> %s %s %s %u %s %u %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3], type_name [array [4]], array [5], (size == D64) ? array [6] : 0);
+    debug_print("@y%s@- @b%s@- @c%s@- %i @cimm@- %i",
+                operation_name[operation],
+                size_name[size],
+                operand_name[to],
+                destination,
+                offset);
 
-	short_prefix (size);
+    short_prefix(size);
 
-	long_prefix (size, to, destination, from, source);
+    long_prefix(size, to, destination, 0, 0);
 
-	inset ((to == REG) && (from == REG), 0x88 + 0x01 * (size != D8));
-	inset ((to == REG) && (from == MEM), 0x8a + 0x01 * (size != D8));
-	inset ((to == MEM) && (from == REG), 0x88 + 0x01 * (size != D8));
+    inset(true, 0xc0 + 0x01 * (size != D8));
 
-	modify_memory (destination, to, from);
-	modify_memory (source,      to, from);
+    inset(to == REG, 0x05 + 0x08 * ((operation - SHIFT_BEGIN) & 7));
+    inset(to == MEM, 0xc0 + 0x08 * ((operation - SHIFT_BEGIN) & 7));
 
-	modify_registers (to, destination, from, source);
+    inset_memory(to == MEM, D32, destination, relative());
 
-	inset ((to == REG) && ((from == IMM) || (from == REL)), 0xb0 + 0x08 * (size != D8) + 0x01 * (destination & 0x07));
+    inset_immediate(true, D8, offset);
 
-	inset ((to == MEM) && (from == IMM), 0xc6 + 0x01 * (size != D8));
-	inset ((to == MEM) && (from == IMM), 0x05);
-
-	inset_memory ((to == REG) && (from == MEM), D32, source,      0x1000 - (text_sector_size + 4));
-	inset_memory ((to == MEM) && (from == REG), D32, destination, 0x1000 - (text_sector_size + 4));
-	inset_memory ((to == MEM) && (from == IMM), D32, destination, 0x1000 - (text_sector_size + 4));
-	inset_memory ((to == REG) && (from == REL), D32, source,      0x4010b0);
-
-	inset_immediate ((to == REG) && (from == IMM) && (size != D64), size, source);
-	inset_immediate ((to == MEM) && (from == IMM) && (size != D64), size, source);
-	inset_immediate ((to == REG) && (from == IMM) && (size == D64), D32,  source);
-	inset_immediate ((to == REG) && (from == IMM) && (size == D64), D32,  extension);
-	inset_immediate ((to == REG) && (from == IMM) && (size == D64), D32,  0);
-
-	return (5 + (size == D64));
+    return 5;
 }
 
-static unsigned int build_call (unsigned int * array) {
-	unsigned int from   = array [1],
-	             source = array [2];
+static uint32_t build_float(const uint32_t * restrict array) { /// X: UNCHECKED.
+    const uint32_t operation = array[0];
+    const uint32_t size      = array[1];
+    const uint32_t from      = array[2];
+    const uint32_t source    = array[3]; /// X: REMOVE UNUSED STUFF.
 
-	debug_printf ("> %s %s %u", data_name [array [0]], type_name [array [1]], array [2]);
+    debug_print("@y%s@- @b%s@- @c%s@- %i",
+                operation_name[operation],
+                size_name[size],
+                operand_name[from],
+                source);
 
-	inset ((from == REG) && (upper (source)), 0x41);
+    inset(from == MEM, 0xd8 + 0x04 * (size == D64));
 
-	inset (from == REL, 0xe8);
-	inset (from == REG, 0xff);
+    modify_memory(operation - FLOAT_BEGIN, 0, from);
 
-	inset_memory (from == REL, D32, source, -(text_sector_size + 4));
+    inset_memory(from == MEM, size, source, 0);
 
-	inset (from == REG, (0xd0 + 0x01 * (source & 0x07)));
-
-	return (2);
+    return 3;
 }
 
-static unsigned int build_enter (unsigned int * array) {
-	unsigned int dynamic_storage = array [1],
-	             nesting_level   = array [2];
-
-	debug_printf ("> %s %u %u", data_name [array [0]], array [1], array [2]);
-
-	inset (1, 0xc8);
-
-	inset_immediate (1, D16, dynamic_storage);
-	inset_immediate (1, D8,  nesting_level & 0x1f);
-
-	return (2);
+static void m072445(uint32_t fuck) { /// THIS IS HORRIBLE.
+    if (fuck == 4) {
+        inset(true, 0x04);
+        inset(true, 0x24);
+    } else if (fuck == 5) {
+        inset(true, 0x45);
+        inset(true, 0x00);
+    } else {
+        inset(true, fuck & 7);
+    }
 }
 
-static unsigned int build_float (unsigned int * array) {
-	unsigned int operation = array [0],
-	             size      = array [1],
-	             from      = array [2],
-	             source    = array [3];
+static uint32_t build_floatl(const uint32_t * restrict array) { /// X: UNCHECKED.
+    const uint32_t operation = array[0];
+    const uint32_t size      = array[1];
+    const uint32_t type      = array[2];
+    const uint32_t from      = array[3];
+    const uint32_t source    = array[4];
 
-	debug_printf ("> %s %s %s %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3]);
+    // FLADD D32 INT DER 1 -> fiadd dword[eax]
+    // FLADD D32 BCF DER 1 -> fadd  dword[eax]
+    // FLADD D16 INT MEM # -> fiadd  word[x]
+    // FLADD D32 INT MEM # -> fiadd dword[x]
+    // FLADD D32 BCF MEM # -> fadd  dword[x]
+    // FLADD D64 BCF MEM # -> fadd  qword[x]
 
-	inset (from == MEM, 0xd8 + 0x04 * (size == D64));
+    debug_print("@y%s@- @b%s@- @c%s@- @c%s@- %i",
+                operation_name[operation],
+                size_name[size],
+                operand_name[type],
+                operand_name[from],
+                source);
 
-	modify_memory (operation, 0, from);
+    inset((from == DER) && (size == D32), 0x67);
 
-	inset_memory (from == MEM, size, source, 0);
+    inset((from == DER) && (upper(source)), 0x41);
 
-	return (3);
+    inset((type == BCF) && (size == D32), 0xd8);
+    inset((type == INT) && (size == D32), 0xda);
+    inset((type == BCF) && (size == D64), 0xdc);
+    inset((type == INT) && (size == D16), 0xde);
+
+    if (from == DER) m072445(source); /// KILL THIS WITH FIRE.
+
+    inset_memory(from == MEM, D32, source, relative());
+
+    return 4;
 }
 
-static unsigned int build_shift (unsigned int * array) {
-	unsigned int operation   = array [0],
-	             size        = array [1],
-	             to          = array [2],
-	             destination = array [3],
-	             offset      = array [5];
+static uint32_t build_fmove_if(const uint32_t * restrict array) { /// X: UNCHECKED.
+    const uint32_t operation = array[0];
+    const uint32_t source    = array[1];
+    const uint32_t offset    = operation - FMOVE_IF_BEGIN;
 
-	debug_printf ("> %s %s %s %u \033[1;35mimm\033[0m %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3], array [5]);
+    debug_print("@y%s@- @cst@- 0 @cst@- %i",
+                operation_name[operation],
+                source);
 
-	short_prefix (size);
+    debug_error (source > 7, "@r%s ! source %i > 7@-\n",
+                             operation_name[operation],
+                             source);
 
-	long_prefix (size, to, destination, 0, 0);
+    inset(operation < FCMOVAE, 0xda);
+    inset(operation > FCMOVU,  0xdb);
 
-	inset (1, 0xc0 + 0x01 * (size != D8));
+    inset(operation < FCMOVAE, 0xc0 + 0x08 * (offset - 0) + source);
+    inset(operation > FCMOVU,  0xc0 + 0x08 * (offset - 4) + source);
 
-	inset (to == REG, 0x05 + 0x08 * (operation & 7));
-	inset (to == MEM, 0xc0 + 0x08 * (operation & 7));
-
-	inset_memory    (to == MEM, D32, destination, 0x1000 - (text_sector_size + 4));
-	inset_immediate (1,         D8,  offset);
-
-	return (5);
+    return 1;
 }
 
-static unsigned int build_in_out (unsigned int * array) {
-	unsigned int move = array [0],
-	             size = array [1],
-	             type = array [2],
-	             port = array [3];
+static uint32_t build_in_out(const uint32_t * restrict array) {
+    const uint32_t move = array[0];
+    const uint32_t size = array[1];
+    const uint32_t type = array[2];
+    const uint32_t port = array[3];
 
-	debug_printf ("> %s %s %s %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3]);
+    debug_print("@y%s@- @b%s@- @c%s@- %i",
+                operation_name[move],
+                size_name[size],
+                operand_name[type],
+                port);
 
-	short_prefix (size);
+    short_prefix(size);
 
-	inset (1, 0xe4 + 0x01 * (size != D8) + 0x02 * (move != OUT) + 0x08 * (type == REG));
+    // Shorten and extend, I think we're not covering all cases.
+    inset(true, 0xe4 +
+             0x01 * (size != D8) +
+             0x02 * (move == IN) +
+             0x08 * (type == REG));
 
-	inset_immediate (type == IMM, D8, port);
+    inset_immediate(type == IMM, D8, port);
 
-	return (3);
+    return 3;
 }
 
-static unsigned int build_pop (unsigned int * array) {
-	unsigned int size        = array [1],
-	             to          = array [2],
-	             destination = array [3];
+static uint32_t build_pop(const uint32_t * restrict array) {
+    const uint32_t size        = array[1];
+    const uint32_t to          = array[2];
+    const uint32_t destination = array[3];
 
-	debug_printf ("> %s %s %s %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3]);
+    debug_print("@ypop@- @b%s@- @c%s@- %i",
+                size_name[size],
+                operand_name[to],
+                destination);
 
-	short_prefix (size);
+    short_prefix(size);
 
-	inset ((to == REG) && (upper (destination)), 0x41);
+    inset((to == REG) && (upper(destination)), 0x41);
 
-	inset (to == REG, 0x58 + 0x01 * (destination & 0x07));
-	inset (to == MEM, 0x8f);
-	inset (to == MEM, 0x05);
+    inset(to == REG, 0x58 + 0x01 * (destination & 7));
+    inset(to == MEM, 0x8f);
+    inset(to == MEM, 0x05);
 
-	inset_memory (to == MEM, D32, destination, 0);
+    inset_memory(to == MEM, D32, destination, 0);
 
-	return (3);
+    return 3;
 }
 
-static unsigned int build_push (unsigned int * array) {
-	unsigned int size   = array [1],
-	             from   = array [2],
-	             source = array [3];
+static uint32_t build_push(const uint32_t * restrict array) {
+    const uint32_t size   = array[1];
+    const uint32_t from   = array[2];
+    const uint32_t source = array[3];
 
-	debug_printf ("> %s %s %s %u", data_name [array [0]], size_name [array [1]], type_name [array [2]], array [3]);
+    debug_print("@ypush@- @b%s@- @c%s@- %i",
+                size_name[size],
+                operand_name[from],
+                source);
 
-	short_prefix (size);
+    short_prefix(size);
 
-	inset ((from == REG) && (upper (source)), 0x41);
+    inset((from == REG) && (upper(source)), 0x41);
 
-	inset (from == REG, 0x50 + 0x01 * (source & 0x07));
-	inset (from == MEM, 0xff);
-	inset (from == MEM, 0x35);
-	inset (from == IMM, 0x68 + 0x02 * (size == D8));
+    inset(from == REG, 0x50 + 0x01 * (source & 7));
+    inset(from == MEM, 0xff);
+    inset(from == MEM, 0x35);
+    inset(from == IMM, 0x68 + 0x02 * (size == D8));
 
-	inset_memory (from == MEM, D32,  source, 0);
-	inset_immediate (from == IMM, size, source);
+    inset_memory(from == MEM, D32, source, 0);
 
-	return (3);
+    inset_immediate(from == IMM, size, source);
+
+    return 3;
 }
 
-static unsigned int build_swap (unsigned int * array) {
-	unsigned int size        = array [1],
-	             destination = array [3];
+static uint32_t build_swap(const uint32_t * restrict array) {
+    const uint32_t size        = array[1];
+    const uint32_t destination = array[3];
 
-	debug_printf ("> %s %s \033[1;35mreg\033[0m %u", data_name [array [0]], size_name [array [1]], array [3]);
+    debug_print("@yswap@- @b%s@- @creg@- %i",
+                size_name[size],
+                destination);
 
-	long_prefix (size, REG, destination, 0, 0);
+    long_prefix(size, REG, destination, 0, 0);
 
-	inset (1, 0x0f);
-	inset (1, 0xc8 + 0x01 * (destination & 0x07));
+    inset(true, 0x0f);
+    inset(true, 0xc8 + 0x01 * (destination & 7));
 
-	return (3);
+    return 3;
 }
 
-static unsigned int build_bit_scan (unsigned int * array) {
-	unsigned int size        = array [1],
-	             destination = array [3],
-	             from        = array [4],
-	             source      = array [5];
+static uint32_t build_bit_scan(const uint32_t * restrict array) {
+    const uint32_t operation   = array[0];
+    const uint32_t size        = array[1];
+    const uint32_t destination = array[3];
+    const uint32_t from        = array[4];
+    const uint32_t source      = array[5];
 
-	debug_printf ("> %s %s \033[1;35mreg\033[0m %u %s %u", data_name [array [0]], size_name [array [1]], array [3], type_name [array [4]], array [5]);
+    debug_print("@y%s@- @b%s@- @creg@- %i @c%s@- %i",
+                operation_name[operation],
+                size_name[size],
+                destination,
+                operand_name[from],
+                source);
 
-	short_prefix (size);
+    short_prefix(size);
 
-	long_prefix (size, REG, destination, from, source);
+    long_prefix(size, REG, destination, from, source);
 
-	inset_immediate (1, D16, 0xbc0f);
+    inset_immediate(true, D16, 0xbc0f + 0x100 * (operation == BSR));
 
-	modify_registers (REG, destination, from, source);
+    inset(transfer(REG, from), mc0(destination, source));
 
-	inset (from == MEM, 0x05 + 0x08 * destination);
+    inset(from == MEM, 0x05 + 0x08 * destination);
 
-	inset_memory (from == MEM, D32, source, 0x1000 - (text_sector_size + 4));
+    inset_memory(from == MEM, D32, source, relative());
 
-	return (5);
+    return 5;
 }
 
-static unsigned int build_loop (unsigned int * array) {
-	unsigned int location = array [3];
+static uint32_t build_bit_test(const uint32_t * restrict array) {
+    const uint32_t operation   = array[0];
+    const uint32_t size        = array[1];
+    const uint32_t to          = array[2];
+    const uint32_t destination = array[3];
+    const uint32_t from        = array[4];
+    const uint32_t source      = array[5];
 
-	debug_printf ("> %s \033[1;35md8 \033[0m \033[1;35mrel\033[0m %u", data_name [array [0]], array [3]);
+    const uint32_t offset = operation - BT;
 
-	inset (array [0] == LOOPNE, 0xe0);
-	inset (array [0] == LOOPE,  0xe1);
-	inset (array [0] == LOOP,   0xe2);
+    debug_error(size > D64, "@rsize : bit test = %i;@-\n", size);
+    debug_error(to   > MEM, "@rto   : bit test = %i;@-\n", to);
+    debug_error(from > IMM, "@rfrom : bit test = %i;@-\n", from);
 
-	inset_memory (1, D8, location, -(text_sector_size + 1));
+    debug_error(size   == D8,  "@rbit test ! size D8@-\n");
+    debug_error(from   == MEM, "@rbit test ! from MEM@-\n");
+    debug_error(source >= 64,  "@rbit test ! source %i@-\n", source);
 
-	return (3);
+    debug_print("@y%s@- @b%s@- @c%s@- %i @c%s@- %i",
+                operation_name[operation],
+                size_name[size],
+                operand_name[to],
+                destination,
+                operand_name[from],
+                source);
+
+    short_prefix(size);
+
+    long_prefix(size, to, destination, from, source);
+
+    inset(true, 0x0f);
+
+    inset(attach  (to, from) || assign(to, from), 0xba);
+    inset(transfer(to, from) || export(to, from), 0xa3 + 0x08 * offset);
+
+    inset (export  (to, from), m05(to));
+    inset (assign  (to, from), m05(4 + offset));
+    inset (attach  (to, from), mc0(destination, 4 + offset));
+    inset (transfer(to, from), mc0(destination, source));
+
+    inset_memory(from == MEM, D32, source, relative());
+
+    inset(from == IMM, source);
+
+    return 5;
 }
 
-static unsigned int fault (unsigned int * array) {
-	debug_printf ("> fault : \033[1;31m%u\033[0m", array [0]);
+static uint32_t build_loop(const uint32_t * restrict array) {
+    const uint32_t operation = array[0];
+    const uint32_t location  = array[3];
 
-	return (0);
+    debug_print("@y%s@- @bd8@- @crel@- %i",
+                operation_name[operation],
+                location);
+
+    inset(operation == LOOPNE, 0xe0);
+    inset(operation == LOOPE,  0xe1);
+    inset(operation == LOOP,   0xe2);
+
+    inset_memory(true, D8, location, -text_sector_size - 1);
+
+    return 3;
 }
 
-static unsigned int (* build_instruction []) (unsigned int * array) = {
-	store_memory,   // ASMDIRMEM : LABEL
-	store_relative, // ASMDIRREL : "IMPLEMENTED"
-	store_immediate,// ASMDIRIMM : LITERAL
-	fault,          // ASMDIRREP : UNIMPLEMENTED
-	build_double,   build_double,   build_double,   build_double,   build_double,   build_double,   build_double,   build_double,
-	build_single,   build_single,   build_single,   build_single,   build_single,   build_single,   build_single,   build_single,
-	build_float,    build_float,    build_float,    build_float,    build_float,    build_float,    build_float,    build_float,
-	build_shift,    build_shift,    build_shift,    build_shift,    build_shift,    build_shift,    build_shift,    build_shift,
-	build_static_1, build_static_1, build_static_1, build_static_1, build_static_1, build_static_1,
-	build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2,
-	build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2,
-	build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2,
-	build_static_2, build_static_2, build_static_2, build_static_2, build_static_2, build_static_2,
-	build_enter,    build_call,     build_in_out,   build_in_out,   build_jump,     build_move,     build_pop,      build_push,
-	build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,
-	build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,
-	build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,
-	build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,  build_move_if,
-	build_set_if,   build_set_if,   build_set_if,   build_set_if,   build_set_if,   build_set_if,   build_set_if,   build_set_if,
-	build_set_if,   build_set_if,   build_set_if,   build_set_if,   build_set_if,   build_set_if,   build_set_if,   build_set_if,
-	build_swap,     build_bit_scan, build_bit_scan, build_loop,     build_loop,     build_loop
+static uint32_t (*build_instruction[OPERATION_END])(const uint32_t * restrict array) = {
+    store_memory,   // ASMDIRMEM : LABEL
+    store_relative, // ASMDIRREL : "IMPLEMENTED"
+    store_immediate,// ASMDIRIMM : LITERAL
+    NULL,           // ASMDIRREP : UNIMPLEMENTED
+    build_double,   build_double,   build_double,   build_double,
+    build_double,   build_double,   build_double,   build_double,
+    build_single,   build_single,   build_single,   build_single,
+    build_single,   build_single,   build_single,   build_single,
+    build_shift,    build_shift,    build_shift,    build_shift,
+    build_shift,    build_shift,    build_shift,    build_shift,
+    build_float,    build_float,    build_float,    build_float,
+    build_float,    build_float,    build_float,    build_float,
+    build_floatl,   build_floatl,   build_floatl,   build_floatl,
+    build_floatl,   build_floatl,   build_floatl,   build_floatl,
+    build_fmove_if, build_fmove_if, build_fmove_if, build_fmove_if,
+    build_fmove_if, build_fmove_if, build_fmove_if, build_fmove_if,
+    build_static_1, build_static_1, build_static_1, build_static_1,
+    build_static_1, build_static_1, build_static_1, build_static_1,
+    build_static_1, build_static_1, build_static_1, build_static_1,
+    build_static_1, build_static_1, build_static_1, build_static_1,
+    build_static_1,
+    build_static_2, build_static_2, build_static_2, build_static_2,
+    build_static_2, build_static_2, build_static_2, build_static_2,
+    build_static_2, build_static_2, build_static_2, build_static_2,
+    build_static_2, build_static_2, build_static_2, build_static_2,
+    build_static_2, build_static_2, build_static_2, build_static_2,
+    build_static_2, build_static_2, build_static_2, build_static_2,
+    build_static_2, build_static_2, build_static_2, build_static_2,
+    build_static_2, build_static_2, build_static_2, build_static_2,
+    build_static_2, build_static_2, build_static_2, build_static_2,
+    build_static_2, build_static_2, build_static_2, build_static_2,
+    build_static_2, build_static_2, build_static_2, build_static_2,
+    build_static_2, build_static_2, build_static_2, build_static_2,
+    build_static_3, build_static_3, build_static_3, build_static_3,
+    build_static_3, build_static_3, build_static_3, build_static_3,
+    build_static_3, build_static_3,
+    build_enter,    build_call,     build_in_out,   build_in_out,
+    build_jump,     build_move,     build_pop,      build_push,
+    build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,
+    build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,
+    build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,
+    build_jump_if,  build_jump_if,  build_jump_if,  build_jump_if,
+    build_move_if,  build_move_if,  build_move_if,  build_move_if,
+    build_move_if,  build_move_if,  build_move_if,  build_move_if,
+    build_move_if,  build_move_if,  build_move_if,  build_move_if,
+    build_move_if,  build_move_if,  build_move_if,  build_move_if,
+    build_set_if,   build_set_if,   build_set_if,   build_set_if,
+    build_set_if,   build_set_if,   build_set_if,   build_set_if,
+    build_set_if,   build_set_if,   build_set_if,   build_set_if,
+    build_set_if,   build_set_if,   build_set_if,   build_set_if,
+    //~NULL,           NULL,           NULL,           NULL,
+    //~NULL,           NULL,           NULL,           NULL,
+    //~NULL,           NULL,           NULL,           NULL,
+    //~NULL,           NULL,           NULL,           NULL,
+    //~LEA,            CWDE,           CDQE,
+    //~CMC,            CLC,            CLD,            CLI,
+    //~MOVBE,          STC,            STD,            STI,
+    //~TEST,           UD2,            XADD,           XCHG,
+    build_bit_test, build_bit_test, build_bit_test, build_bit_test,
+    build_bit_scan, build_bit_scan, build_swap,
+    build_loop,     build_loop,     build_loop,
+    //~NULL,           NULL,           NULL,
+    //~NULL,           NULL,           NULL,           NULL,
+    //~NULL,           NULL,           NULL
+    //~REP,            REPE,           REPNE,
+    //~INS,            OUTS,           LODS,           STOS,
+    //~MOVS,           CMPS,           SCAS
 };
 
-unsigned int    nopification     = 1;
-unsigned int    text_entry_point = 0;
-unsigned int    text_sector_size = 0;
-unsigned char * text_sector_byte = NULL;
+uint32_t   main_entry_point = 0;
+uint32_t   text_sector_size = 0;
+uint8_t  * text_sector_byte = NULL;
+uint32_t   data_sector_size = 0;    // This is unused, and it should be used...
+uint8_t  * data_sector_byte = NULL; // This is unused, and it should be used...
 
-int was_instruction_array_empty = 0;
+bool was_instruction_array_empty = false;
 
-int assemble (unsigned int count, unsigned int * array) {
-	unsigned int index;
+bool assemble(      uint32_t            count,
+              const uint32_t * restrict array) {
+    if ((!count) || (!array)) {
+        was_instruction_array_empty = true;
+        return false;
+    }
 
-	if ((count == 0) || (array == NULL)) {
-		was_instruction_array_empty = 1;
-		return (EXIT_FAILURE);
-	}
+    empty_array = aalloc(1024ul * sizeof(*empty_array)); /// X: STUPID
+    empty_imbue = aalloc(1024ul * sizeof(*empty_imbue));
+    empty_store = aalloc(1024ul * sizeof(*empty_store));
 
-	empty_array = calloc (1024UL, sizeof (* empty_array));
-	empty_imbue = calloc (1024UL, sizeof (* empty_imbue));
-	empty_store = calloc (1024UL, sizeof (* empty_store));
+    for (uint32_t index = 0; index < count; ++index) {
+        const uint32_t size = text_sector_size;
 
-	for (index = 0; index < count; ++index) {
-		unsigned int check_at;
-		unsigned int byte;
+#if DEBUG == 1
+        inset(array[index] > ASMDIRREP, 0x90);
+#endif
 
-		inset ((nopification) && (array [index] > ASMDIRREP), 0x90);
+        index += build_instruction[array[index]](&array[index]);
 
-		check_at = text_sector_size;
+#if DEBUG == 1
+        debug_print(" @a--@- ");
+        for (uint32_t byte = size; byte < text_sector_size; ++byte) {
+            debug_print("@p%02X@- ", (uint8_t)text_sector_byte[byte]);
+        }
+        debug_print("\n");
+#endif
+    }
 
-		index += build_instruction [array [index]] (& array [index]);
+    main_entry_point = empty_store[0];
 
-		debug_printf (" -- \033[0;35m");
+    for (uint32_t index = 1; index < empty_holes; ++index) {
+        uint32_t set = 0;
+        uint32_t get = empty_array[index];
 
-		for (byte = check_at; byte < text_sector_size; ++byte) {
-			debug_printf ("%02X ", text_sector_byte [byte]);
-		}
+        replace((uint8_t*)&set, &text_sector_byte[get], sizeof(set));
 
-		debug_printf ("\033[0m\n");
-	}
+        set += empty_store[empty_imbue[index]];
 
-	text_entry_point = empty_store [0];
+        replace(&text_sector_byte[get], (uint8_t*)&set, sizeof(get));
+    }
 
-	for (index = 1; index < empty_holes; ++index) {
-		unsigned int set = 0;
-		unsigned int get = empty_array [index];
-
-		replace ((unsigned char *) & set, & text_sector_byte [get], sizeof (set));
-
-		set += empty_store [empty_imbue [index]];
-
-		replace (& text_sector_byte [get], (unsigned char *) & set, sizeof (set));
-	}
-
-	free (empty_array);
-	free (empty_imbue);
-	free (empty_store);
-
-	return (0);
+    return true;
 }

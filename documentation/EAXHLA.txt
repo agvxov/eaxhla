@@ -1,0 +1,103 @@
+0) Preprocessor
+>> But xolatile, why?
+>> Because I don't want to use # in non-C languages...
+
+	#define XYZ (ABC)
+	// Not same as '#define XYZ(ABC)' by the way, space there matters!
+
+	macro XYZ begin
+		ABC
+	end macro
+	// We could talk about "short form"-ing very simple macros too.
+	macro XYZ -> ABC
+	macro XYZ => ABC
+
+	-- Replace every whole-word instance of "XYZ" with "ABC", simple as that.
+	-- In the case of "<>XYZ" or "XYZ<>", where <> is anything, don't replace.
+	-- I wouldn't use '#define ' as begining and '\n' as ending.
+	-- It should have clear ending, like our 'if' and 'repeat' statements.
+	-- If it's more complex definition, it should easily span over lines.
+	-- So, we shouldn't use '\n' as ending, nor '\\' as continuation.
+	-- It should explicitly show if it accepts arguments or not, as procedures.
+
+	C examples:
+		#define STRING_LENGTH_LIMIT (256)
+		#define ABSOLUTE(X) (((x) < 0) ? -(x) : (x))
+		#define VECTOR_ADD_FOR(size, v1, v2) \
+		do {                                 \
+		    for (int i = 0; i < size; ++i)   \
+		        v1 [i] += v2 [i];            \
+		} while (0)
+		// Notice that we don't add ';' above, in C...?
+
+	EAXHLA examples:
+		macro STRING_LENGTH_LIMIT => 256
+		// No ABSOLUTE, We need to talk about procedure arguments...
+		// And probably about ?: operator too, imagine this tho...
+		macro VECTOR_ADD_FOR (size, v1, v2) begin
+			repeat i for 0 .. size
+				// Example where 'size' is integer literal!
+				// In that case 'i' can be replaced with current iteration!
+				mov eax v1 add eax (i * 4)
+				mov ebx v2 add ebx (i * 4)
+				add eax ebx
+				// This can be done cleaner, it's unoptimized.
+			end repeat
+		end macro
+
+	#include "lnao.h" // Search from current directory.
+	#include <lnao.h> // Search from '/usr/include' directory.
+
+	include "lnao.eax" // Search from current, then from general, then what? Abort?
+	exclude "lnao.eax" // Discard all "declarations", macros and definitions from here?
+
+	-- Do we want to keep track of what was declared where...?
+	-- Is this stupid, is this ever going to be useful...?
+	-- There is '#undef' and '#define' already tho, why not this then?
+	-- Should we have '#ifdef', '#ifndef', '#else', '#endif' and similar macros?
+	-- They could potentially reuse our keywords 'if', 'else', 'end'.
+	-- They must not conflict with the language itself in that case, is it doable?
+	-- We kinda use '#' for comments, and it wouldn't be good to change that.
+	-- If fucker sees '#define', he'll assume it's m4, and treat it as such.
+	-- In that case, we should LIMIT the scope of what our preprocessor supports!
+
+1) Standard library
+>> But xolatile, how?
+>> Slowly, systematically, carefully, while testing it...
+
+	Before I continue, I need to state something obvious:
+	>> Only Linux/BSD/Haiku people will ever use EAXHLA for anything, if at all...
+	>> If they use it at all, they won't make anything of high complexity.
+	>> Most people will run it on x86-64, but we should assume Z80 and friends too.
+	With those real world assumptions, lets continue...
+
+	-- We need only simple things here in my opinion, but useful.
+	-- No one will write spectral ray tracer in this language, maybe only htop clone.
+	-- Some things that'll be useful out of the box, that C doesn't have (ootb).
+	-- Full standard VT100 support with code symbols and short names.
+	-- String, vector, matrix, memory, buffer, (formatless) image (RGBA) manipulation.
+	-- We could probably add X11 support, but I doubt it'll be easy or sane.
+	-- We should add "ncurses"-like support, it's just a bunch of ioctls.
+	-- Maybe even some minimal "TUI" as "header"-only library out of the box.
+
+	I can do all of the above in assembly, meaning that in EAXHLA it'll be shorter.
+	However, we do need procedure arguments, and the following changes:
+
+	-- Remove 'unix' keyword, it's not like we'll have 'windows', fuck that shit.
+	-- Probably remove 'fast' keyword, if there's no validation for checking it!
+	-- Some procedures can't be optimized to use registers instead of stack.
+	-- To Anon and Emil, I suggest you to look into Fortran for inspiration...
+	-- Many people know that most Fortran code is faster than majority of C code.
+
+	Also fuck X11...
+
+2) Purpose
+>> But xolatile, what?
+>> To create something and to use it instead of good stuff (C).
+
+	It'd be fun to write small terminal-based programs in EAXHLA.
+	In C it's too easy, in assembly it's too boring, in Fortran it's bad.
+	No need for external libraries (ncurses, pcurses, terminfo) unlike in C.
+	It'll be very minimal language, easy to implement and extend.
+	I'd be very happy to remove ALL dependencies except libc itself...
+	But I guess we won't do that anytime soon sadly...

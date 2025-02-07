@@ -54,7 +54,7 @@ For the specifics of the supported instructions consult
 |  E  |  r14   |  r14d  |  r14w  |  r14b  |
 |  F  |  r15   |  r15d  |  r15w  |  r15b  |
 ```
-
+// X: Legacy registers ah, ch, dh, bh aren't supported.
 
 ## Types
 ```
@@ -78,8 +78,10 @@ float prefixes:
 float sizes:
 + 32
 + 64
-+ 80?
++ 80
 + 128?
++ 256?
++ 512?
 
 All of these types would be generically available unless disabled by some compiler option.
 All of the traditional types would be enabled by default or require said flag to become usable,
@@ -122,6 +124,7 @@ Logic is only evaulated in _logical blocks_
 + and
 + or
 + xor
+// X: Since we're in assembly, overflow, sign and parity can be added!
 
 ## Functions
 ```
@@ -139,7 +142,7 @@ qualifier:
 
 type:
 + procedure
-+ ? function
++ ? function -> X: Return value is in accumulator register anyway.
 
 ### calls
 ```
@@ -162,18 +165,27 @@ This, in all sane contexes means leaving a registers value unchanged.
 ```C
 my_label:
 ```
-Labels act like variables,
-but should not be dereferenced.
+Labels act like variables, but should not be dereferenced.
 Feel free to use them inside jump instructions.
+// X: Is there flex way to verify when they are used...?
+// X: I don't mind adding integers and labels tho, it's based.
+// X: A label is just a number calculated at compile time.
 
 ## Come back to later
 + `register`
 + `volatile`
 + `extern`
 + `static`
+// X: We don't really need 'register' or 'volatile'.
+// X: Only either of 'static' or 'extern' should be added.
+// X: If it's not declared as one, then it must be the other.
+// X: Same as 'const' qualifier in C, there's no 'var' one.
 
 ### LATER
 + DWARF2
   - ask xolatile very nicely
+  // X: Will do it, would work well with Valgrind.
 + linker?
   - support ld (thereby mold/gold) for speed reasons
+  // X: This is sadly very useful...
+  // X: It'll enable us to use C libraries with EAXHLA.

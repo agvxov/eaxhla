@@ -13,6 +13,7 @@
 
 #include "eaxhla.tab.h"
 
+#include "arena.h"
 #include "debug.h"
 #include "assembler.h"
 #include "compile.h"
@@ -144,7 +145,6 @@ void empty_out_scope(void) {
     scope = NULL;
 }
 
-
 int eaxhla_init(void) {
     undeclared_symbol = (symbol_t *)calloc(sizeof(symbol_t), 1);
     tommy_hashtable_init(&symbol_table, 256);
@@ -156,7 +156,7 @@ int eaxhla_init(void) {
 symbol_t * new_symbol(char * name) {
     symbol_t * r;
 
-    r = (symbol_t *)calloc(sizeof(symbol_t), 1);
+    r = (symbol_t *)calloc(sizeof(symbol_t), 1ul);
     r->name = name;
 
     return r;
@@ -273,7 +273,7 @@ char * make_scoped_name(const char * const scope, const char * const name) {
     char * r;
     const long scl = strlen(scope);
     const long nml = strlen(name);
-    r = malloc(2 + scl + 1 + nml + 1);
+    r = calloc((size_t) (2 + scl + 1 + nml + 1), 1ul);
     r[0] = '_';
     r[1] = '_';
     memcpy(r + 2, scope, scl);
@@ -337,7 +337,6 @@ void _add_variable(unsigned type, const char * const name, size_t size, void * v
     variable->symbol_type = VARIABLE_SYMBOL;
 
     symbol_insert(variable);
-
 }
 
 void add_variable(unsigned type, const char * const name) {
@@ -381,7 +380,7 @@ void add_literal(void * data, size_t size) {
     int ignore = asprintf(&name, "_anon_%lu", anon_variable_counter++);
     (void)ignore;
 
-    symbol_t * literal = (symbol_t *)calloc(sizeof(symbol_t), 1);
+    symbol_t * literal = (symbol_t *)calloc(sizeof(symbol_t), 1ul);
     literal->name = name;
     literal->elements = size;
     literal->array_value = data;
@@ -497,6 +496,7 @@ symbol_t * get_variable(const char * const name) {
     }
 
     free(varname);
+
     return r;
 }
 

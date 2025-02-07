@@ -13,20 +13,24 @@
 #include "unix.h"
 #include "safety.h"
 #include "debug.h"
+#include "arena.h"
 #include "printf2.h"
 
-unsigned int * token_array = NULL;
-unsigned int   token_count = 0;
+unsigned * token_array = NULL;
+unsigned   token_count = 0;
 
 char * output_file_name = "a.out";
 
 int compile_init(void) {
-	token_array = calloc(1440UL, sizeof(*token_array));
+    // Funny hacky solution, we can use arenas here.
+    // And a day later we did use them...
+    token_array = aalloc(1440ul * sizeof(*token_array));
     return 0;
 }
 
+// Function not needful anymore sir!
+// Arena handles the memory, no need to free!
 int compile_deinit(void) {
-	free(token_array);
     return 0;
 }
 
@@ -62,7 +66,7 @@ int write_output(FILE * file) {
             // Header calculation
             int total_reserved_size = variable_size_sum();
 
-            elf_main_header(1, 1, 1);
+            elf_main_header(main_entry_point, 1, 1, 1);
             elf_text_sector(text_sector_size, total_reserved_size);
             elf_data_sector(text_sector_size, total_reserved_size);
 
@@ -71,14 +75,14 @@ int write_output(FILE * file) {
             checked_fwrite(elf_text_sector_byte, 1UL, ELF_TEXT_SECTOR_SIZE, file);
             checked_fwrite(elf_data_sector_byte, 1UL, ELF_DATA_SECTOR_SIZE, file);
 
-	        checked_fwrite(text_sector_byte, sizeof(*text_sector_byte), (size_t)text_sector_size, file);
+            checked_fwrite(text_sector_byte, sizeof(*text_sector_byte), (size_t)text_sector_size, file);
         } break;
         case SHELL: {
-            elf_main_header(1, 1, 1);
+            elf_main_header(main_entry_point, 1, 1, 1);
             elf_text_sector(text_sector_size, 0);
             elf_data_sector(text_sector_size, 0);
 
-	        checked_fwrite(text_sector_byte, sizeof(*text_sector_byte), (size_t)text_sector_size, file);
+            checked_fwrite(text_sector_byte, sizeof(*text_sector_byte), (size_t)text_sector_size, file);
         } break;
     }
 
@@ -114,9 +118,9 @@ int compile(void) {
 
     dump_variables_to_assembler();
 
-    text_sector_byte = calloc(4096UL, sizeof(*text_sector_byte));
+    text_sector_byte = aalloc(4096ul * sizeof(*text_sector_byte));
 
-    if (assemble(token_count, token_array)) {
+    if (!assemble(token_count, token_array)) {
         issue_internal_error();
         return 1;
     }
@@ -126,8 +130,6 @@ int compile(void) {
     fclose(output_file);
 
     make_executable(output_file_name);
-
-    free(text_sector_byte);
 
     return 0;
 }

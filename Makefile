@@ -67,7 +67,7 @@ ${OBJECT.d}/%.pp: tool/generators/%.tcl tool/generators/instructions.tcl tool/ge
 	tclsh $< > $@
 
 unplug:
-	-rm ${PLUGLOCK}
+	-rm -f ${PLUGLOCK}
 	${PLUG} -u -a source/eaxhla.l source/eaxhla.y
 
 ${OBJECT.d}/%.pluglock: ${OBJECT.d}/%.pp
@@ -84,12 +84,12 @@ bootstrap:
 deepclean: unplug clean
 
 clean:
-	-rm ${GENSOURCE}
-	-rm ${GENOBJECT}
-	-rm ${OBJECT}
-	-rm ${OUT}
-	-rm token_dump
-	-rm a.out
+	-rm -f ${GENSOURCE}
+	-rm -f ${GENOBJECT}
+	-rm -f ${OBJECT}
+	-rm -f ${OUT}
+	-rm -f token_dump
+	-rm -f a.out
 
 ${OUT}: ${PLUGLOCK} ${GENSOURCE} ${GENOBJECT} ${OBJECT} ${LIB}
 	${LINK.c} -o $@ ${OBJECT} ${GENOBJECT} ${LDLIBS} library/tommyds/tommy.o library/sds/sds.o

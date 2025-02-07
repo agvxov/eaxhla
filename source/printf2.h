@@ -5,8 +5,9 @@
 #include <stdarg.h>
 #include <string.h>
 
+__attribute__((unused))
 static
-int parse_color(char * buf, char * fmt) {
+int parse_color(char * buf, const char * fmt) {
     switch (*fmt) {
         case 'a': memcpy (buf, "\x1b[1;30m", 7ul); return 7; // gray
         case 'r': memcpy (buf, "\x1b[1;31m", 7ul); return 7; // red
@@ -22,15 +23,17 @@ int parse_color(char * buf, char * fmt) {
     }
 }
 
+__attribute__((unused))
 static
-int parse_chars(char * buf, char * fmt) {
+int parse_chars(char * buf, const char * fmt) {
     memcpy (buf, fmt, 1ul);
 
     return 1;
 }
 
+__attribute__((unused))
 static
-void printf2(char * fmt, ...) {
+void printf2(const char * fmt, ...) {
     va_list args;
     char buf[1024] = "";
 
@@ -44,6 +47,21 @@ void printf2(char * fmt, ...) {
     va_start(args, fmt);
     vprintf(buf, args);
     va_end(args);
+}
+
+__attribute__((unused))
+static
+void vprintf2(const char * fmt, va_list args) {
+    char buf[1024] = "";
+
+    for (int l = 0; *fmt != '\0'; ++fmt) {
+        switch (*fmt) {
+            case '@': l += parse_color(&buf[l], ++fmt); break;
+            default:  l += parse_chars(&buf[l],   fmt); break;
+        }
+    }
+
+    vprintf(buf, args);
 }
 
 #endif

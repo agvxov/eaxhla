@@ -1,5 +1,6 @@
 %{
     #include <stdlib.h>
+
     #include "sds/sds.h"
     #include "eaxhla.h"
     #include "eaxhla.tab.h"
@@ -265,7 +266,7 @@ library        { BEGIN INITIAL; return END_LIBRARY; }
     /* XXX: the first WORD_SIZE_IN_BYTES bytes should be 0'd */
 \"  {
         BEGIN INITIAL;
-        yylval.blobval.data = malloc(sdslen(string_literal_buffer));
+        yylval.blobval.data = calloc(sdslen(string_literal_buffer), 1ul);
         memcpy(yylval.blobval.data, string_literal_buffer, sdslen(string_literal_buffer));
         yylval.blobval.len = sdslen(string_literal_buffer);
 

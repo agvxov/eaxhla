@@ -1,0 +1,98 @@
+--------------------------------------------------------------------------------
+--- Copyright (c) 2036 :: Angela 'astropussy' Collier
+---
+--- All rights reserved, fuck you commies.
+--------------------------------------------------------------------------------
+
+unscope standard_header
+use     standard_header
+
+--------------------------------------------------------------------------------
+
+# GNU/Linux standard file descriptors.
+alias standard_input  0
+alias standard_output 1
+alias standard_error  2
+
+--------------------------------------------------------------------------------
+
+# GNU/Linux system calls.
+alias system_call_read  0x00
+alias system_call_write 0x01
+alias system_call_open  0x02
+alias system_call_close 0x03
+alias system_call_exit  0x3c
+
+--------------------------------------------------------------------------------
+
+# GNU/Linux file flags.
+alias file_read_only      0x000
+alias file_write_only     0x001
+alias file_read_and_write 0x002
+alias file_create         0x040
+alias file_truncate       0x200
+alias file_append         0x400
+
+--------------------------------------------------------------------------------
+
+# GNU/Linux file mode flags.
+alias file_mode_user_read      0o400
+alias file_mode_user_write     0o200
+alias file_mode_user_execute   0o100
+alias file_mode_group_read     0o040
+alias file_mode_group_write    0o020
+alias file_mode_group_execute  0o010
+alias file_mode_others_read    0o004
+alias file_mode_others_write   0o002
+alias file_mode_others_execute 0o001
+
+--------------------------------------------------------------------------------
+
+# VT100 escape sequences.
+# Currently normal text, it should be bold, italic, underlined and dark too.
+s8 <7> t100_grey_code   = "\e[0;30m"
+s8 <7> t100_red_code    = "\e[0;31m"
+s8 <7> t100_green_code  = "\e[0;32m"
+s8 <7> t100_yellow_code = "\e[0;33m"
+s8 <7> t100_blue_code   = "\e[0;34m"
+s8 <7> t100_pink_code   = "\e[0;35m"
+s8 <7> t100_cyan_code   = "\e[0;36m"
+s8 <7> t100_white_code  = "\e[0;37m"
+s8 <4> t100_reset_code  = "\e[0m"
+
+--------------------------------------------------------------------------------
+
+# Store [rdx] count of bytes from 'STDIN_FILENO' file descriptor to [rsi].
+# Return value is stored in [rax] and equal to bytes read or '-1' on error.
+macro fast_read
+	mov eax system_call_read
+	mov edi standard_input
+	syscall
+end macro
+
+--------------------------------------------------------------------------------
+
+# Print [rdx] count of bytes from [rsi] to 'STDOUT_FILENO' file descriptor.
+# Return value is stored in [rax] and equal to bytes written or '-1' on error.
+macro fast_write
+	mov eax system_call_write
+	mov edi standard_output
+	syscall
+end macro
+
+--------------------------------------------------------------------------------
+
+# Print VT100 sequence to standard output, 't100' sounds cool.
+macro t100_grey   mov esi t100_grey_code   mov edx 7 fast_write end macro
+macro t100_red    mov esi t100_red_code    mov edx 7 fast_write end macro
+macro t100_green  mov esi t100_green_code  mov edx 7 fast_write end macro
+macro t100_yellow mov esi t100_yellow_code mov edx 7 fast_write end macro
+macro t100_blue   mov esi t100_blue_code   mov edx 7 fast_write end macro
+macro t100_pink   mov esi t100_pink_code   mov edx 7 fast_write end macro
+macro t100_cyan   mov esi t100_cyan_code   mov edx 7 fast_write end macro
+macro t100_white  mov esi t100_white_code  mov edx 7 fast_write end macro
+macro t100_reset  mov esi t100_reset_code  mov edx 4 fast_write end macro
+
+--------------------------------------------------------------------------------
+
+end unscope

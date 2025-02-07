@@ -1,8 +1,8 @@
 #ifndef COMPILE_H
 #define COMPILE_H
 
-extern unsigned int * token_array;
-extern unsigned int   token_count;
+extern unsigned * token_array;
+extern unsigned   token_count;
 
 extern char * output_file_name;
 
